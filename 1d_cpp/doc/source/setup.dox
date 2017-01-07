@@ -1,0 +1,30 @@
+/*! \page setup Setup
+  * \section install Installation and Execution
+ * Required Packages: 
+ * 1. gcc-6
+ * 2. open-mpi
+ * 3. HDF5 - Needs to be compiled with c++11 standards
+ * 
+ * These packages can be easily installed with a package manager, such as the one provided with each Linux distribution.
+ * 
+ * \subsection mac Mac Package Instructions
+ * If you are using a Mac, use homebrew to easily install (and maintain) these packages. Follow the instructions on <a href="brew.sh">their website</a>.
+ * Once homebrew is installed, set your Homebrew compilers to those provided gcc-6 by
+ * \code HOMEBREW_CC = gcc-6 \endcode
+ * \code HOMEBREW_CXX = g++-6 \endcode
+ * 
+ * Now download and build open-mpi using gcc (rather than clang)
+ * \code brew install open-mpi --build-from-source \endcode 
+ * 
+ * and finally, install HDF5
+ * \code brew install hdf5 --with-cxx --c++11 --build-from-source \endcode
+ * 
+ * \subsection code Code compile
+ * Running
+ * \code make \endcode 
+ * from the source code directory will attempt compilation of the code. Successful compilation produces an executable called oshun.e
+ * 
+ * Executing the code simply requires
+ * \code ./oshun.e \endcode
+ * from the same directory and a file labeled "inputdeck" which contains the input parameters to the simulation.
+ */
