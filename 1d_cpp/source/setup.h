@@ -18,7 +18,7 @@ class Grid_Info {
 //--------------------------------------------------------------
 public:
 //  Constructor
-    Grid_Info(const vector<size_t> _Nl,   const vector<size_t> _Nm, 
+    Grid_Info(const vector<size_t> _l0,   const vector<size_t> _m0, 
               const vector<double> _mass, const vector<double> _charge,
 //            local  spatial axes
               const vector<double> _xmin, const vector<double> _xmax,  const vector<size_t> _Nx,     
@@ -28,20 +28,20 @@ public:
                                           const vector<double> _pmax,  const vector<size_t> _Np,     
 //                                             output momentum axes
               const vector<size_t> _Npx,   const vector<size_t> _Npy, const vector<size_t> _Npz) 
-         : Nl(_Nl), Nm(_Nm), 
+         : l0(_l0), m0(_m0), 
            Np(_Np), mass(_mass), charge(_charge),
                 axis( _xmin, _xmax, _Nx, _xgmin, _xgmax, _Nxg, _pmax, _Np, _Npx, _Npy, _Npz ) {}
 
 //--------------------------------------------------------------
 //  Copy constructor
-    Grid_Info(const Grid_Info& other): Nl(other.Nl), Nm(other.Nm), 
+    Grid_Info(const Grid_Info& other): l0(other.l0), m0(other.m0), 
                                         Np(other.Np),
                                         mass(other.mass), charge(other.charge),
                                         axis(other.axis){}
     ~Grid_Info(){};
 
-    const vector<size_t> Nl;
-    const vector<size_t> Nm;
+    const vector<size_t> l0;
+    const vector<size_t> m0;
     const vector<size_t> Np;
     const vector<double> mass;
     const vector<double> charge;
@@ -68,10 +68,10 @@ namespace Setup_Y {
     valarray<double>& density, valarray<double>& temperature,const double mass);    
 
     void init_f1(size_t s, SHarmonic1D& h, const valarray<double>& p, const valarray<double>& x, 
-    valarray<double>& density, valarray<double>& temperature,const double mass);    
+    valarray<double>& density, valarray<double>& temperature, valarray<double>& jx, const SHarmonic1D& f0, const double mass);
 
     void init_f2(size_t s, SHarmonic1D& h, const valarray<double>& p, const valarray<double>& x, 
-    valarray<double>& density, valarray<double>& temperature,const double mass);    
+    valarray<double>& density, valarray<double>& temperature, const double mass);
 
 //      Initialize the appropriate density and temperature profiles (from the list below)
     void initialize(State1D &Y, Grid_Info &grid);

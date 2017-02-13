@@ -41,8 +41,10 @@
 //  Constructor
 //-------------------------------------------------------------------
         : dt(deltat),
-        pgrid_s1(Algorithms::MakeAxis(DF1.pmax()/(2.0*DF1(0,0).nump()-1.0),DF1.pmax(),DF1(0,0).nump())),
-        pgrid_s2(Algorithms::MakeAxis(DF2.pmax()/(2.0*DF2(0,0).nump()-1.0),DF2.pmax(),DF2(0,0).nump())),
+//        pgrid_s1(Algorithms::MakeAxis(DF1.pmax()/(2.0*DF1(0,0).nump()-1.0),DF1.pmax(),DF1(0,0).nump())),
+//        pgrid_s2(Algorithms::MakeAxis(DF2.pmax()/(2.0*DF2(0,0).nump()-1.0),DF2.pmax(),DF2(0,0).nump())),
+        pgrid_s1(Algorithms::MakeCAxis(0.0,DF1.pmax(),DF1(0,0).nump())),
+        pgrid_s2(Algorithms::MakeCAxis(0.0,DF2.pmax(),DF2(0,0).nump())),
         // f1(DF1(0,0)),f2(DF2(0,0)),
         fslope(0.0, DF1(0,0).nump()),
         // f0(0.0, DF1(0,0).nump()),
@@ -69,8 +71,8 @@
          I4_s1(0.0, DF2(0,0).nump()) ///<      Integrals
         {
         
-        Nbc = Input::List().RKLevel;
-        szx = Input::List().NxLocal[0];  
+        Nbc = Input::List().BoundaryCells;
+        szx = Input::List().NxLocal[0];
 
         m2 = DF2.mass()  ; m1 = DF1.mass();
         z2 = DF2.q();      z1 = DF1.q();
@@ -321,8 +323,8 @@
         {
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
           h = deltat/static_cast<double>(num_h);
-        Nbc = Input::List().RKLevel;
-        szx = Input::List().NxLocal[0];  //Input::List().numx;      // size of useful x axis 
+        Nbc = Input::List().BoundaryCells;
+        szx = Input::List().NxLocal[0];  //Input::List().numx;      // size of useful x axis
     }
 //-------------------------------------------------------------------
 
@@ -378,7 +380,8 @@
        : 
 //       Pre-Calculated Constants
 //      INCLUDED pmax[0] here only because pmax currently is vector having elements for two species
-         vr(Algorithms::MakeAxis(pmax/(2.0*nump-1.0),pmax,nump)), 
+//         vr(Algorithms::MakeAxis(pmax/(2.0*nump-1.0),pmax,nump)),
+        vr(Algorithms::MakeCAxis(0.0,pmax,nump)),
 //       Constants for Integrals
          U4(0.0,  nump), 
          U4m1(0.0,nump), 
@@ -680,7 +683,7 @@
          {
      
         
-        Nbc = Input::List().RKLevel;
+        Nbc = Input::List().BoundaryCells;
         szx = Input::List().NxLocal[0];
 
     }

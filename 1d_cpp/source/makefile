@@ -20,7 +20,7 @@ EXEC_DIR = ../bin
 TMP_DIR = ./tmp
 
 
-OBJECTS = input.o state.o formulary.o setup.o vlasov.o nmethods.o interspeciescollisions.o collisions.o fluid.o implicitE.o parallel.o export.o laser.o main.o 
+OBJECTS = input.o state.o formulary.o setup.o vlasov.o nmethods.o interspeciescollisions.o collisions.o fluid.o implicitE.o parallel.o export.o main.o
 
 EXEC = oshun1d.e
 

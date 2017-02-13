@@ -50,7 +50,7 @@
             IB_f00(valarray<double>& fslope, double pmax);
          
 //          Explicit Advance
-            valarray<double>& Getslope(const valarray<double>& fin, const double vos);    
+            valarray<double>& Getslope(const valarray<double>& fin, const double vos, const double Zval);
         };
 //--------------------------------------------------------------
 //**************************************************************
@@ -73,7 +73,7 @@
             RK4_IB(valarray<double>& fin, double pmax, int tout_start);
 
 //          Main function
-            RK4_IB& advance(const double vosc);    
+            RK4_IB& advance(const double vosc, const double Zval);
         
 //          Access
             double&  tout();
@@ -83,7 +83,7 @@
 
         private:
 //          Helper functions
-            valarray<double>& F(const valarray<double>& fin, const double vosc);
+            valarray<double>& F(const valarray<double>& fin, const double vosc, const double Zval);
 
 //          Variables
     	    valarray<double>  f0, f1, fh;
@@ -110,7 +110,7 @@
             InverseBremsstrahlung(double pmax, size_t nump, size_t numx, int tout_start, const valarray<double>& grid);
          
 //          Explicit Advance
-            void loop(SHarmonic1D& f0, const double& tnew);  
+            void loop(SHarmonic1D& f0, valarray<double>& Zarray, const double& tnew);
 
             valarray<double>  U2, U2m1;//, U1, U1m1;
 

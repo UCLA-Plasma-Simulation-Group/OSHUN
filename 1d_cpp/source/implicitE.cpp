@@ -68,7 +68,7 @@
          tempz(0.0,emf.Ex().numx()),
          fourpioverthree(4.0*M_PI/3.0,0.0)
          {
-            Nbc = Input::List().RKLevel;
+            Nbc = Input::List().BoundaryCells;
             szx = Input::List().NxLocal[0];
             // for (size_t s(0); s<Yin.Species();++s)
             // {
@@ -258,30 +258,32 @@
          idx(static_cast< complex<double> >(0.5/deltax))
          {
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-            Nbc = Input::List().RKLevel;
-            szx = Input::List().numx; 
+            Nbc = Input::List().BoundaryCells;
+            szx = Input::List().NxLocal[0];
     }
 //--------------------------------------------------------------
 
 //--------------------------------------------------------------
     void Electric_Field_Methods::Implicit_E_Field::
-    advance(Algorithms::RK2<State1D>* rk, State1D& Yin, collisions& coll, VlasovFunctor1D_implicitE_p2* rkF){//, double time, double dt){ 
+    advance(Algorithms::RK4<State1D>* rk, State1D& Yin, collisions& coll, VlasovFunctor1D_implicitE_p2* rkF){//, double time, double dt){
 //--------------------------------------------------------------
 //  Calculate the implicit electric field
 //--------------------------------------------------------------
 
         int zeros_in_det(1);      // This counts the number of zeros in the determinant 
         int execution_attempt(0); // This counts the number of attempts to find invert the E-field
-            
-        vector<SHarmonic1D> f00;
-        vector<SHarmonic1D> f10;vector<SHarmonic1D> f11;
-        vector<SHarmonic1D> f20;vector<SHarmonic1D> f21;vector<SHarmonic1D> f22;
+        State1D Yh(Yin);
+        Yh = 0.0;
 
-        for (size_t s(0); s < Yin.Species(); ++s){
-            f00.push_back(Yin.SH(s,0,0));
-            f10.push_back(Yin.SH(s,1,0));f11.push_back(Yin.SH(s,1,1));
-            f20.push_back(Yin.SH(s,2,0));f21.push_back(Yin.SH(s,2,1));f22.push_back(Yin.SH(s,2,2));
-        }
+        // vector<SHarmonic1D> f00;
+        // vector<SHarmonic1D> f10;vector<SHarmonic1D> f11;
+        // vector<SHarmonic1D> f20;vector<SHarmonic1D> f21;vector<SHarmonic1D> f22;
+
+        // for (size_t s(0); s < Yin.Species(); ++s){
+        //     f00.push_back(Yin.SH(s,0,0));
+        //     f10.push_back(Yin.SH(s,1,0));f11.push_back(Yin.SH(s,1,1));
+        //     f20.push_back(Yin.SH(s,2,0));f21.push_back(Yin.SH(s,2,1));f22.push_back(Yin.SH(s,2,2));
+        // }
 
         FindDE(Yin.EMF());                           //  Reset DE
 
@@ -293,54 +295,72 @@
 // - - - - - - - - - - - - - - - - - - - - - -  
                                                         // Effect of E = 0 on f00, f10, f11
             
-            coll.advancef1(Yin);                 // Collisions for f10, f11
-            J0.calculate_J(Yin);
+            coll.advancef1(Yin,Yh);                 // Collisions for f10, f11
+            // for (size_t s(0); s < Yin.Species(); ++s){
+            //     Yin.SH(s,1,0) = Yh.SH(s,1,0);
+            //     Yin.SH(s,1,1) = Yh.SH(s,1,0);
+            // }   
+            J0.calculate_J(Yh);
             
             
-            for (size_t s(0); s < Yin.Species(); ++s){
-                Yin.SH(s,0,0) = f00[s];
-                Yin.SH(s,1,0) = f10[s];Yin.SH(s,1,1) = f11[s];
-            // Yin.SH(s,2,0) = f20[s];Yin.SH(s,2,1) = f21[s];Yin.SH(s,2,2) = f22[s];
-            }       
+            // for (size_t s(0); s < Yin.Species(); ++s){
+            //     Yin.SH(s,0,0) = f00[s];
+            //     Yin.SH(s,1,0) = f10[s];Yin.SH(s,1,1) = f11[s];
+            // // Yin.SH(s,2,0) = f20[s];Yin.SH(s,2,1) = f21[s];Yin.SH(s,2,2) = f22[s];
+            // }       
 
             Yin.EMF().Ex() = DE.Ex();             // Ex = DEx
             Yin = (*rk)(Yin, dt, rkF, 1);           // Effect of DEx on Y00, Y10, Y11, Y20, Y21, Y22            
-            coll.advancef1(Yin);                 // Collisions for f10, f11
-            J_Ex.calculate_J(Yin);                // Evaluate J(DEx)
+            coll.advancef1(Yin,Yh);                 // Collisions for f10, f11
+            // for (size_t s(0); s < Yin.Species(); ++s){
+            //     Yin.SH(s,1,0) = Yh.SH(s,1,0);
+            //     Yin.SH(s,1,1) = Yh.SH(s,1,0);
+            // }                    // Collisions for f10, f11
+            J_Ex.calculate_J(Yh);                // Evaluate J(DEx)
             
             // Ytemp = Yin;
-            for (size_t s(0); s < Yin.Species(); ++s){
-            Yin.SH(s,0,0) = f00[s];
-            Yin.SH(s,1,0) = f10[s];Yin.SH(s,1,1) = f11[s];
-            Yin.SH(s,2,0) = f20[s];Yin.SH(s,2,1) = f21[s];Yin.SH(s,2,2) = f22[s];
-            }       
+            // for (size_t s(0); s < Yin.Species(); ++s){
+            // Yin.SH(s,0,0) = f00[s];
+            // Yin.SH(s,1,0) = f10[s];Yin.SH(s,1,1) = f11[s];
+            // Yin.SH(s,2,0) = f20[s];Yin.SH(s,2,1) = f21[s];Yin.SH(s,2,2) = f22[s];
+            // }       
            
                 // 
             Yin.EMF().Ey() = DE.Ey();             // Ey = DEy
             Yin = (*rk)(Yin, dt, rkF, 2);           // Effect of DEy on Y00, Y10, Y11, Y20, Y21, Y22
-            coll.advancef1(Yin);                 // Collisions for f10, f11
-            J_Ey.calculate_J(Yin);                 // Evaluate J(DEy)
+            coll.advancef1(Yin,Yh);                 // Collisions for f10, f11
+            // for (size_t s(0); s < Yin.Species(); ++s){
+            //     Yin.SH(s,1,0) = Yh.SH(s,1,0);
+            //     Yin.SH(s,1,1) = Yh.SH(s,1,0);
+            // }                    // Collisions for f10, f11
+            J_Ey.calculate_J(Yh);                 // Evaluate J(DEy)
             
             // Ytemp = Yin;
-            for (size_t s(0); s < Yin.Species(); ++s){
-                Yin.SH(s,0,0) = f00[s];
-                Yin.SH(s,1,0) = f10[s];Yin.SH(s,1,1) = f11[s];
-                Yin.SH(s,2,0) = f20[s];Yin.SH(s,2,1) = f21[s];Yin.SH(s,2,2) = f22[s];
-            }       
+            // for (size_t s(0); s < Yin.Species(); ++s){
+            //     Yin.SH(s,0,0) = f00[s];
+            //     Yin.SH(s,1,0) = f10[s];Yin.SH(s,1,1) = f11[s];
+            //     Yin.SH(s,2,0) = f20[s];Yin.SH(s,2,1) = f21[s];Yin.SH(s,2,2) = f22[s];
+            // }       
 // - - - - - - - - - - - - - - - - - - - - - -
 
            
             Yin.EMF().Ez() = DE.Ez();             // Ey = DEy
             Yin = (*rk)(Yin, dt, rkF, 3);           // Effect of DEy on Y00, Y10, Y11, Y20, Y21, Y22
-            coll.advancef1(Yin);                 // Collisions for f10, f11
-            J_Ez.calculate_J(Yin); //exit(1);               // Evaluate J(DEy)
+            
+            coll.advancef1(Yin,Yh);                 // Collisions for f10, f11
+            // for (size_t s(0); s < Yin.Species(); ++s){
+            //     Yin.SH(s,1,0) = Yh.SH(s,1,0);
+            //     Yin.SH(s,1,1) = Yh.SH(s,1,0);
+            // }   
+
+            J_Ez.calculate_J(Yh); //exit(1);               // Evaluate J(DEy)
             
             // Ytemp = Yin;
-            for (size_t s(0); s < Yin.Species(); ++s){
-                Yin.SH(s,0,0) = f00[s];
-                Yin.SH(s,1,0) = f10[s];Yin.SH(s,1,1) = f11[s];
-                Yin.SH(s,2,0) = f20[s];Yin.SH(s,2,1) = f21[s];Yin.SH(s,2,2) = f22[s];
-            }    
+            // for (size_t s(0); s < Yin.Species(); ++s){
+            //     Yin.SH(s,0,0) = f00[s];
+            //     Yin.SH(s,1,0) = f10[s];Yin.SH(s,1,1) = f11[s];
+            //     Yin.SH(s,2,0) = f20[s];Yin.SH(s,2,1) = f21[s];Yin.SH(s,2,2) = f22[s];
+            // }    
 // - - - - - - - - - - - - - - - - - - - - - -
 
                 

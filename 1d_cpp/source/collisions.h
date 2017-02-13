@@ -22,6 +22,92 @@
 /** \addtogroup vfp1d
  *  @{
  */
+class self_f00_implicit_step {
+//-------------------------------------------------------------------
+private:
+
+    double mass;
+    double dt;
+    bool   ib;
+    ///     Define the velocity axis
+    valarray<double>  vr;
+    valarray<double>  dvr;
+    valarray<double>  vrh;
+    valarray<double>  dtoverv2;
+
+
+    ///     Various coefficients for the integrals
+    valarray<double>  p2dp, p2dpm1, phdp, phdpm1, p4dp, laser_Inv_Uav6;
+
+    ///     Rosenbluth Potentials
+    valarray<double>  C_RB, D_RB;
+    double            I4_Lnee;
+
+    ///     Chang-Cooper weighting delta
+    valarray<double>  delta_CC;
+
+    ///     Constants
+    double c_kpre;
+    double vw_coeff_cube;
+
+    Formulary formulas;
+
+    void   update_C_Rosenbluth(valarray<double>& fin);
+    double update_D_Rosenbluth(const size_t& k, valarray<double>& fin, const double& delta);
+    void   update_D_and_delta(valarray<double>& fin);
+    void   update_D_inversebremsstrahlung(const double& Z0, const double& heatingcoefficient, const double& vos);
+    double calc_delta_ChangCooper(const size_t& k, const double& C, const double& D);
+
+public:
+
+    self_f00_implicit_step(const size_t &nump, const double &pmax, const double &_mass, const double &_deltat, bool& _ib);
+
+    void takestep(valarray<double> &fin, valarray<double> &fh, const double& Z0, const double& heating, const double& cooling);
+    void getleftside(valarray<double> &fin, const double& Z0, const double& heating, const double& cooling, Array2D<double> &LHStemp);
+};
+
+//-------------------------------------------------------------------
+/**
+* \class self_f00_explicit_step
+* \brief The top-level container for collisions on l=0.
+*
+*   The self_f00_explicit_step class describes the object that
+*   contains the RK4 algorithm that sets up the explicit solve step.
+*   self_f00_explicit_step has a "loop()" function that pulls the relevant
+*   distribution function and passes it to the RK4 solver.
+*/
+class self_f00_implicit_collisions {
+//--------------------------------------------------------------
+public:
+    /// Constructors/Destructors
+    self_f00_implicit_collisions(const DistFunc1D& DFin, const double& deltat);
+
+    /// This loop calls the RK4_f00 private member that is
+    /// responsible for setting up the RK4 algorithm to advance
+    /// the collision step.
+    void loop(SHarmonic1D& SHin, valarray<double>& Zarray, const double time, SHarmonic1D& SHout);
+
+private:
+    //  Variables
+    valarray<double>            fin, fout;
+    valarray<double>            xgrid;
+    bool                        ib;
+    self_f00_implicit_step      collide;
+
+    ///     Switches for inverse bremsstrahlung and maxwellian cooling
+    bool                        IB_heating;
+    bool                        MX_cooling;
+
+    valarray<double>            heatingprofile;
+    valarray<double>            coolingprofile;
+
+
+    int                         Nbc; ///< Number of boundary cells in each direction
+    int                         szx; ///< Total cells including boundary cells in x-direction
+
+};
+//--------------------------------------------------------------
+
 //-------------------------------------------------------------------
 /** \class  f00_step
  *  \brief  Collisions for l=0
@@ -112,7 +198,7 @@ class self_f00_explicit_step {
 		/// This loop calls the RK4_f00 private member that is
 		/// responsible for setting up the RK4 algorithm to advance
 		/// the collision step. 
-            void loop(SHarmonic1D& SHin);//SHarmonic1D& f0);  
+            void loop(SHarmonic1D& SHin, SHarmonic1D& SHout);
 
         private:
 		//  Variables
@@ -184,7 +270,7 @@ class self_f00_explicit_step {
             self_flm_implicit_step(double pmax, size_t nump, double mass); 
          
 //          Calculate the coefficients
-            void reset_coeff(const valarray<double>& f00, const double Delta_t);    
+            void reset_coeff(const valarray<double>& f00, double Zvalue, const double Delta_t);
 
 //          Explicit Advance
             void advance(valarray<complex<double> >& fin, const int el);    
@@ -211,10 +297,10 @@ class self_f00_explicit_step {
             self_flm_implicit_collisions(const DistFunc1D &DFin, const double& deltat); 
 
 ///         Advance f1_loop for 2D code.
-            void advancef1(DistFunc1D& DF); 
+            void advancef1(DistFunc1D& DF, valarray<double>& Zarray, DistFunc1D& DFh);
 
 ///         Advance flm_loop for 2D code.
-            void advanceflm(DistFunc1D& DF);
+            void advanceflm(DistFunc1D& DF, valarray<double>& Zarray, DistFunc1D& DFh);
 
         private:
             // State1D& Y;
@@ -222,7 +308,8 @@ class self_f00_explicit_step {
 
             int Nbc; ///< Number of boundary cells in each direction
             int szx; ///< Total cells including boundary cells in x-direction
-
+            int f1_m_upperlimit;
+            
             size_t l0; ///< Number of m harmonics.
             size_t m0; ///< Number of m harmonics.
 
@@ -249,13 +336,14 @@ class self_f00_explicit_step {
         /// Constructors/Destructors
             self_collisions(const DistFunc1D& DFin, const double& deltat); 
             // ~self_collisions();
-            void advancef00(SHarmonic1D& f0);
-            void advancef1(DistFunc1D& DF);
-            void advanceflm(DistFunc1D& DF);
+            void advancef00(SHarmonic1D& f00, valarray<double>& Zarray, const double time, SHarmonic1D& f00h);
+            void advancef1(DistFunc1D& DF, valarray<double>& Zarray, DistFunc1D& DFh);
+            void advanceflm(DistFunc1D& DF, valarray<double>& Zarray, DistFunc1D& DFh);
 
         private:
         //  Variables
-            self_f00_explicit_collisions self_f00_collisions;
+            self_f00_explicit_collisions self_f00_exp_collisions;
+            self_f00_implicit_collisions self_f00_imp_collisions;
             self_flm_implicit_collisions self_flm_collisions;
         };
 
@@ -272,9 +360,10 @@ class self_f00_explicit_step {
         /// Constructors/Destructors
             collisions(const State1D& Yin, const double& deltat); 
             // ~self_collisions();
-            void advancef0(State1D& Y);
-            void advancef1(State1D& Y);
-            void advanceflm(State1D& Y);
+            void advance(State1D& Y, const Clock& W);
+            void advancef0(State1D& Y, const Clock& W, State1D& Yh);
+            void advancef1(State1D& Y, State1D& Yh);
+            void advanceflm(State1D& Y, State1D& Yh);
 
             vector<self_collisions> self();
             // void advancef1(State1D& Y);
@@ -282,6 +371,7 @@ class self_f00_explicit_step {
 
         private:
         //  Variables
+            State1D Yh;
             vector<self_collisions> self_coll;
             // vector<interspecies_collisions> unself_coll;
             vector<interspecies_f00_explicit_collisions> unself_f00_coll;

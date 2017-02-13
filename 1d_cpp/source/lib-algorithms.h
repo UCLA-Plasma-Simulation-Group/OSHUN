@@ -96,23 +96,25 @@ public:
 //  Local  axes x(0) --> x, x(1) --> y, x(2) --> z            
     valarray<T> x(size_t i)     const { return *(_x[i].v); }
     size_t      Nx(size_t i)    const  { return (*(_x[i].v)).size(); }
-    T           xmin(size_t i)  const  { return (*(_x[i].v))[0]; }
-    T           xmax(size_t i)  const  { return (*(_x[i].v))[Nx(i)-1]; }
+    T           xmin(size_t i)  const  { return (*(_x[i].v))[0]-0.5*_dx[i]; }
+    T           xmax(size_t i)  const  { return (*(_x[i].v))[Nx(i)-1]+0.5*_dx[i]; }
     size_t      xdim()          const  { return _x.size();  }
+    T           dx(size_t i)    const  { return _dx[i]; }
                  
 //  Global axes xg(0) --> x, xg(1) --> y, xg(2) --> z            
     valarray<T> xg(size_t i)    const  { return *(_xg[i].v); }
     size_t      Nxg(size_t i)   const  { return (*(_xg[i].v)).size(); }
-    T           xgmin(size_t i) const  { return (*(_xg[i].v))[0]; }
-    T           xgmax(size_t i) const  { return (*(_xg[i].v))[Nxg(i)-1]; }
+    T           xgmin(size_t i) const  { return (*(_xg[i].v))[0]-0.5*_dx[i]; }
+    T           xgmax(size_t i) const  { return (*(_xg[i].v))[Nxg(i)-1]+0.5*_dx[i]; }
     size_t      xgdim()         const  { return _xg.size();  }
                  
 //  Global axes p(0) --> species1, p(1) --> species2 ...
     valarray<T> p(size_t i)     const  { return *(_p[i].v); }
     size_t      Np(size_t i)    const  { return (*(_p[i].v)).size(); }
-    T           pmin(size_t i)  const  { return (*(_p[i].v))[0]; }
-    T           pmax(size_t i)  const  { return (*(_p[i].v))[Np(i)-1]; }
+    T           pmin(size_t i)  const  { return (*(_p[i].v))[0]-0.5*_dp[i]; }
+    T           pmax(size_t i)  const  { return (*(_p[i].v))[Np(i)-1]+0.5*_dp[i]; }
     size_t      pdim()          const  { return _p.size();  }
+    T           dp(size_t i)    const  { return _dp[i]; }
                  
 //  Global axes px(0) --> species1, px(1) --> species2 ...
     valarray<T> px(size_t i)    const  { return *(_px[i].v); }
@@ -145,10 +147,22 @@ public:
         } 
         for (size_t i(0); i < _Nxg.size(); ++i) {
             _xg.push_back( CAxis<T>( _xgmin[i], _xgmax[i], _Nxg[i])); 
-        } 
+        }
+        for (size_t i(0); i < _Nxg.size(); ++i) {
+            _dx.push_back((_xmax[i]-_xmin[i])/(static_cast<T>(_Nx[i])));
+        }
+
+//        for (size_t i(0); i < _Np.size(); ++i) {
+//            _p.push_back( Axis<T>( _pmax[i]/(static_cast<T>(2 * _Np[i]-1)), _pmax[i], _Np[i]) );
+//        }
         for (size_t i(0); i < _Np.size(); ++i) {
-            _p.push_back( Axis<T>( _pmax[i]/(static_cast<T>(2 * _Np[i]-1)), _pmax[i], _Np[i]) ); 
-        } 
+            _p.push_back( CAxis<T>(static_cast<T>(0.0), _pmax[i], _Np[i]) );
+        }
+
+        for (size_t i(0); i < _Np.size(); ++i) {
+            _dp.push_back((_pmax[i])/(static_cast<T>(_Np[i])));
+        }
+
         for (size_t i(0); i < _Npx.size(); ++i) {
             _px.push_back( Axis<T>( static_cast<T>(-1.0) * _pmax[i], _pmax[i], _Npx[i])); 
         } 
@@ -167,9 +181,22 @@ public:
         for (size_t i(0); i < a.xgdim(); ++i) {
             _xg.push_back( CAxis<T>(a.xgmin(i), a.xgmax(i), a.Nxg(i)) );
         }
-        for (size_t i(0); i < a.pdim(); ++i) {
-            _p.push_back( Axis<T>(a.pmin(i),a.pmax(i),a.Np(i)) );
+        for (size_t i(0); i < a.xdim(); ++i) {
+            _dx.push_back( (a.xgmax(i)-a.xgmin(i))/a.Nxg(i) );
         }
+//        for (size_t i(0); i < a.pdim(); ++i) {
+//            _p.push_back( Axis<T>(a.pmin(i),a.pmax(i),a.Np(i)) );
+//        }
+        for (size_t i(0); i < a.pdim(); ++i) {
+            _p.push_back( CAxis<T>(a.pmin(i),a.pmax(i),a.Np(i)) );
+        }
+        for (size_t i(0); i < a.pdim(); ++i) {
+            _dp.push_back( a.pmax(i)/a.Np(i) );
+        }
+        for (size_t i(0); i < a.pdim(); ++i) {
+            _p.push_back( CAxis<T>(a.pmin(i),a.pmax(i),a.Np(i)) );
+        }
+
         for (size_t i(0); i < a.pxdim(); ++i) {
             _px.push_back( Axis<T>( a.pxmin(i), a.pxmin(i), a.Npx(i)) );
         }
@@ -185,8 +212,12 @@ public:
 
 private:
     // vector< Axis<T> > _x, _xg, _p, _px;                        
-    vector< Axis<T> > _p, _px, _py, _pz;                        
-    vector< CAxis<T> > _x, _xg;                              
+    vector< Axis<T> >  _px, _py, _pz;
+    vector< CAxis<T> > _x, _xg, _p;
+    vector<T>           _dx, _dp;
+
+
+
 
 };
 //--------------------------------------------------------------
@@ -278,46 +309,74 @@ private:
 
        T integral(0.0);     
 // TODO:   Integral values up to the zeroth cell and above the last cell
-       integral += q[0] * pow(x[0], p)                   // += Q_0*x_0^p * (x_1-x_0) 
-                   * (x[1]-x[0]); 
-       for (size_t i(1); i < q.size()-1; ++i){           // += Q_i*x_i^p * (x_{i+1}-x_{i-1}) 
-           integral += q[i] * pow(x[i], p) 
-                       * (x[i+1] - x[i-1]);
-       }
-       integral += q[q.size()-1] * pow(x[q.size()-1], p) // += Q_n*x_n^p * (x_{n}-x_{n-1}) 
-                       * (x[q.size()-1]-x[q.size()-2]); 
-       return integral*0.5;                              
-   }
+//       integral += q[0] * pow(x[0], p)                   // += Q_0*x_0^p * (x_1-x_0)
+//                   * (x[1]-x[0]);
+//       for (size_t i(1); i < q.size()-1; ++i){           // += Q_i*x_i^p * (x_{i+1}-x_{i-1})
+//           integral += q[i] * pow(x[i], p)
+//                       * (x[i+1] - x[i-1]);
+//       }
+//       integral += q[q.size()-1] * pow(x[q.size()-1], p) // += Q_n*x_n^p * (x_{n}-x_{n-1})
+//                       * (x[q.size()-1]-x[q.size()-2]);
+//       return integral*0.5;
+
+        integral += q[0] * pow(x[0], p)                   // += Q_0*x_0^p * (x_1-x_0)
+                    * (x[1]-x[0]);
+        for (size_t i(1); i < q.size()-1; ++i){           // += Q_i*x_i^p * (x_{i+1}-x_{i-1})
+            integral += q[i] * pow(x[i], p)
+                        * 0.5*(x[i+1] - x[i-1]);
+        }
+        integral += q[q.size()-1] * pow(x[q.size()-1], p) // += Q_n*x_n^p * (x_{n}-x_{n-1})
+                    * (x[q.size()-1]-x[q.size()-2]);
+        return integral;
+    }
 
    template<class T> 
    T moment(const vector<T> q, const valarray<T> x, const int p){
 
        T integral(0.0);     
 // TODO:   Integral values up to the zeroth cell and above the last cell
-       integral += q[0] * pow(x[0], p)                   // += Q_0*x_0^p * (x_1-x_0) 
-                   * (x[1]-x[0]); 
-       for (size_t i(1); i < q.size()-1; ++i){           // += Q_i*x_i^p * (x_{i+1}-x_{i-1}) 
-           integral += q[i] * pow(x[i], p) 
-                       * (x[i+1] - x[i-1]);
+//       integral += q[0] * pow(x[0], p)                   // += Q_0*x_0^p * (x_1-x_0)
+//                   * (x[1]-x[0]);
+//       for (size_t i(1); i < q.size()-1; ++i){           // += Q_i*x_i^p * (x_{i+1}-x_{i-1})
+//           integral += q[i] * pow(x[i], p)
+//                       * (x[i+1] - x[i-1]);
+//       }
+//       integral += q[q.size()-1] * pow(x[q.size()-1], p) // += Q_n*x_n^p * (x_{n}-x_{n-1})
+//                       * (x[q.size()-1]-x[q.size()-2]);
+//       return integral*0.5;
+       integral += q[0] * pow(x[0], p)                   // += Q_0*x_0^p * (x_1-x_0)
+                   * (x[1]-x[0]);
+       for (size_t i(1); i < q.size()-1; ++i){           // += Q_i*x_i^p * (x_{i+1}-x_{i-1})
+           integral += q[i] * pow(x[i], p)
+                       * 0.5*(x[i+1] - x[i-1]);
        }
-       integral += q[q.size()-1] * pow(x[q.size()-1], p) // += Q_n*x_n^p * (x_{n}-x_{n-1}) 
-                       * (x[q.size()-1]-x[q.size()-2]); 
-       return integral*0.5;                              
+       integral += q[q.size()-1] * pow(x[q.size()-1], p) // += Q_n*x_n^p * (x_{n}-x_{n-1})
+                   * (x[q.size()-1]-x[q.size()-2]);
+       return integral;
    }
    template<class T> 
    T moment(const valarray<T> q, const valarray<T> x, const int p){
 
        T integral(0.0);     
 // TODO:   Integral values up to the zeroth cell and above the last cell
-       integral += q[0] * pow(x[0], p)                   // += Q_0*x_0^p * (x_1-x_0) 
-                   * (x[1]-x[0]); 
-       for (size_t i(1); i < q.size()-1; ++i){           // += Q_i*x_i^p * (x_{i+1}-x_{i-1}) 
-           integral += q[i] * pow(x[i], p) 
-                       * (x[i+1] - x[i-1]);
+//       integral += q[0] * pow(x[0], p)                   // += Q_0*x_0^p * (x_1-x_0)
+//                   * (x[1]-x[0]);
+//       for (size_t i(1); i < q.size()-1; ++i){           // += Q_i*x_i^p * (x_{i+1}-x_{i-1})
+//           integral += q[i] * pow(x[i], p)
+//                       * (x[i+1] - x[i-1]);
+//       }
+//       integral += q[q.size()-1] * pow(x[q.size()-1], p) // += Q_n*x_n^p * (x_{n}-x_{n-1})
+//                       * (x[q.size()-1]-x[q.size()-2]);
+//       return integral*0.5;
+       integral += q[0] * pow(x[0], p)                   // += Q_0*x_0^p * (x_1-x_0)
+                   * (x[1]-x[0]);
+       for (size_t i(1); i < q.size()-1; ++i){           // += Q_i*x_i^p * (x_{i+1}-x_{i-1})
+           integral += q[i] * pow(x[i], p)
+                       * 0.5*(x[i+1] - x[i-1]);
        }
-       integral += q[q.size()-1] * pow(x[q.size()-1], p) // += Q_n*x_n^p * (x_{n}-x_{n-1}) 
-                       * (x[q.size()-1]-x[q.size()-2]); 
-       return integral*0.5;                              
+       integral += q[q.size()-1] * pow(x[q.size()-1], p) // += Q_n*x_n^p * (x_{n}-x_{n-1})
+                   * (x[q.size()-1]-x[q.size()-2]);
+       return integral;
    }
 //--------------------------------------------------------------
 // relativistic moments for inverse gamma and gamma
@@ -327,37 +386,62 @@ private:
 
        T integral(0.0);     
 // TODO:   Integral values up to the zeroth cell and above the last cell
-       integral += q[0] * pow(x[0], p)                   // += Q_0*x_0^p * (x_1-x_0) 
-                   * (x[1]-x[0])
-                   / sqrt(1.0+x[0]*x[0]); 
-       for (size_t i(1); i < q.size()-1; ++i){           // += Q_i*x_i^p * (x_{i+1}-x_{i-1}) 
-           integral += q[i] * pow(x[i], p) 
-                       * (x[i+1] - x[i-1])
-                       / sqrt(1.0+x[i]*x[i]);
-       }
-       integral += q[q.size()-1] * pow(x[q.size()-1], p) // += Q_n*x_n^p * (x_{n}-x_{n-1}) 
-                       * (x[q.size()-1]-x[q.size()-2])
-                       / sqrt(1.0+x[q.size()-1]*x[q.size()-1]); 
-       return integral*0.5;                              
-   }
+//       integral += q[0] * pow(x[0], p)                   // += Q_0*x_0^p * (x_1-x_0)
+//                   * (x[1]-x[0])
+//                   / sqrt(1.0+x[0]*x[0]);
+//       for (size_t i(1); i < q.size()-1; ++i){           // += Q_i*x_i^p * (x_{i+1}-x_{i-1})
+//           integral += q[i] * pow(x[i], p)
+//                       * (x[i+1] - x[i-1])
+//                       / sqrt(1.0+x[i]*x[i]);
+//       }
+//       integral += q[q.size()-1] * pow(x[q.size()-1], p) // += Q_n*x_n^p * (x_{n}-x_{n-1})
+//                       * (x[q.size()-1]-x[q.size()-2])
+//                       / sqrt(1.0+x[q.size()-1]*x[q.size()-1]);
+//       return integral*0.5;
+
+        integral += q[0] * pow(x[0], p)                   // += Q_0*x_0^p * (x_1-x_0)
+                    * (x[1]-x[0])
+                    / sqrt(1.0+x[0]*x[0]);
+        for (size_t i(1); i < q.size()-1; ++i){           // += Q_i*x_i^p * (x_{i+1}-x_{i-1})
+            integral += q[i] * pow(x[i], p)
+                        * 0.5*(x[i+1] - x[i-1])
+                        / sqrt(1.0+x[i]*x[i]);
+        }
+        integral += q[q.size()-1] * pow(x[q.size()-1], p) // += Q_n*x_n^p * (x_{n}-x_{n-1})
+                    * (x[q.size()-1]-x[q.size()-2])
+                    / sqrt(1.0+x[q.size()-1]*x[q.size()-1]);
+        return integral;
+    }
 
    template<class T> 
    T relativistic_invg_moment(const valarray<T> q, const valarray<T> x, const int p){
 
        T integral(0.0);     
 // TODO:   Integral values up to the zeroth cell and above the last cell
-       integral += q[0] * pow(x[0], p)                   // += Q_0*x_0^p * (x_1-x_0) 
+//       integral += q[0] * pow(x[0], p)                   // += Q_0*x_0^p * (x_1-x_0)
+//                   * (x[1]-x[0])
+//                   / sqrt(1.0+x[0]*x[0]);
+//       for (size_t i(1); i < q.size()-1; ++i){           // += Q_i*x_i^p * (x_{i+1}-x_{i-1})
+//           integral += q[i] * pow(x[i], p)
+//                       * (x[i+1] - x[i-1])
+//                       / sqrt(1.0+x[i]*x[i]);
+//       }
+//       integral += q[q.size()-1] * pow(x[q.size()-1], p) // += Q_n*x_n^p * (x_{n}-x_{n-1})
+//                       * (x[q.size()-1]-x[q.size()-2])
+//                       / sqrt(1.0+x[q.size-1]*x[q.size-1]);
+//       return integral*0.5;
+       integral += q[0] * pow(x[0], p)                   // += Q_0*x_0^p * (x_1-x_0)
                    * (x[1]-x[0])
-                   / sqrt(1.0+x[0]*x[0]); 
-       for (size_t i(1); i < q.size()-1; ++i){           // += Q_i*x_i^p * (x_{i+1}-x_{i-1}) 
-           integral += q[i] * pow(x[i], p) 
-                       * (x[i+1] - x[i-1])
+                   / sqrt(1.0+x[0]*x[0]);
+       for (size_t i(1); i < q.size()-1; ++i){           // += Q_i*x_i^p * (x_{i+1}-x_{i-1})
+           integral += q[i] * pow(x[i], p)
+                       * 0.5*(x[i+1] - x[i-1])
                        / sqrt(1.0+x[i]*x[i]);
        }
-       integral += q[q.size()-1] * pow(x[q.size()-1], p) // += Q_n*x_n^p * (x_{n}-x_{n-1}) 
-                       * (x[q.size()-1]-x[q.size()-2])
-                       / sqrt(1.0+x[q.size-1]*x[q.size-1]); 
-       return integral*0.5;                              
+       integral += q[q.size()-1] * pow(x[q.size()-1], p) // += Q_n*x_n^p * (x_{n}-x_{n-1})
+                   * (x[q.size()-1]-x[q.size()-2])
+                   / sqrt(1.0+x[q.size-1]*x[q.size-1]);
+       return integral;
    }
 //--------------------------------------------------------------
    template<class T> 
@@ -365,19 +449,31 @@ private:
 
        T integral(0.0);     
 // TODO:   Integral values up to the zeroth cell and above the last cell
-       integral += q[0] * pow(x[0], p)                   // += Q_0*x_0^p * (x_1-x_0) 
-                   * (x[1]-x[0])
-                   * sqrt(1.0+x[0]*x[0]); 
-       for (size_t i(1); i < q.size()-1; ++i){           // += Q_i*x_i^p * (x_{i+1}-x_{i-1}) 
-           integral += q[i] * pow(x[i], p) 
-                       * (x[i+1] - x[i-1])
-                       * sqrt(1.0+x[i]*x[i]);
-       }
-       integral += q[q.size()-1] * pow(x[q.size()-1], p) // += Q_n*x_n^p * (x_{n}-x_{n-1}) 
-                       * (x[q.size()-1]-x[q.size()-2])
-                       * sqrt(1.0+x[q.size-1]*x[q.size-1]); 
-       return integral*0.5;                              
-   }
+//       integral += q[0] * pow(x[0], p)                   // += Q_0*x_0^p * (x_1-x_0)
+//                   * (x[1]-x[0])
+//                   * sqrt(1.0+x[0]*x[0]);
+//       for (size_t i(1); i < q.size()-1; ++i){           // += Q_i*x_i^p * (x_{i+1}-x_{i-1})
+//           integral += q[i] * pow(x[i], p)
+//                       * (x[i+1] - x[i-1])
+//                       * sqrt(1.0+x[i]*x[i]);
+//       }
+//       integral += q[q.size()-1] * pow(x[q.size()-1], p) // += Q_n*x_n^p * (x_{n}-x_{n-1})
+//                       * (x[q.size()-1]-x[q.size()-2])
+//                       * sqrt(1.0+x[q.size-1]*x[q.size-1]);
+//       return integral*0.5;
+        integral += q[0] * pow(x[0], p)                   // += Q_0*x_0^p * (x_1-x_0)
+                    * (x[1]-x[0])
+                    * sqrt(1.0+x[0]*x[0]);
+        for (size_t i(1); i < q.size()-1; ++i){           // += Q_i*x_i^p * (x_{i+1}-x_{i-1})
+            integral += q[i] * pow(x[i], p)
+                        * 0.5*(x[i+1] - x[i-1])
+                        * sqrt(1.0+x[i]*x[i]);
+        }
+        integral += q[q.size()-1] * pow(x[q.size()-1], p) // += Q_n*x_n^p * (x_{n}-x_{n-1})
+                    * (x[q.size()-1]-x[q.size()-2])
+                    * sqrt(1.0+x[q.size-1]*x[q.size-1]);
+        return integral;
+    }
 //--------------------------------------------------------------
 
 
@@ -647,6 +743,42 @@ private:
 
 //--------------------------------------------------------------
 }
+//**************************************************************
+
+
+
+//**************************************************************
+//  This Clock controls an iteration loop, given an initial
+//  time tout_start*dt_out it evaluates the number of time-
+//  steps it takes to get to (tout_start+1)*dt_out and can
+//  be incremented;
+
+class Clock {
+public:
+//      Constructor
+    Clock(int tout_start, double dt_out, double CFL) {
+        _hstep = 0;
+        _t_start = double(tout_start)*dt_out;
+        _numh  = size_t(static_cast<int>(dt_out/CFL))+1;
+        _h     = dt_out/static_cast<double>(_numh);
+    }
+
+//      Clock readings
+    double h()     const {return _h;}                    // Step size
+    size_t numh()  const {return _numh;}                 // # steps
+    size_t tick()  const {return _hstep;}                // Current step
+    double time()  const {return tick()*h() + _t_start;} // Current time
+
+//      Increment time
+    Clock& operator++() { ++_hstep; return *this;}
+
+private:
+    double _t_start;   // Initial output timestep
+    size_t _numh;      // # of steps derived from this CFL
+    double _h;         // resulting time-step from CFL
+    size_t _hstep;
+};
+//--------------------------------------------------------------
 //**************************************************************
 
 

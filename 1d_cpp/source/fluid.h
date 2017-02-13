@@ -9,18 +9,19 @@
             Fluid_Equation_1D(double xmin, double xmax, size_t Nx); 
             
             /// Momentum (and Energy and Density?) Update
-            valarray<double>  density(const Hydro1D& Hin);//State1D& Yin, double deltat);
-            valarray<double>  velocity(const State1D& Hin); //State1D& Yin,double deltat);
+            void density(const Hydro1D& Hin, Hydro1D& Hslope);//State1D& Yin, double deltat);
+            void chargefraction(const Hydro1D& Hin, Hydro1D& Hslope);//State1D& Yin, double deltat);
+            void velocity(const State1D& Hin, Hydro1D& Hslope); //State1D& Yin,double deltat);
             // void energy()(const valarray<double>& energy, valarray<double>& newenergy);
             
 
             /// Electric Field Update
-            void updateE( const valarray<double>& hydrovelocity, const valarray<double>& dCdt,
+            void updateE( Hydro1D& HYDRO,
                                 EMF1D& EMF);
 
 
             /// Evaluate Quantities from Distribution Functions
-            void calcquantities(const State1D& Yin); 
+//            void calcquantities(const State1D& Yin);
             // void evaluatekineticenergyexchange(const State1D& Yin);            
 
         private:

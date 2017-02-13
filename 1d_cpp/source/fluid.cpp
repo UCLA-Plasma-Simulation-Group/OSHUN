@@ -34,180 +34,219 @@
 /// Constructor for hydro equations
 //-------------------------------------------------------------------------------------------------------------------------------------------------------
 Hydro_Functor::Hydro_Functor(double xmin, double xmax, size_t numx):
-    idx(numx/(xmax-xmin)),szx(numx),FEQ(xmin,xmax,numx)             {}
+    idx(numx/(xmax-xmin)), szx(numx), FEQ(xmin,xmax,numx) {}
+//-------------------------------------------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------------------------------------------
 void Hydro_Functor::operator()(const State1D& Yin, State1D& Yslope){
-
     Yslope = 0.0;
-    
 
-                                        FEQ.calcquantities(Yin);
-    Yslope.HYDRO().densityarray()  =    FEQ.density(Yin.HYDRO());
-    Yslope.HYDRO().velocityarray() =    FEQ.velocity(Yin);
-                                        FEQ.updateE(Yin.HYDRO().velocityarray(),Yslope.HYDRO().velocityarray(),Yslope.EMF());
-
+    FEQ.density(         Yin.HYDRO(), Yslope.HYDRO());
+    FEQ.chargefraction(  Yin.HYDRO(), Yslope.HYDRO());
+    FEQ.velocity(        Yin        , Yslope.HYDRO());
+    FEQ.updateE(         Yin.HYDRO(), Yslope.EMF()  );
 }
+//-------------------------------------------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------------------------------------------
 void Hydro_Functor::operator()(const State1D& Yin, State1D& Yslope, size_t dir){}
 void Hydro_Functor::operator()(const State1D& Y1in, const State1D& Y2in, State1D& Yslope){}
 //-------------------------------------------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------------------------------------------
 
-//**************************************************************
-//--------------------------------------------------------------
+//******************************************************************************************
+//------------------------------------------------------------------------------------------
 //  Fluid Equation Class Constructor
- 
-Fluid_Equation_1D::Fluid_Equation_1D(double xmin, double xmax, size_t Nx) 
+
+Fluid_Equation_1D::Fluid_Equation_1D(double xmin, double xmax, size_t Nx)
   : idx(Nx/(xmax-xmin)), szx(Nx), dummy(0.0,Nx)
     {
-        Nbc = Input::List().RKLevel;
+        Nbc = Input::List().BoundaryCells;
     }
 
-//--------------------------------------------------------------
-//--------------------------------------------------------------
+//------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------
+void Fluid_Equation_1D::density(const Hydro1D& Hin, Hydro1D& Hslope){
+    valarray<double> d_nvx(Hin.densityarray());
+    for (size_t ix(0);ix<szx;++ix)
+        d_nvx[ix] = d_nvx[ix] * Hin.vx(ix);
 
-valarray<double> Fluid_Equation_1D::density(const Hydro1D& Hin){
-
-    dummy[0]    = idx*(Hin.density(1)*Hin.velocity(1)-Hin.density(0)*Hin.velocity(0));            
+    Hslope.density(0)       += -idx * d_nvx[0];
 
     for (size_t ix(1);ix<szx-1;++ix)
     {
-        dummy[ix]     = 0.5*idx*(Hin.density(ix+1)*Hin.velocity(ix+1)-Hin.density(ix-1)*Hin.velocity(ix-1));            
-        // std::cout << "\n\n hydrodensity[" << ix << "] = " << Hin.density(ix) ;       
+        Hslope.density(ix)  += -idx * d_nvx[ix];
+        // std::cout << "\n\n hydrodensity[" << ix << "] = " << Hin.density(ix) ;
     }
 
-    dummy[szx-1]     = idx*(Hin.density(szx-1)*Hin.velocity(szx-1)-Hin.density(szx-2)*Hin.velocity(szx-2));  
+    Hslope.density(szx - 1) += -idx * d_nvx[szx-1];
 
-    return dummy; 
-    
 }
+//---------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------
+void Fluid_Equation_1D::chargefraction(const Hydro1D& Hin, Hydro1D& Hslope){
+    valarray<double> d_nZx(Hin.densityarray());
+    for (size_t ix(0);ix<szx;++ix)
+        d_nZx[ix] = d_nZx[ix] * Hin.Z(ix);
 
-//------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------
-//
-////--------------------------------------------------------------
-//--------------------------------------------------------------
-
-valarray<double>  Fluid_Equation_1D::velocity(const State1D& Yin){
-    // State1D& Yin, double deltat){
-
-    valarray<double> totalpressure(Yin.HYDRO().kineticspeciespressurearray());
-    valarray<double> nh(Yin.HYDRO().densityarray());
-    valarray<double> Th(Yin.HYDRO().temperaturearray());
-    valarray<double> Ux(Yin.HYDRO().velocityarray());
-
-    valarray<double> dUxdx(0.0,Ux.size());
-    
-
-    totalpressure                  *=  Yin.HYDRO().charge()/Yin.HYDRO().mass();
-
-    dUxdx[0]                        = idx*(Ux[1]-Ux[0]);
-
-    dummy[0]                        =   (      -idx*(
-                                        (totalpressure[1]-totalpressure[0])
-                                        +   (nh[1]*Th[1]-nh[0]*Th[0])/Yin.HYDRO().mass())   
-            // +   Yin.HYDRO().jy(ix)*Yin.EMF().Bz()(ix)-Yin.HYDRO().jz(ix)*Yin.EMF().By()(ix)   
-                                        +   (Yin.EMF().Ex()(0)).real()*(Yin.HYDRO().charge()*nh[0]-Yin.HYDRO().ne(0))/Yin.HYDRO().mass());
-
-
-    dummy[0]                       -= Ux[0] * dUxdx[0];
-    // Yin.HYDRO().velocity(0)        = Yin.HYDRO().velocity(0) + deltat * (dCdt[0]);
-
-
+    Hslope.Z(0)       += -idx * d_nZx[0];
 
     for (size_t ix(1);ix<szx-1;++ix)
     {
-        
-        dUxdx[ix]                       = 0.5*idx*(Ux[ix+1]-Ux[ix-1]);
-
-        dummy[ix]                       =   (      -0.5*idx*(
-                                            (totalpressure[ix+1]-totalpressure[ix-1])
-                                            +   (nh[ix+1]*Th[ix+1]-nh[ix-1]*Th[ix-1])/Yin.HYDRO().mass())   
-            // +   Yin.HYDRO().jy(ix)*Yin.EMF().Bz()(ix)-Yin.HYDRO().jz(ix)*Yin.EMF().By()(ix)   
-                                            +   (Yin.EMF().Ex()(ix)).real()*(Yin.HYDRO().charge()*nh[ix]-Yin.HYDRO().ne(ix))/Yin.HYDRO().mass());
-
-        dummy[ix]                       -= Ux[ix] * dUxdx[ix];
-        // std::cout << "\n\n hydrodensity[" << ix << "] = " << dummy[ix] ;
-    
+        Hslope.Z(ix)  += -idx * d_nZx[ix];
+        // std::cout << "\n\n hydrodensity[" << ix << "] = " << Hin.density(ix) ;
     }
-    
-    dUxdx[szx-1]                        = idx*(Ux[szx-1]-Ux[szx-2]);
 
-    dummy[szx-1]                        =   (      -idx*(
-                                            (totalpressure[szx-1]-totalpressure[szx-2])
-                                        +   (nh[szx-1]*Th[szx-1]-nh[szx-2]*Th[szx-2])/Yin.HYDRO().mass())   
-            // +   Yin.HYDRO().jy(ix)*Yin.EMF().Bz()(ix)-Yin.HYDRO().jz(ix)*Yin.EMF().By()(ix)   
-                                        +   (Yin.EMF().Ex()(szx-1)).real()*(Yin.HYDRO().charge()*nh[szx-1]-Yin.HYDRO().ne(szx-1))/Yin.HYDRO().mass());
+    Hslope.Z(szx - 1) += -idx *  d_nZx[szx-1];
 
-
-    dummy[szx-1]                       -= Ux[szx-1] * dUxdx[szx-1];
-    
-    return dummy;
 }
+//---------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------
+void Fluid_Equation_1D::velocity(const State1D& Yin, Hydro1D& Hslope){
 
+    double Zeovermi = Yin.HYDRO().charge()/Yin.HYDRO().mass();
+    valarray<double> d_ionpressure(Yin.HYDRO().densityarray()), d_vx(Yin.HYDRO().vxarray()), d_vy(Yin.HYDRO().vxarray()), d_vz(Yin.HYDRO().vxarray());
+
+    for (size_t ix(0);ix<szx;++ix)
+        d_ionpressure[ix] = d_ionpressure[ix] * Yin.HYDRO().temperature(ix);
+
+    d_ionpressure = df_4thorder(d_ionpressure);
+    d_vx = df_4thorder(d_vx);
+    d_vy = df_4thorder(d_vy);
+    d_vz = df_4thorder(d_vz);
+
+
+    Hslope.vx(0)  += - idx * d_ionpressure[0] / Yin.HYDRO().density(0) / Yin.HYDRO().mass()
+                                    +   Zeovermi * (Yin.EMF().Ex()(0).real()
+                                    +   Yin.HYDRO().vy(0) * Yin.EMF().Bz()(0).real()
+                                    -   Yin.HYDRO().vz(0) * Yin.EMF().By()(0).real()); //+ Rie/ni;
+
+    Hslope.vx(0) -= Yin.HYDRO().vx(0) * (idx * d_vx[0]);
+
+    for (size_t ix(1);ix<szx-1;++ix)
+    {
+
+        Hslope.vx(ix)  += -0.5 * idx * d_ionpressure[ix] / Yin.HYDRO().density(ix) / Yin.HYDRO().mass()
+                                    +   Zeovermi * (Yin.EMF().Ex()(ix).real()
+                                    +   Yin.HYDRO().vy(ix) * Yin.EMF().Bz()(ix).real()
+                                    -   Yin.HYDRO().vz(ix) * Yin.EMF().By()(ix).real()); //+ Rie/ni;
+        Hslope.vx(ix) -= Yin.HYDRO().vx(ix) * (idx * d_vx[ix]);
+    }
+
+    Hslope.vx(szx - 1) += -idx * d_ionpressure[szx - 1] / Yin.HYDRO().density(szx - 1) / Yin.HYDRO().mass()
+                                    +   Zeovermi * (Yin.EMF().Ex()(szx - 1).real()
+                                    +   Yin.HYDRO().vy(szx - 1) * Yin.EMF().Bz()(szx - 1).real()
+                                    -   Yin.HYDRO().vz(szx - 1) * Yin.EMF().By()(szx - 1).real()); //+ Rie/ni
+    Hslope.vx(szx - 1) -= Yin.HYDRO().vx(szx - 1) * (idx * d_vx[szx - 1]);
+
+    /// ----------------------------------------------------------------------
+    /// Momentum equation - y direction
+    /// ----------------------------------------------------------------------
+    Hslope.vy(0) += Zeovermi *
+                            (   Yin.HYDRO().vz(0) * Yin.EMF().Bx()(0).real()
+                            -   Yin.HYDRO().vx(0) * Yin.EMF().Bz()(0).real()
+                            +   Yin.EMF().Ey()(0).real());
+
+    for (size_t ix(1);ix<szx-1;++ix)
+    {
+        Hslope.vy(ix) += Zeovermi *
+                            (   Yin.HYDRO().vz(ix) * Yin.EMF().Bx()(ix).real()
+                            -   Yin.HYDRO().vx(ix) * Yin.EMF().Bz()(ix).real()
+                            +   Yin.EMF().Ey()(ix).real());
+    }
+
+    Hslope.vy(szx - 1) += Zeovermi *
+                            (   Yin.HYDRO().vz(szx - 1) * Yin.EMF().Bx()(szx - 1).real()
+                            -   Yin.HYDRO().vx(szx - 1) * Yin.EMF().Bz()(szx - 1).real()
+                            +   Yin.EMF().Ey()(szx - 1).real());
+
+
+    /// ----------------------------------------------------------------------
+    /// Momentum equation - z direction
+    /// ----------------------------------------------------------------------
+    Hslope.vz(0) += Zeovermi *
+                            (   Yin.HYDRO().vx(0) * Yin.EMF().By()(0).real()
+                            -   Yin.HYDRO().vy(0) * Yin.EMF().Bx()(0).real()
+                            +   Yin.EMF().Ez()(0).real());
+
+    for (size_t ix(1);ix<szx-1;++ix)
+    {
+        Hslope.vz(ix) += Zeovermi *
+                            (   Yin.HYDRO().vx(ix) * Yin.EMF().By()(ix).real()
+                            -   Yin.HYDRO().vy(ix) * Yin.EMF().Bx()(ix).real()
+                            +   Yin.EMF().Ez()(ix).real());
+    }
+
+    Hslope.vz(szx - 1) += Zeovermi *
+                            (   Yin.HYDRO().vx(szx - 1) * Yin.EMF().By()(szx - 1).real()
+                            -   Yin.HYDRO().vy(szx - 1) * Yin.EMF().Bx()(szx - 1).real()
+                            +   Yin.EMF().Ez()(szx - 1).real());
+}
 //------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------
-
-void Fluid_Equation_1D::updateE(const valarray<double>& hydrovelocity,const valarray<double>& dCdt,
+void Fluid_Equation_1D::updateE(Hydro1D& HYDRO,
                                 EMF1D& EMF){
 
-    for (size_t ix(Nbc);ix<szx-Nbc;++ix){        
-        EMF.Ex()(ix) -= dCdt[ix]; //+0.5*dC2xdx[ix]+(hydrocharge*electrondensity[ix]-hydrodensity[ix]); // Needs JxB in 2D
-        EMF.Ey()(ix) += -1.0*hydrovelocity[ix]*EMF.Bz()(ix);//+jx[ix]*Bz(ix)-jz[ix]*Bx(ix);
-        EMF.Ez()(ix) += hydrovelocity[ix]*EMF.By()(ix);//-jx[ix]*By(ix)-jy[ix]*Bx(ix);
+    for (size_t ix(0);ix<szx;++ix){
+//        EMF.Ex()(ix) -= dCdt[ix]; //+0.5*dC2xdx[ix]+(hydrocharge*electrondensity[ix]-hydrodensity[ix]); // Needs JxB in 2D
+//        EMF.Ey()(ix) += -1.0*hydrovelocity[ix]*EMF.Bz()(ix);//+jx[ix]*Bz(ix)-jz[ix]*Bx(ix);
+//        EMF.Ez()(ix) += hydrovelocity[ix]*EMF.By()(ix);//-jx[ix]*By(ix)-jy[ix]*Bx(ix);
+
+        EMF.Ex()(ix) += HYDRO.charge()*HYDRO.vx(ix)*HYDRO.density(ix);
+        EMF.Ey()(ix) += HYDRO.charge()*HYDRO.vy(ix)*HYDRO.density(ix);
+        EMF.Ez()(ix) += HYDRO.charge()*HYDRO.vz(ix)*HYDRO.density(ix);
     }
 }
 
 //------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------
 
-void Fluid_Equation_1D:: calcquantities(const State1D& Yin){
-        
-    Yin.HYDRO().kineticspeciespressurearray()=0.0;
-   
-    for (size_t s(0);s<Yin.Species();++s){
+//void Fluid_Equation_1D:: calcquantities(const State1D& Yin){
+//
+//    Yin.HYDRO().kineticspeciespressurearray()=0.0;
+//
+//    for (size_t s(0);s<Yin.Species();++s){
+//
+//        Yin.HYDRO().kineticspeciespressurearray() += Yin.DF(s).getpressure();
+//        Yin.HYDRO().jxarray() += (Yin.DF(s).getcurrent(0));
+//        Yin.HYDRO().jyarray() += (Yin.DF(s).getcurrent(1));
+//        Yin.HYDRO().jzarray() += (Yin.DF(s).getcurrent(2));
+//        // std::cout << "kinetic pressure[" << ix << "]=" << Yin.HYDRO().kpressure(ix) << "\n";
+//        // }
+//    }
+//
+//    Yin.HYDRO().electrondensityarray() =  Yin.DF(0).getdensity();
+//
+//}
 
-        Yin.HYDRO().kineticspeciespressurearray() += Yin.DF(s).getpressure();   
-        Yin.HYDRO().jxarray() += (Yin.DF(s).getcurrent(0));
-        Yin.HYDRO().jyarray() += (Yin.DF(s).getcurrent(1));
-        Yin.HYDRO().jzarray() += (Yin.DF(s).getcurrent(2));         
-        // std::cout << "kinetic pressure[" << ix << "]=" << Yin.HYDRO().kpressure(ix) << "\n";
-        // } 
-    }           
-   
-    Yin.HYDRO().electrondensityarray() =  Yin.DF(0).getdensity();
-
-}   
-
-
+//------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------
 
 //******************************************************************************************
 //------------------------------------------------------------------------------------------
 Hydro_Advection_1D::Hydro_Advection_1D(size_t Nl, size_t Nm,
-                         double pmin, double pmax, size_t Np, 
-                         double xmin, double xmax, size_t Nx) 
+                         double pmin, double pmax, size_t Np,
+                         double xmin, double xmax, size_t Nx)
 //--------------------------------------------------------------
 //  Constructor
 //--------------------------------------------------------------
    : XX1(Nl+1,Nm+1), XX2(Nl+1,Nm+1), XX3(Nl+1,Nm+1), XX4(Nl+1,Nm+1),
      A1(Nl+1,Nm+1), A2(Nl+1,Nm+1), fd1(Nl+1,Nm+1), fd2(Nl+1,Nm+1),
      Hp0(Nl+1), H(Np,Nx), G(Np,Nx), TMP(Np,Nx),
-     pr(Algorithms::MakeAxis(static_cast<complex<double> >(pmin),
+     pr(Algorithms::MakeCAxis(static_cast<complex<double> >(pmin),
                              static_cast<complex<double> >(pmax),
                              Np)),
-     invpr(pr), szx(Nx) 
+     invpr(pr), szx(Nx)
      {
 //      - - - - - - - - - - - - - - - - - - - - - - - - - - -
          complex<double> lc, mc;
 
 //       Inverted momentum axis
-         for (size_t i(0); i < pr.size(); ++i) { 
-             invpr[i] = 1.0/pr[i]; 
+         for (size_t i(0); i < pr.size(); ++i) {
+             invpr[i] = 1.0/pr[i];
          }
-         idp = (-1.0)/ (2.0*(pmax-pmin)/double(Np-1)); // -1/(2dp) 
-         idx = (-1.0) / (2.0*(xmax-xmin)/double(Nx)); // -1/(2dx) 
+         idp = (-1.0)/ (2.0*(pmax-pmin)/double(Np-1)); // -1/(2dp)
+         idx = (-1.0) / (2.0*(xmax-xmin)/double(Nx)); // -1/(2dx)
 
-         Nbc = Input::List().RKLevel;
+         Nbc = Input::List().BoundaryCells;
 
 //       - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //       Calculate the "A1, A2" parameters
@@ -238,29 +277,29 @@ Hydro_Advection_1D::Hydro_Advection_1D(size_t Nl, size_t Nm,
 void Hydro_Advection_1D::operator()(const DistFunc1D& Din, const Hydro1D& hydro, DistFunc1D& Dh) {
 //--------------------------------------------------------------
 
-        valarray<complex<double> > vt(pr); vt *= 1.0/Din.mass(); 
+        valarray<complex<double> > vt(pr); vt *= 1.0/Din.mass();
         valarray<complex<double> > tempv(vt);
-        
-
-        valarray<complex<double> > Ux(0.0,(hydro.velocityarray()).size());
-        valarray<complex<double> > dUxdx(0.0,(hydro.velocityarray()).size());
 
 
-        Ux[0] = hydro.velocity(0);
-        dUxdx[0] = idx*(hydro.velocity(1)-hydro.velocity(0));
+        valarray<complex<double> > Ux(0.0,(hydro.vxarray()).size());
+        valarray<complex<double> > dUxdx(0.0,(hydro.vxarray()).size());
 
-        Ux[szx-1] = hydro.velocity(szx-1);
-        dUxdx[szx-1] = idx*(hydro.velocity(szx-1)-hydro.velocity(szx-2));
+
+        Ux[0] = hydro.vx(0);
+        dUxdx[0] = idx*(hydro.vx(1)-hydro.vx(0));
+
+        Ux[szx-1] = hydro.vx(szx-1);
+        dUxdx[szx-1] = idx*(hydro.vx(szx-1)-hydro.vx(szx-2));
         for (size_t i(1);i<szx-1;++i)
         {
-            Ux[i] = hydro.velocity(i);
-            // dUxdx[i] = idx/12.0*(-hydro.velocity(i+2)+8.0*(hydro.velocity(i+1)-hydro.velocity(i-1))+hydro.velocity(i-2));
-            dUxdx[i] = idx*0.5*(hydro.velocity(i+1)-hydro.velocity(i-1));
+            Ux[i] = hydro.vx(i);
+            // dUxdx[i] = idx/12.0*(-hydro.vx(i+2)+8.0*(hydro.vx(i+1)-hydro.vx(i-1))+hydro.vx(i-2));
+            dUxdx[i] = idx*0.5*(hydro.vx(i+1)-hydro.vx(i-1));
             // dUxdx[i] = idx/3.0*(-Cx[i+3]+6.0*Cx[i+2]-3.0*Cx[i+1]-2.0*Cx[i]);
         }
 
 
-        // vt += fluidvelocity;       
+        // vt += fluidvx;
         size_t l0(Din.l0());
         size_t m0(Din.m0());
 

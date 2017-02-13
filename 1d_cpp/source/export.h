@@ -150,6 +150,9 @@ namespace Export_Files{
             string          label(const size_t i);
             string          units(const size_t i);
             float           conv(const size_t i);
+
+            float           min(const size_t i) {return(xyz_axis[i].min);}
+            float           max(const size_t i) {return(xyz_axis[i].max);}
             
             string  Title_label(); 
             float   Title_conv(); 
@@ -298,19 +301,19 @@ private:
 
 //      Access
         size_t Species()         const { return p1x1.size(); }
-        size_t Nl(size_t s)      const  { return Pl[s].dim(); }
-        size_t Npx(size_t s)     const  { return polarR[s].dim1(); }
-        size_t Np(size_t s)      const  { return polarR[s].dim2(); }
+//        size_t Nl(size_t s)      const  { return Pl[s].dim(); }
+//        size_t Npx(size_t s)     const  { return polarR[s].dim1(); }
+//        size_t Np(size_t s)      const  { return polarR[s].dim2(); }
         float  Pmin(size_t s)    const  { return pmin[s]; }
         float  Pmax(size_t s)    const  { return pmax[s]; }
 
-        PLegendre1D      PL(size_t s)     const { return Pl[s]; }
+//        PLegendre1D      PL(size_t s)     const { return Pl[s]; }
         valarray<float>  p1_x1(size_t s)  const { return p1x1[s]; }
-        Array2D<float>   PolarR(size_t s) const { return polarR[s]; }
+//        Array2D<float>   PolarR(size_t s) const { return polarR[s]; }
 
     private:
-        vector< PLegendre1D >    Pl;
-        vector< Array2D<float> > polarR;
+//        vector< PLegendre1D >    Pl;
+//        vector< Array2D<float> > polarR;
 
         vector< valarray<float> > p1x1;
         vector<float> pmin, pmax;
@@ -383,8 +386,8 @@ private:
         size_t Species()         const { return nump.size(); }
         // size_t Npx(size_t s)     const  { return f0x1[s].size(); }
         size_t Np(size_t s)     const  { return nump[s]; }
-        // float  Pmin(size_t s)    const  { return pmin[s]; }
-        // float  Pmax(size_t s)    const  { return pmax[s]; }
+         float  Pmin(size_t s)    const  { return pmin[s]; }
+         float  Pmax(size_t s)    const  { return pmax[s]; }
 
         
         // valarray<float>  f_x1(size_t s)  const { return f0x1[s]; }
@@ -392,7 +395,7 @@ private:
 
     private:
         // vector< valarray<float> > f0x1;
-        // vector<float> pmin, pmax;
+         vector<float> pmin, pmax;
         vector<float> nump;
         
     };
@@ -408,7 +411,8 @@ private:
                                const vector< string > _oTags, 
                                string homedir="")  
         : expo( _grid.axis, _oTags, homedir),
-          px_x( _grid ), f_x( _grid), pxpy_x( _grid),
+          px_x( _grid ), //pxpy_x( _grid),
+          f_x( _grid),
           oTags(_oTags) { }
 
 //      Functor
@@ -417,13 +421,15 @@ private:
 //                                      const Parallel_Environment_1D& PE);
         void operator()(const State1D& Y, const Grid_Info& grid, const size_t tout,
                                         const Parallel_Environment_1D& PE);
+        void distdump(const State1D& Y, const Grid_Info& grid, const size_t tout,
+                        const Parallel_Environment_1D& PE);
 
     private:
         size_t              Nbc;
         Export_Files::Xport expo;
         p1x1_1D             px_x;
         fx1_1D             f_x;
-        p2p1x1_1D           pxpy_x;
+//        p2p1x1_1D           pxpy_x;
         vector< string >    oTags;
 
         void Ex(const State1D& Y, const Grid_Info& grid, const size_t tout,
@@ -440,8 +446,8 @@ private:
                                         const Parallel_Environment_1D& PE);
         void px(const State1D& Y, const Grid_Info& grid, const size_t tout,
                                         const Parallel_Environment_1D& PE);
-        void pxpy(const State1D& Y, const Grid_Info& grid, const size_t tout,
-                                        const Parallel_Environment_1D& PE);
+//        void pxpy(const State1D& Y, const Grid_Info& grid, const size_t tout,
+//                                        const Parallel_Environment_1D& PE);
         void f0(const State1D& Y, const Grid_Info& grid, const size_t tout,
                                         const Parallel_Environment_1D& PE);
         void f10(const State1D& Y, const Grid_Info& grid, const size_t tout,
@@ -460,10 +466,25 @@ private:
                                         const Parallel_Environment_1D& PE);
         void Qx(const State1D& Y, const Grid_Info& grid, const size_t tout,
                                         const Parallel_Environment_1D& PE);
+        void Qy(const State1D& Y, const Grid_Info& grid, const size_t tout,
+                const Parallel_Environment_1D& PE);
+        void Qz(const State1D& Y, const Grid_Info& grid, const size_t tout,
+                const Parallel_Environment_1D& PE);
         void vNx(const State1D& Y, const Grid_Info& grid, const size_t tout,
                                         const Parallel_Environment_1D& PE);
+        void vNy(const State1D& Y, const Grid_Info& grid, const size_t tout,
+                 const Parallel_Environment_1D& PE);
+        void vNz(const State1D& Y, const Grid_Info& grid, const size_t tout,
+                 const Parallel_Environment_1D& PE);
+
         void Ux(const State1D& Y, const Grid_Info& grid, const size_t tout,
                                         const Parallel_Environment_1D& PE);
+        void Uy(const State1D& Y, const Grid_Info& grid, const size_t tout,
+                const Parallel_Environment_1D& PE);
+        void Uz(const State1D& Y, const Grid_Info& grid, const size_t tout,
+                const Parallel_Environment_1D& PE);
+        void Z(const State1D& Y, const Grid_Info& grid, const size_t tout,
+                const Parallel_Environment_1D& PE);
         void ni(const State1D& Y, const Grid_Info& grid, const size_t tout,
                                         const Parallel_Environment_1D& PE);
         void Ti(const State1D& Y, const Grid_Info& grid, const size_t tout,
