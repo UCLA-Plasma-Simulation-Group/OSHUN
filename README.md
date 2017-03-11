@@ -43,5 +43,5 @@ python oshun.zip ../examples/sample-spitzer.py
 
 Output should immediately be in the ```output``` subdirectory. The ```oshun.zip``` file can be copied and moved to any desired location. Input decks can exist in any directory as well. Just make sure the fully-qualified names are passed to python (i.e. ```python /full/path/to/oshun.zip /full/path/to/inputdeck```). Output will be placed in the current directory.
 
-![UCLA PICKSC](http://picksc.idre.ucla.edu/wp-content/uploads/2017/03/PICKSC-logo-OSHUN.png){:height="36px"}
+![UCLA PICKSC](http://picksc.idre.ucla.edu/wp-content/uploads/2017/03/PICKSC-logo-OSHUN.png =36x)
 ![UCLA PickSE](http://169.232.154.80/oshun.jpg)
