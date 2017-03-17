@@ -1,3 +1,5 @@
+<meta http-equiv="Cache-control" content="no-cache">
+
 # OSHUN
 
 OSHUN is a parallel Vlasov-Fokker-Planck plasma simulation code that employs an arbitrary-order spherical harmonic velocity-space decomposition.
@@ -44,7 +46,4 @@ python oshun.zip ../examples/sample-spitzer.py
 Output should immediately be in the ```output``` subdirectory. The ```oshun.zip``` file can be copied and moved to any desired location. Input decks can exist in any directory as well. Just make sure the fully-qualified names are passed to python (i.e. ```python /full/path/to/oshun.zip /full/path/to/inputdeck```). Output will be placed in the current directory.
 
 ![UCLA PickSE](http://169.232.154.80/oshun.jpg)
-<?php
-  header("Cache-Control: no-cache, must-revalidate"); //HTTP 1.1
-?>
 # ![UCLA PICKSC](http://exodus.physics.ucla.edu/~uclapic/repo_images/PICKSC-logo-OSHUN.png)
