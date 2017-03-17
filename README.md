@@ -45,5 +45,3 @@ Output should immediately be in the ```output``` subdirectory. The ```oshun.zip`
 
 ![UCLA PickSE](http://169.232.154.80/oshun.jpg)
 # ![UCLA PICKSC](http://exodus.physics.ucla.edu/~uclapic/repo_images/PICKSC-logo-OSHUN.png)
-<img src="http://exodus.physics.ucla.edu/~uclapic/repo_images/PICKSC-logo-OSHUN.png?nocache=<?php echo time(); ?>">
-
