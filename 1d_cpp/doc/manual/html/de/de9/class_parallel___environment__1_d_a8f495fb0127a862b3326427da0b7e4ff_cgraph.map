@@ -1,0 +1,23 @@
+<map id="Parallel_Environment_1D::Neighbor_ImplicitE_Communications" name="Parallel_Environment_1D::Neighbor_ImplicitE_Communications">
+<area shape="rect" id="node2" href="$de/de9/class_parallel___environment__1_d.html#a58c3dbe6dbfd82b1157a39123c202bc4" title="Parallel_Environment\l_1D::BNDX" alt="" coords="253,40,401,79"/>
+<area shape="rect" id="node3" href="$db/d67/class_node___implicit_e___communications.html#adb626428859054738f2452897144bde5" title="Node_ImplicitE_Communications\l::mirror_bound_Xleft" alt="" coords="484,5,702,44"/>
+<area shape="rect" id="node10" href="$db/d67/class_node___implicit_e___communications.html#a64e8545715f4648ca411f2fcf65648cd" title="Node_ImplicitE_Communications\l::mirror_bound_Xright" alt="" coords="484,68,702,107"/>
+<area shape="rect" id="node11" href="$de/de9/class_parallel___environment__1_d.html#aaebbf50fcd9c47d035be5a068bac8efe" title="Parallel_Environment\l_1D::NODES" alt="" coords="253,472,401,511"/>
+<area shape="rect" id="node12" href="$de/de9/class_parallel___environment__1_d.html#abb6d82b81e689b0aa09a5310f3c381ee" title="Parallel_Environment\l_1D::RANK" alt="" coords="253,535,401,573"/>
+<area shape="rect" id="node13" href="$db/d67/class_node___implicit_e___communications.html#a1123ecebad1cb01a0d5eb7eb93f62f1a" title="Node_ImplicitE_Communications\l::Recv_from_left_X" alt="" coords="484,193,702,232"/>
+<area shape="rect" id="node14" href="$db/d67/class_node___implicit_e___communications.html#a73882cbb11936ecd31a386a5078fbc83" title="Node_ImplicitE_Communications\l::Recv_from_right_X" alt="" coords="484,444,702,483"/>
+<area shape="rect" id="node16" href="$db/d67/class_node___implicit_e___communications.html#ae85d7a296a1b74cdc188433b5f6290ec" title="Node_ImplicitE_Communications\l::sameNode_bound_X" alt="" coords="218,256,436,295"/>
+<area shape="rect" id="node21" href="$db/d67/class_node___implicit_e___communications.html#a4883796e3bc86333a78d8cf158091e47" title="Node_ImplicitE_Communications\l::Send_left_X" alt="" coords="484,319,702,357"/>
+<area shape="rect" id="node22" href="$db/d67/class_node___implicit_e___communications.html#aac10a03d9eaef793c24dd047d6a54206" title="Node_ImplicitE_Communications\l::Send_right_X" alt="" coords="484,381,702,420"/>
+<area shape="rect" id="node4" href="$db/d09/group__st2d.html#gaa25ff80a7c43c90dd28c4e877c3f5bd2" title="EMF1D::Bx" alt="" coords="777,75,867,100"/>
+<area shape="rect" id="node5" href="$db/d09/group__st2d.html#ga0af17cfa15b120c92e840bc6c4d2b5ec" title="EMF1D::dim" alt="" coords="774,269,870,295"/>
+<area shape="rect" id="node6" href="$db/d09/group__st2d.html#gae086e9cef14d1424700680a2f3ec7de9" title="State1D::EMF" alt="" coords="769,323,875,348"/>
+<area shape="rect" id="node7" href="$db/d09/group__st2d.html#gacb4879b52e4206e7edb65d08f801014d" title="State1D::FLD" alt="" coords="771,207,873,232"/>
+<area shape="rect" id="node8" href="$db/d09/group__st2d.html#ga59d310369b6ee8067eecbcaf8d5be993" title="SHarmonic1D::numx" alt="" coords="750,124,894,149"/>
+<area shape="rect" id="node9" href="$db/d09/group__st2d.html#ga50919b4f1b390bf77ff30af772a61be4" title="State1D::SH" alt="" coords="774,25,870,51"/>
+<area shape="rect" id="node15" href="$db/d09/group__st2d.html#gaab9cc94604c92f28a02cc0bd16cfcfb1" title="Field1D::numx" alt="" coords="768,451,876,476"/>
+<area shape="rect" id="node17" href="$db/d67/class_node___implicit_e___communications.html#ab63b67b79f684b50f801a9c1989bdfb5" title="Node_ImplicitE_Communications\l::BNDX" alt="" coords="484,256,702,295"/>
+<area shape="rect" id="node18" href="$db/d67/class_node___implicit_e___communications.html#ada23453b9d3f2a334b8625f7a5edae59" title="Node_ImplicitE_Communications\l::sameNode_mirror_X" alt="" coords="484,131,702,169"/>
+<area shape="rect" id="node19" href="$db/d67/class_node___implicit_e___communications.html#ad109d5c492cf919880efd79059f5cb69" title="Node_ImplicitE_Communications\l::sameNode_periodic_X" alt="" coords="484,507,702,545"/>
+<area shape="rect" id="node20" href="$db/d09/group__st2d.html#gaeba7194d5f31f27452d079091de5ece7" title="EMF1D::Ex" alt="" coords="777,513,867,539"/>
+</map>

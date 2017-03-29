@@ -743,6 +743,10 @@ void Node_Communications::mirror_bound_Xleft(State1D& Y) {
     {
         // Hydro Quantities:   x0 "Right-Bound ---> Left-Guard"
         for(int c(0); c < Nbc; c++) {
+            Y.HYDRO().density(c) =  Y.HYDRO().density(2*Nbc-c-1);
+            Y.HYDRO().temperature(c) =  Y.HYDRO().temperature(2*Nbc-c-1);
+            Y.HYDRO().Z(c) =  Y.HYDRO().Z(2*Nbc-c-1);
+
             Y.HYDRO().vx(c) *= -1.0;
         }
     }
@@ -797,6 +801,11 @@ void Node_Communications::mirror_bound_Xright(State1D& Y) {
     {
         // Hydro Quantities:   x0 "Left-Bound ---> Right-Guard"
         for(int c(0); c < Nbc; c++) {
+            Y.HYDRO().density(Y.EMF().Ex().numx()-Nbc+c) =  Y.HYDRO().density(Y.EMF().Ex().numx()-2*Nbc+c);
+            Y.HYDRO().temperature(Y.EMF().Ex().numx()-Nbc+c) =  Y.HYDRO().temperature(Y.EMF().Ex().numx()-2*Nbc+c);
+            Y.HYDRO().Z(Y.EMF().Ex().numx()-Nbc+c) =  Y.HYDRO().Z(Y.EMF().Ex().numx()-2*Nbc+c);
+            
+
             Y.HYDRO().vx(Y.EMF().Ex().numx()-Nbc+c) *=  -1.0;
         }
     }
@@ -1017,7 +1026,6 @@ Parallel_Environment_1D:: Parallel_Environment_1D() :
 //--------------------------------------------------------------
         bndX(Input::List().bndX),           // Type of boundary
         Nnodes(Input::List().NnodesX)   // Number of nodes in X-direction
-//         restart_time(Input::List().restart_time)
 {
     // Determination of the rank and size of the run
     MPI_Comm_size(MPI_COMM_WORLD, &Nnodes);
@@ -1140,62 +1148,54 @@ void Parallel_Environment_1D::Neighbor_ImplicitE_Communications(State1D& Y){
 
 
 //--------------------------------------------------------------
-void Parallel_Environment_1D::Neighbor_Communications(State1D& Y){
+void Parallel_Environment_1D::Neighbor_Communications(State1D& Y) {
 //--------------------------------------------------------------
 //  Information exchange between neighbors 
 //--------------------------------------------------------------
 
-    int moduloX(RANK()%2);
-    int RNx((RANK()+1)%NODES()),         // This is the right neighbor
-            LNx((RANK()-1+NODES())%NODES()); // This is the left  neighbor
+    int moduloX(RANK() % 2);
+    int RNx((RANK() + 1) % NODES()),         // This is the right neighbor
+            LNx((RANK() - 1 + NODES()) % NODES()); // This is the left  neighbor
 
     if (NODES() > 1) {
         //even nodes
 //        if (moduloX==0){
-            if (BNDX()==0)
-            {
-                if (((RANK() != 0) && (RANK() != NODES() - 1))) {
-                    X_Data.Send_right_X(Y, RNx);                  //   (Send) 0 --> 1
-                    X_Data.Recv_from_left_X(Y, LNx);          //          1 --> 0 (Receive)
-                    X_Data.Send_left_X(Y, LNx);               //          1 <-- 0 (Send)
-                    X_Data.Recv_from_right_X(Y, RNx);               // (Receive) 0 <-- 1
-                }
-                else if (RANK() == 0) {                         /// Update node "0" in the x direction
-                    X_Data.Recv_from_left_X(Y, NODES()-1);          //          1 --> 0 (Receive)
-                    X_Data.Send_left_X(Y, NODES()-1);               //          1 <-- 0 (Send)
-                    X_Data.Send_right_X(Y, RNx);                ///   (Send) 0 --> 1
-                    X_Data.Recv_from_right_X(Y, RNx);           /// (Receive) 0 <-- 1
-                }
-                else if (RANK() == NODES() - 1) {               ///        // Update node "NODES()" in the x direction
-                    X_Data.Send_right_X(Y, 0);                  //   (Send) 0 --> 1
-                    X_Data.Recv_from_right_X(Y, 0);           /// (Receive) 0 <-- 1
-                    X_Data.Recv_from_left_X(Y, LNx);          //          1 --> 0 (Receive)
-                    X_Data.Send_left_X(Y, LNx);               //          1 <-- 0 (Send)
-                }
+        if (BNDX() == 0) {
+            if (((RANK() != 0) && (RANK() != NODES() - 1))) {
+                X_Data.Send_right_X(Y, RNx);                  //   (Send) 0 --> 1
+                X_Data.Recv_from_left_X(Y, LNx);          //          1 --> 0 (Receive)
+                X_Data.Send_left_X(Y, LNx);               //          1 <-- 0 (Send)
+                X_Data.Recv_from_right_X(Y, RNx);               // (Receive) 0 <-- 1
+            } else if (RANK() == 0) {                         /// Update node "0" in the x direction
+                X_Data.Recv_from_left_X(Y, NODES() - 1);          //          1 --> 0 (Receive)
+                X_Data.Send_left_X(Y, NODES() - 1);               //          1 <-- 0 (Send)
+                X_Data.Send_right_X(Y, RNx);                ///   (Send) 0 --> 1
+                X_Data.Recv_from_right_X(Y, RNx);           /// (Receive) 0 <-- 1
+            } else if (RANK() == NODES() - 1) {               ///        // Update node "NODES()" in the x direction
+                X_Data.Send_right_X(Y, 0);                  //   (Send) 0 --> 1
+                X_Data.Recv_from_right_X(Y, 0);           /// (Receive) 0 <-- 1
+                X_Data.Recv_from_left_X(Y, LNx);          //          1 --> 0 (Receive)
+                X_Data.Send_left_X(Y, LNx);               //          1 <-- 0 (Send)
             }
-            else if (BNDX()==1)
-            {
-                if (((RANK() != 0) && (RANK() != NODES() - 1))) {
-                    X_Data.Send_right_X(Y, RNx);                  //   (Send) 0 --> 1
-                    X_Data.Recv_from_left_X(Y, LNx);          //          1 --> 0 (Receive)
-                    X_Data.Send_left_X(Y, LNx);               //          1 <-- 0 (Send)
-                    X_Data.Recv_from_right_X(Y, RNx);               // (Receive) 0 <-- 1
-                }
-                else if (RANK() == 0) {                         /// Update node "0" in the x direction
-                    X_Data.mirror_bound_Xleft(Y);
-                    X_Data.Send_right_X(Y, RNx);                ///   (Send) 0 --> 1
-                    X_Data.Recv_from_right_X(Y, RNx);           /// (Receive) 0 <-- 1
-                }
-                else if (RANK() == NODES() - 1) {               ///        // Update node "NODES()" in the x direction
-                    X_Data.mirror_bound_Xright(Y);
-                    X_Data.Recv_from_left_X(Y, LNx);          //          1 --> 0 (Receive)
-                    X_Data.Send_left_X(Y, LNx);               //          1 <-- 0 (Send)
-                }
+        } else if (BNDX() == 1) {
+            if (((RANK() != 0) && (RANK() != NODES() - 1))) {
+                X_Data.Send_right_X(Y, RNx);                  //   (Send) 0 --> 1
+                X_Data.Recv_from_left_X(Y, LNx);          //          1 --> 0 (Receive)
+                X_Data.Send_left_X(Y, LNx);               //          1 <-- 0 (Send)
+                X_Data.Recv_from_right_X(Y, RNx);               // (Receive) 0 <-- 1
+            } else if (RANK() == 0) {                         /// Update node "0" in the x direction
+                X_Data.mirror_bound_Xleft(Y);
+                X_Data.Send_right_X(Y, RNx);                ///   (Send) 0 --> 1
+                X_Data.Recv_from_right_X(Y, RNx);           /// (Receive) 0 <-- 1
+            } else if (RANK() == NODES() - 1) {               ///        // Update node "NODES()" in the x direction
+                X_Data.mirror_bound_Xright(Y);
+                X_Data.Recv_from_left_X(Y, LNx);          //          1 --> 0 (Receive)
+                X_Data.Send_left_X(Y, LNx);               //          1 <-- 0 (Send)
+            }
 
-            }
-            else {
-                    cout<<"Invalid Boundary." << endl;
-            }
+        } else {
+            cout << "Invalid Boundary." << endl;
+        }
 
 //            //odd nodes
 //        else {
@@ -1214,10 +1214,11 @@ void Parallel_Environment_1D::Neighbor_Communications(State1D& Y){
 //            }
 //            X_Data.Send_left_X(Y,LNx);                    //           0 <-- 1 (Send)
 //        }
-    }
-    else { X_Data.sameNode_bound_X(Y); }
+    } else { X_Data.sameNode_bound_X(Y); }
 
 }
 //--------------------------------------------------------------
+
+
 
 //**************************************************************

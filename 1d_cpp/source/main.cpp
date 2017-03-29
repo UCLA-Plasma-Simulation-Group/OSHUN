@@ -1,5 +1,5 @@
 /*! \brief Main Loop
- * \author Michail Tzoufras, Archis Joglekar, Benjamin Winjum
+ * \author PICKSC
  * \date   September 1, 2016
  * \file   main.cpp
  * 
@@ -7,14 +7,7 @@
  * - the main loop.
  * - the definition for the clock class
  * - the definition of periodic boundaries
- * 
- * \todo Change clock to have fixed timestep from input deck and all corresponding changes. Rename CLF to timestep. Implicit solver timestep is FUBAR
- * \todo Cleanup home directory - new makefile, source directory, version output
- * \todo Choose output files by strings rather than toggles
- * \todo Implement various useful moments i.e. Resistivity, Nernst velocity, Anisotropic Pressure
- * \todo 2D - Field Solver
- * \todo Hydro ion motion
- * \todo Kinetic ions
+ *
  */  
 
 // Standard libraries 
@@ -55,7 +48,7 @@
 #include "fluid.h"
 #include "vlasov.h"
 #include "collisions.h"
-#include "interspeciescollisions.h"
+#include "functors.h"
 #include "parallel.h"
 #include "implicitE.h"
 
@@ -137,7 +130,7 @@ int main(int argc, char** argv) {
 
     MPI_Init(&argc,&argv);
 
-///  Initiate the Paralell Environment / Decompose the Computational Domain
+///  Initiate the Parallel Environment and decompose the Computational Domain
     Parallel_Environment_1D PE;
 
     time_t tstart, tend;
@@ -154,7 +147,9 @@ int main(int argc, char** argv) {
 
 
 ///  Clock
-    int tout_start(0);
+    int tout_start;
+    if (Input::List().isthisarestart) tout_start = Input::List().restart_time;
+    else  tout_start = 0;
 
     double dt_out(Input::List().t_stop / Input::List().n_outsteps);
     double CLF(Input::List().clf_dp);
@@ -165,17 +160,27 @@ int main(int argc, char** argv) {
 ///  INITIALIZATION
 	if (PE.RANK() == 0) {
 		Export_Files::Folders();
-	    Export_Files::Restart_Facility Re;
 	}
+
+    Export_Files::Restart_Facility Re(PE.RANK());
 
     State1D Y( grid.axis.Nx(0), Input::List().ls, Input::List().ms, grid.Np, Input::List().pmax, grid.charge, grid.mass, Input::List().hydromass, Input::List().hydrocharge);
     Y = 0.0;
     Setup_Y::initialize(Y, grid);
+
+
     collisions collide(Y,h);
 //    InverseBremsstrahlung IB(Y.DF(0).pmax(),Y.SH(0,0,0).nump(),Y.SH(0,0,0).numx(),tout_start,grid.axis.x(0));
     Hydro_Functor         HydroFunc(grid.axis.xmin(0), grid.axis.xmax(0), grid.axis.Nx(0));
 
-    Algorithms::RK4<State1D> RK(Y);
+    Algorithms::RK3<State1D> RK(Y);
+
+    // Algorithms::LEAPs<State1D> LEAP(Y);
+    // Algorithms::PEFRL<State1D> MAGIC(Y);
+
+
+   if (Input::List().isthisarestart) Re.Read(PE.RANK(),tout_start,Y);
+
     Output_Data::Output_Preprocessor_1D  output( grid, Input::List().oTags);
     output( Y, grid, tout_start, PE );
     output.distdump(Y, grid, tout_start, PE );
@@ -199,7 +204,7 @@ int main(int argc, char** argv) {
             // --------------------------------------------------------------------------------------------------------------------------------
             // IMPLICIT E-FIELD
             // --------------------------------------------------------------------------------------------------------------------------------
-            VlasovFunctor1D_implicitEB_p1 impE_p1_Functor(Input::List().ls, Input::List().ms, Input::List().pmax,
+            VlasovFunctor1D_implicitE_implicitB_p1 impE_p1_Functor(Input::List().ls, Input::List().ms, Input::List().pmax,
                                                          Input::List().ps,
                                                          grid.axis.xmin(0), grid.axis.xmax(0), grid.axis.Nx(0));
 
@@ -233,11 +238,11 @@ int main(int argc, char** argv) {
                 // --------------------------------------------------------------------------------------------------------------------------------
                 for (Clock W(t_out - 1, dt_out, CLF); W.tick() < W.numh(); ++W) {
                     // --------------------------------------------------------------------------------------------------------------------------------
-                    if (!(PE.RANK())) {
-                        // cout << "Time = " <<  W.time()<< "\n";
-                        printf("\r Time = %4.4f tau_p = %4.4f fs", W.time(), W.time() * plasmaperiod);
-                        fflush(stdout);
-                    }
+                    // if (!(PE.RANK())) {
+                    //     // cout << "Time = " <<  W.time()<< "\n";
+                    //     printf("\r Time = %4.4f tau_p = %4.4f fs", W.time(), W.time() * plasmaperiod);
+                    //     fflush(stdout);
+                    // }
                     // --------------------------------------------------------------------------------------------------------------------------------
                     // --------------------------------------------------------------------------------------------------------------------------------
                     // --------------------------------------------------------------------------------------------------------------------------------
@@ -259,12 +264,10 @@ int main(int argc, char** argv) {
                     }
 
                     collide.advance(Y,W);                                                                             /// Fokker-Planck
-//                    if (Input::List().inverse_bremsstrahlung) {
-//                        IB.loop(Y.SH(0, 0, 0), Y.HYDRO().Zarray(), W.time());                                       /// Explicit IB heating for f00
-//                    }
+                                                                                                                      
                     if (Input::List().hydromotion)
                         Y = RK(Y, W.h(), &HydroFunc);                                                               /// Hydro Motion
-                    // Y.checknan();                                                                                /// Error Checking
+                                                                                                    /// Error Checking
                     PE.Neighbor_Communications(Y);                                                                  /// Boundaries
                     // --------------------------------------------------------------------------------------------------------------------------------
                     // --------------------------------------------------------------------------------------------------------------------------------
@@ -273,7 +276,7 @@ int main(int argc, char** argv) {
                     // --------------------------------------------------------------------------------------------------------------------------------
                 }
 
-                if (!(PE.RANK())) cout << " \n Output...\n";
+                if (!(PE.RANK())) cout << " \n Output #" << t_out << "\n";
                 output(Y, grid, t_out, PE);
                 Y.checknan();
 
@@ -286,11 +289,9 @@ int main(int argc, char** argv) {
             // --------------------------------------------------------------------------------------------------------------------------------
             // EXPLICIT E-FIELD
             // --------------------------------------------------------------------------------------------------------------------------------
-            VlasovFunctor1D_explicitEB rkF(Input::List().ls, Input::List().ms, Input::List().pmax, Input::List().ps,
+            VlasovFunctor1D_explicitE_implicitB rkF(Input::List().ls, Input::List().ms, Input::List().pmax, Input::List().ps,
                                           grid.axis.xmin(0), grid.axis.xmax(0), grid.axis.Nx(0));
-//            Magnetic_Field_1D Bfield(Input::List().ls[0], Input::List().ms[0], Input::List().pmax[0]/(2.0*Input::List().ps[0]-1), Input::List().pmax[0],
-//                                     Input::List().ps[0],
-//                                     grid.axis.xmin(0), grid.axis.xmax(0), grid.axis.Nx(0));
+
             Magnetic_Field_1D Bfield(Input::List().ls[0], Input::List().ms[0],
                                      0.0, Input::List().pmax[0], Input::List().ps[0],
                                      grid.axis.xmin(0), grid.axis.xmax(0), grid.axis.Nx(0));
@@ -299,17 +300,16 @@ int main(int argc, char** argv) {
             for (size_t t_out(tout_start + 1); t_out < n_outsteps + 1; ++t_out) {
                 for (Clock W(t_out - 1, dt_out, CLF); W.tick() < W.numh(); ++W) {
                     // --------------------------------------------------------------------------------------------------------------------------------
-                    if (!(PE.RANK())) {
+                    // if (!(PE.RANK())) {
 
-                        printf("\r Time = %4.4f tau_p = %4.4f fs", W.time(), W.time() * plasmaperiod);
-                        fflush(stdout);
-                    }
+                    //     printf("\r Time = %4.4f tau_p = %4.4f fs", W.time(), W.time() * plasmaperiod);
+                    //     fflush(stdout);
+                    // }
                     // --------------------------------------------------------------------------------------------------------------------------------
                     //                                   the guts
                     // --------------------------------------------------------------------------------------------------------------------------------
 
                     if (Input::List().ext_fields) Setup_Y::applyexternalfields(grid, Y, W.time());
-
 
                     Y = RK(Y, W.h(), &rkF);                                                                         ///  Vlasov          //
 
@@ -325,16 +325,10 @@ int main(int argc, char** argv) {
                     if (Input::List().hydromotion)
                         Y = RK(Y, W.h(), &HydroFunc);                                      ///  Hydro           //
 
-//                    if (Input::List().inverse_bremsstrahlung)
-//                        IB.loop(Y.SH(0, 0, 0), Y.HYDRO().Zarray(), W.time());     ///  Inverse-Brem    //
-
-                    // Y.checknan();                                                                                ///  Error-checking  //
-
-                    PE.Neighbor_Communications(
-                            Y);                                                                  ///  Boundaries      //
+                    PE.Neighbor_Communications(Y);                                                                  ///  Boundaries      //
                 }
 
-                if (!(PE.RANK())) cout << " \n Output...\n";
+                if (!(PE.RANK())) cout << " \n Output #" << t_out << "\n";
                 output(Y, grid, t_out, PE);
                 Y.checknan();
 
@@ -373,11 +367,11 @@ int main(int argc, char** argv) {
                 // --------------------------------------------------------------------------------------------------------------------------------
                 for (Clock W(t_out - 1, dt_out, CLF); W.tick() < W.numh(); ++W) {
                     // --------------------------------------------------------------------------------------------------------------------------------
-                    if (!(PE.RANK())) {
-                        // cout << "Time = " <<  W.time()<< "\n";
-                        printf("\r Time = %4.4f tau_p = %4.4f fs", W.time(), W.time() * plasmaperiod);
-                        fflush(stdout);
-                    }
+                    // if (!(PE.RANK())) {
+                    //     // cout << "Time = " <<  W.time()<< "\n";
+                    //     printf("\r Time = %4.4f tau_p = %4.4f fs", W.time(), W.time() * plasmaperiod);
+                    //     fflush(stdout);
+                    // }
                     // --------------------------------------------------------------------------------------------------------------------------------
                     // --------------------------------------------------------------------------------------------------------------------------------
                     // --------------------------------------------------------------------------------------------------------------------------------
@@ -408,7 +402,7 @@ int main(int argc, char** argv) {
                     // --------------------------------------------------------------------------------------------------------------------------------
                 }
 
-                if (!(PE.RANK())) cout << " \n Output...\n";
+                if (!(PE.RANK())) cout << " \n Output #" << t_out << "\n";
                 output(Y, grid, t_out, PE);
                 Y.checknan();
 
@@ -423,23 +417,34 @@ int main(int argc, char** argv) {
             // --------------------------------------------------------------------------------------------------------------------------------
             VlasovFunctor1D_explicitE rkF(Input::List().ls, Input::List().ms, Input::List().pmax, Input::List().ps,
                                           grid.axis.xmin(0), grid.axis.xmax(0), grid.axis.Nx(0));
+
+            // VlasovFunctor1D_spatialpush SA(Input::List().ls, Input::List().ms, Input::List().pmax, Input::List().ps,
+            //                               grid.axis.xmin(0), grid.axis.xmax(0), grid.axis.Nx(0));
+
+            // VlasovFunctor1D_momentumpush PA(Input::List().ls, Input::List().ms, Input::List().pmax, Input::List().ps,
+            //                               grid.axis.xmin(0), grid.axis.xmax(0), grid.axis.Nx(0));
             // --------------------------------------------------------------------------------------------------------------------------------
             for (size_t t_out(tout_start + 1); t_out < n_outsteps + 1; ++t_out) {
                 for (Clock W(t_out - 1, dt_out, CLF); W.tick() < W.numh(); ++W) {
+            
                     // --------------------------------------------------------------------------------------------------------------------------------
-                    if (!(PE.RANK())) {
-                        // cout << "Time = " <<  W.time()<< "\n";
-                        printf("\r Time = %4.4f tau_p = %4.4f fs", W.time(), W.time() * plasmaperiod);
-                        fflush(stdout);
-                    }
+                    // if (!(PE.RANK())) {
+
+                    //     printf("\r Time = %4.4f tau_p = %4.4f fs", W.time(), W.time() * plasmaperiod);
+                    
+
+                    // }
                     // --------------------------------------------------------------------------------------------------------------------------------
                     //                                   the guts
                     // --------------------------------------------------------------------------------------------------------------------------------
-
+                
                     if (Input::List().ext_fields) Setup_Y::applyexternalfields(grid, Y, W.time());
+                    // if (Input::List().ext_fields) Setup_Y::applyexternalfields(grid, Y, t);
+                    if (Input::List().trav_wave) Setup_Y::applytravelingwave(grid, Y, W.time());
 
                     Y = RK(Y, W.h(), &rkF);                                                 ///  Vlasov          //
-
+                    // Y = LEAP(Y, W.h(), &SA, &PA);                                                 ///  Vlasov          //
+                    // Y = MAGIC(Y, W.h(), &SA, &PA);                                                 ///  Vlasov          //
                     if (Input::List().collisions)
                         collide.advance(Y,W);                                               ///  Fokker-Planck   //
 
@@ -448,13 +453,18 @@ int main(int argc, char** argv) {
 
                     PE.Neighbor_Communications(Y);                                         ///  Boundaries      //
                 }
+                
 
-                if (!(PE.RANK())) cout << " \n Output......\n";
+                if (!(PE.RANK())) cout << " \n Output #" << t_out << "\n";
+
                 output(Y, grid, t_out, PE);
                 Y.checknan();
 
                 if (!(t_out%Input::List().n_distoutsteps))
                     output.distdump(Y, grid, t_out, PE);
+
+                if (!(t_out%Input::List().n_restarts))
+                    Re.Write(PE.RANK(), t_out, Y);
             }
         }
     }

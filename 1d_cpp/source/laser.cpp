@@ -1,5 +1,5 @@
 /*!\brief  Laser source - Definitions
- * \author Michail Tzoufras, Ben Winjum, Adam Tableman, Archis Joglekar
+ * \author PICKSC
  * \date   August 9, 2016
  * \file   laser.cpp
  *

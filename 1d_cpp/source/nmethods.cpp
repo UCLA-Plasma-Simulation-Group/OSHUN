@@ -1,5 +1,5 @@
 /*! \brief Numerical Methods - Declarations
- * \author Michail Tzoufras, Archis Joglekar, Benjamin Winjum
+* \author PICKSC
  * \date   September 1, 2016
  * \file   nmethods.cpp
  * 
@@ -419,6 +419,22 @@ vector<float> vfloat_complex(const vector<complex<double> > vDouble){
 //--------------------------------------------------------------
 
 valarray<double> df_4thorder(const valarray<double>& f) {
+    valarray<double> df(f.size());
+
+    df[0] = f[1]-f[0];
+    df[1] = 1.0/12.0*(f[4]-6.0*f[3]+18.0*f[2]-10.0*f[1]-3.0*f[0]);
+
+    for (size_t i(2); i < df.size()-2; ++i) {
+        df[i] = 1.0/12.0*(-f[i+2]+8.0*f[i+1]-8.0*f[i-1]+f[i-2]);
+    }
+
+    df[df.size()-2] = 1.0/12.0*(3.0*f[df.size()-1]+10.0*f[df.size()-2]-18.0*f[df.size()-3]+6.0*f[df.size()-4]-f[df.size()-5]);
+    df[df.size()-1] = f[df.size()-1]-f[df.size()-2];
+
+    return df;
+}
+
+valarray<double> df_4thorder(valarray<double>& f) {
     valarray<double> df(f.size());
 
     df[0] = f[1]-f[0];

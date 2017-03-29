@@ -1,0 +1,12 @@
+<map id="Ampere_1D::operator()" name="Ampere_1D::operator()">
+<area shape="rect" id="node2" href="$db/d09/group__st2d.html#ga3cd8efa54d063f445a59bd477d2b8809" title="EMF1D::By" alt="" coords="213,55,302,80"/>
+<area shape="rect" id="node3" href="$db/d09/group__st2d.html#ga4281fba2a76ed54ce1ab5a2e161413ee" title="EMF1D::Bz" alt="" coords="213,104,302,129"/>
+<area shape="rect" id="node8" href="$db/d09/group__st2d.html#gaa436c75fb1acbef5fc64e3458d88bede" title="Field1D::Dx" alt="" coords="212,153,303,179"/>
+<area shape="rect" id="node10" href="$db/d09/group__st2d.html#gae97c11bb9bd89428dcc56a57caea38e3" title="EMF1D::Ey" alt="" coords="213,203,302,228"/>
+<area shape="rect" id="node11" href="$db/d09/group__st2d.html#ga35704c418f26114638f9abb38cc5aaf6" title="EMF1D::Ez" alt="" coords="213,252,302,277"/>
+<area shape="rect" id="node4" href="$db/d09/group__st2d.html#ga789d734194cee61dadbcd915a53eec08" title="SHarmonic1D::operator=" alt="" coords="355,5,524,31"/>
+<area shape="rect" id="node5" href="$db/d09/group__st2d.html#ga9e8ed6f6f915c3e02538b7c8b7348bf9" title="SHarmonic1D::operator*=" alt="" coords="352,55,526,80"/>
+<area shape="rect" id="node6" href="$db/d09/group__st2d.html#ga90d78f456ba8705f644751879a112d68" title="SHarmonic1D::operator+=" alt="" coords="351,104,528,129"/>
+<area shape="rect" id="node7" href="$db/d09/group__st2d.html#gad86e2d1c1b65ee02d5faef8fde48c46c" title="SHarmonic1D::operator&#45;=" alt="" coords="352,153,526,179"/>
+<area shape="rect" id="node9" href="$db/d09/group__st2d.html#ga59d310369b6ee8067eecbcaf8d5be993" title="SHarmonic1D::numx" alt="" coords="367,203,511,228"/>
+</map>

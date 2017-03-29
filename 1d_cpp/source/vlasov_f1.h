@@ -1,14 +1,10 @@
 /*!\brief  Vlasov Equation - Declarations
- * \author Michail Tzoufras, Benjamin Winjum, Archis Joglekar
+* \author PICKSC
  * \date   October 10, 2016
- * \file   vlasov.h
+ * \file   vlasov_f1.h
  *
  * Includes declarations for spatial advection, electric field advection, current, and 
  * the RK1D Functor responsible for stepping forward
- * 
- * \todo Needs Spatial Advection 2D
- * \todo Electric Field 2D
- * \todo RK2D Functor
  * 
  */
 

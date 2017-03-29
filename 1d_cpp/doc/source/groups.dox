@@ -7,16 +7,6 @@
  *  @{
  *  @} */ // end of group1
 
-/** @defgroup st2d Simulation state in 2D code
- *  These are all the state objects used to describe the distribution function and electromagnetic fields in the 2D code
- * - SHarmonic2D : A wrapper class for Array3D<...>. It is used to describe a single spherical harmonic in 2D.
- * - Field2D : Similar to Field1D but made of a Array2D<complex>.
- * - EMF2D: The 6 2D Fields in a 2D-3P code. A vector of 6 Field2D objects.
- * - DistFunc2D: The collection of 2D spherical harmonics. A vector of SHarmonic2D.
- * - State2D: The collection of 2D distributions and an EMF2D object describing all the fields. A vector of DistFunc2D per species and an EMF2D object.
- *  @{
- *  @} */ // end of group2
-
  /** @defgroup vfp1d Vlasov-Fokker-Planck operators in 1D
  *  These are all the VFP objects used to describe the evolution of distribution function in the 1D code
  *  - Spatial Advection
@@ -24,14 +14,4 @@
  *  - Electron-electron collisions on \f$f^0\f$
  *  - Electron-ion and electron-electron collisions on \f$f^l\f$
  *  @{
- *  @} */ // end of group3
-
-/** @defgroup vfp2d Vlasov-Fokker-Planck operators in 2D
- *  These are all the VFP objects used to describe the evolution of distribution function in the 1D code
- *  - Spatial Advection
- *  - Electric Field
- *  - Magnetic Field
- *  - Electron-electron collisions on \f$f^0_0\f$
- *  - Electron-ion and electron-electron collisions on \f$f^l_m\f$
- *  @{
- *  @} */ // end of group3
+ *  @} */ // end of group2

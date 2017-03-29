@@ -1,0 +1,8 @@
+<map id="Magnetic_Field_1D::implicit" name="Magnetic_Field_1D::implicit">
+<area shape="rect" id="node2" href="$db/d09/group__st2d.html#ga2af25048adf47b4ba5762cb6ac7b0943" title="Field1D::array" alt="" coords="216,5,321,31"/>
+<area shape="rect" id="node3" href="$db/d09/group__st2d.html#gaac6559b7b70419f5f497a981d31b317a" title="DistFunc1D::q" alt="" coords="215,55,321,80"/>
+<area shape="rect" id="node4" href="$d3/d6c/nmethods_8cpp.html#a344466e46998648d28f1ca474667109d" title="The tridiagonal solver for implicit collisions. " alt="" coords="197,104,339,129"/>
+<area shape="rect" id="node5" href="$dd/d03/class_array2_d.html#a1e12b23c24a402b5238a91f7dd538d75" title="Array2D::dim1" alt="" coords="394,55,501,80"/>
+<area shape="rect" id="node6" href="$dd/d03/class_array2_d.html#a8f75ad6d94fc616a1257b69fc1391515" title="Array2D::dim2" alt="" coords="394,104,501,129"/>
+<area shape="rect" id="node7" href="$d3/d6c/nmethods_8cpp.html#a11e2a28cd8cdab77320407c906b3a643" title="Set up tridiagonal solver. " alt="" coords="387,153,508,179"/>
+</map>

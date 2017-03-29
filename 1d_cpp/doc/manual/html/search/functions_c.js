@@ -1,0 +1,23 @@
+var searchData=
+[
+  ['n',['n',['../d0/d30/class_output___data_1_1_output___preprocessor__1_d.html#a290a0bb2352b125c13da14b224872a6f',1,'Output_Data::Output_Preprocessor_1D']]],
+  ['neighbor_5fcommunications',['Neighbor_Communications',['../de/de9/class_parallel___environment__1_d.html#ab455af3c48a5f804c229a2df387bee38',1,'Parallel_Environment_1D']]],
+  ['neighbor_5fimplicite_5fcommunications',['Neighbor_ImplicitE_Communications',['../de/de9/class_parallel___environment__1_d.html#a8f495fb0127a862b3326427da0b7e4ff',1,'Parallel_Environment_1D']]],
+  ['ni',['ni',['../d0/d30/class_output___data_1_1_output___preprocessor__1_d.html#abd46b3347ce63ca9d6c4b9be9860187b',1,'Output_Data::Output_Preprocessor_1D']]],
+  ['nl',['Nl',['../df/d94/class_output___data_1_1p2p1x1__1_d.html#af0bd2e2d9fbf38e0650b86fa345c58a8',1,'Output_Data::p2p1x1_1D']]],
+  ['nm',['Nm',['../df/d94/class_output___data_1_1p2p1x1__1_d.html#a4894cab17ec3ebebd6c61713154b2236',1,'Output_Data::p2p1x1_1D']]],
+  ['node_5fcommunications',['Node_Communications',['../d1/dd4/class_node___communications.html#a53247ece50e7fcd9b8d2df5b0c13141a',1,'Node_Communications']]],
+  ['node_5fimplicite_5fcommunications',['Node_ImplicitE_Communications',['../db/d67/class_node___implicit_e___communications.html#a4a682ece6a2f7836dd4a2e6f5827674f',1,'Node_ImplicitE_Communications']]],
+  ['nodes',['NODES',['../de/de9/class_parallel___environment__1_d.html#aaebbf50fcd9c47d035be5a068bac8efe',1,'Parallel_Environment_1D']]],
+  ['np',['Np',['../de/daf/class_output___data_1_1fx1__1_d.html#adb4b1278256e6e8eb5e0f199c2d2d6e0',1,'Output_Data::fx1_1D::Np()'],['../dc/dfc/class_algorithms_1_1_axis_bundle.html#a2639193623e2e95f1034c7b4a06cda3b',1,'Algorithms::AxisBundle::Np()']]],
+  ['npcell',['npcell',['../df/d94/class_output___data_1_1p2p1x1__1_d.html#afc031e452aa6e38e7a7d94f1a46837f3',1,'Output_Data::p2p1x1_1D']]],
+  ['npx',['Npx',['../df/d94/class_output___data_1_1p2p1x1__1_d.html#a315513faab4731bc8ad33117f09c67b6',1,'Output_Data::p2p1x1_1D::Npx()'],['../dc/dfc/class_algorithms_1_1_axis_bundle.html#ad0e7e45f4383d08d90392ee1021d4f1b',1,'Algorithms::AxisBundle::Npx()']]],
+  ['npy',['Npy',['../df/d94/class_output___data_1_1p2p1x1__1_d.html#a0a1c780ea306f64cfd5315066a27905c',1,'Output_Data::p2p1x1_1D::Npy()'],['../dc/dfc/class_algorithms_1_1_axis_bundle.html#a9cba3817eb21b627ee1a4b982ddfefbd',1,'Algorithms::AxisBundle::Npy()']]],
+  ['npz',['Npz',['../dc/dfc/class_algorithms_1_1_axis_bundle.html#a417cf42f365973f5df0ca93b1c6b574c',1,'Algorithms::AxisBundle']]],
+  ['numh',['numh',['../db/dce/class_r_k4___i_b.html#a38382afef9095f2d516b96eb50eedfb3',1,'RK4_IB::numh()'],['../d7/d44/class_clock.html#a356670a95f88e2fc38914191a25ef02b',1,'Clock::numh()']]],
+  ['nump',['nump',['../db/d09/group__st2d.html#ga92eae6dbcfcc5770299682b046c87739',1,'SHarmonic1D::nump()'],['../db/d09/group__st2d.html#ga5e2c03bac30e3c98a8ac385e7d517846',1,'SHarmonic2D::nump()']]],
+  ['numx',['numx',['../db/d09/group__st2d.html#ga59d310369b6ee8067eecbcaf8d5be993',1,'SHarmonic1D::numx()'],['../db/d09/group__st2d.html#ga2db5c0d21280f5450f0566a70c334b6d',1,'SHarmonic2D::numx()'],['../db/d09/group__st2d.html#gaab9cc94604c92f28a02cc0bd16cfcfb1',1,'Field1D::numx()'],['../db/d09/group__st2d.html#gaded2ecf9bba6ad7f5de88bd5210d7eab',1,'Field2D::numx()'],['../db/d09/group__st2d.html#gad4b2cf8ad2df3a58b14312ac0990e79a',1,'Hydro1D::numx()']]],
+  ['numy',['numy',['../db/d09/group__st2d.html#ga1265a82c58ab8f3cb75181120e5a4a76',1,'SHarmonic2D::numy()'],['../db/d09/group__st2d.html#ga77f05eec20ec0735f922a826d862e787',1,'Field2D::numy()']]],
+  ['nx',['Nx',['../dc/dfc/class_algorithms_1_1_axis_bundle.html#acac19f5d54e9ec7156a7bd3be984dc02',1,'Algorithms::AxisBundle']]],
+  ['nxg',['Nxg',['../dc/dfc/class_algorithms_1_1_axis_bundle.html#ab343b2b25d66ce40e8772789c168c687',1,'Algorithms::AxisBundle']]]
+];

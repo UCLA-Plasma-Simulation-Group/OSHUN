@@ -1,18 +1,12 @@
-///////////////////////////////////////////////////////////
-//   Contributing authors : Michail Tzoufras, Benjamin Winjum
-//
-//  Last Modified:  September 1, 2016
-///////////////////////////////////////////////////////////
-
-//   
-//   This header file contains the declaration for the 
-//   structures that are required for importing the input
-//   parameters:
-//
-//   1. Import:
-//     Input data
-//
-///////////////////////////////////////////////////////////
+/*! \brief Input reader - Declarations
+ * \author PICKSC
+ * \date   March 2017
+ * \file   input.h
+ * 
+ * Contains:
+ * 1) input reader
+ * 2) default values for input variables.
+ */
 
 #ifndef DECL_IMPORT_H
 #define DECL_IMPORT_H
@@ -31,6 +25,8 @@ namespace Input{
 //--------------------------------------------------------------
 //  declaration of input list variables (input deck)
 //--------------------------------------------------------------
+        bool isthisarestart;
+
         size_t NnodesX;
 
         size_t numsp;
@@ -48,6 +44,8 @@ namespace Input{
         bool implicit_E;
         bool implicit_B;
         bool collisions;
+        int f00_implicitorexplicit;
+        bool flm_collisions;
 
         int BoundaryCells;
         int bndX;
@@ -63,7 +61,8 @@ namespace Input{
         bool o_Vsq, o_Qx, o_Qy, o_Qz;
         bool o_vNx, o_vNy, o_vNz;
         bool o_Jx, o_Jy, o_Jz;
-        bool o_Pressure, o_Temperature, o_ND, o_Nu, o_p1x1, o_f0x1, o_f10x1, o_f11x1;
+        bool o_Pressure, o_Temperature, o_ND, o_Nu, o_p1x1, o_f0x1, o_f10x1, o_f11x1,
+                o_f20x1, o_fl0x1;
         bool o_Ux, o_Uy, o_Uz, o_Z, o_ni, o_Ti;
         bool only_output;
         size_t numpx, nump1, nump2, nump3;
@@ -83,31 +82,42 @@ namespace Input{
         bool hydromotion;
         double hydromass, hydrocharge;
 
-//          Phenomenological laser parameters
         int polarization_direction;
 
-        bool init_f1;
-        bool IB_heating;
+        bool init_f1, init_f2;
+
         bool MX_cooling;
 
         double super_gaussian_m;
 
-        double I_0, lambda_0;
 
-        bool ext_fields;
+        
 
         double pth_ref;
 
-        // Strings
+// ----------------------------------------------------------------------
+// ----------------------------------------------------------------------
+        /// Initialization
 
         std::vector<std::string> dens_profile_str;
         std::vector<std::string> temp_profile_str;
         std::vector<std::string> f10x_profile_str;
+        std::vector<std::string> f20x_profile_str;
+        std::vector<std::string> f_pedestal;
 
         std::string hydro_dens_profile_str;
         std::string hydro_temp_profile_str;
         std::string hydro_vel_profile_str;
         std::string hydro_Z_profile_str;
+
+
+// ----------------------------------------------------------------------
+        /// External fields
+//
+        bool ext_fields,trav_wave;
+        int num_waves;
+        bool IB_heating;
+        double I_0, lambda_0;
 
         std::string intensity_profile_str;
         std::string intensity_time_profile_str;
@@ -118,12 +128,27 @@ namespace Input{
         std::string by_time_profile_str;
         std::string bz_time_profile_str;
 
-        std::string Ex_profile_str;
-        std::string Ey_profile_str;
-        std::string Ez_profile_str;
-        std::string Bx_profile_str;
-        std::string By_profile_str;
-        std::string Bz_profile_str;
+        std::string ex_profile_str;
+        std::string ey_profile_str;
+        std::string ez_profile_str;
+        std::string bx_profile_str;
+        std::string by_profile_str;
+        std::string bz_profile_str;
+
+        std::vector< std::string > ex_wave_profile_str;
+        std::vector< std::string > ey_wave_profile_str;
+        std::vector< std::string > ez_wave_profile_str;
+        std::vector< std::string > bx_wave_profile_str;
+        std::vector< std::string > by_wave_profile_str;
+        std::vector< std::string > bz_wave_profile_str;
+        std::vector< std::string > wave_time_envelope_str;
+        std::vector< double > trav_wave_rise;
+        std::vector< double > trav_wave_flat;
+        std::vector< double > trav_wave_fall;
+        std::vector< double > trav_wave_center;
+
+// ----------------------------------------------------------------------
+// ----------------------------------------------------------------------
 
         std::vector< std::string > oTags;
         std::vector<double> qs;

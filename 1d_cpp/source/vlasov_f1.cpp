@@ -1,7 +1,7 @@
 /*! \brief  Vlasov Equation - Definitions
- * \author Michail Tzoufras, Benjamin Winjum, Archis Joglekar
+* \author PICKSC
  * \date   October 10, 2016
- * \file   vlasov.cpp
+ * \file   vlasov_f1.cpp
  *
  * Includes spatial advection, electric field advection, and electric field update routines
  * 

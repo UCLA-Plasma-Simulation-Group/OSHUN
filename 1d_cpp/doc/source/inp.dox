@@ -1,10 +1,14 @@
 /*! \page input %Input Deck
- * Note: All the following variables are housed in the Input_List class.
- * \section bss Overall Simulation Setup
+ * Note: All the following variables are housed in the Input_List class. Each one of the below variables needs to be specified. Some need to be specified before the others 
+ * so check this page or an example inputdeck to double-check
+ * 
+ * \section oss Overall Simulation Setup
  *\subsection simgrid Simulation Grid
  * 
- * - \code NnodesX = ... \endcode \code NnodesY = ... \endcode 
- * The number of MPI nodes to use along the X/Y directions.
+ * - \code NnodesX = ... \endcode 
+ * The number of MPI processes.
+ * 
+ * - \code numsp = ... \endcode Specifies the number of species. Just 1 for now.
  * 
  * - \code l0 = ... \endcode 
  * The highest 'l' value to use in the velocity space spherical harmonic expansion.
@@ -14,72 +18,72 @@
  * 
  * - \code nump = ... \endcode 
  *  The number of cells that will make up the momentum-space axis in the simulation. 
+ *
+ * - \code pmax = ... \endcode  Specifies extent of cell centered momentum grid (0 < p < pmax). 
  * 
- * - \code numx_glob, numy_glob = ... \endcode 
- * Number of cells along the X/Y directions.
+ * - \code mass = ... \endcode  Species mass
  * 
- * - \code xmin, xmax = ... \endcode The extent (in units normalized to skin depth) along the X direction.
+ * - \code charge = ... \endcode  The extent of the absolute value of momentum to use in the simulation. `pmin = pmax /(2.0* nump+1)`.
  * 
- * - \code ymin, ymax = ... \endcode The extent (in units normalized to skin depth) along the Y direction.
+ * - \code Nx = ... \endcode Number of cells along the X/Y directions. 
  * 
- * - \code pmax = ... \endcode  The extent of the absolute value of momentum to use in the simulation. `pmin = pmax /(2.0* nump+1)`.
+ * - \code xmin = ... \endcode Extent of simulation domain covered with Nx cells. Cell centered.
+ * - \code xmax = ... \endcode 
  * 
- *\subsection time Timing
- * - \code t_stop = ... \endcode  End simulation at this time (in simulation units).
+ * 
+ 
+ *\subsection time Time Grid
+ * - \code clf_dp = ... \endcode  Parameter that controls the minimum size of the time-step. The simulation step size (in simulation units) is `_h_ = dt_out / float(integer(_dt_out_/clf_dp)+1)`. 
+ * Please refer to the Clock object for more details.
  * 
  * - \code n_outsteps = ... \endcode  Number of outputs, evenly spaced from `t=0` to `t=t_stop`.
  * 
- * - _dt_out_: Amount of time between outputs. Set by `dt_out = t_stop/n_outsteps`. (only provided for reference, not needed in the input deck)
+ * - \code n_distoutsteps = ... \endcode  Number of output steps between distribution outputs.
  * 
- * - \code clf_dp = ... \endcode  Parameter that controls the minimum size of the time-step. The simulation step size (in simulation units) is `_h_ = dt_out / float(integer(_dt_out_/clf_dp)+1)`.
+ * - \code t_stop = ... \endcode  End simulation at this time (in simulation units).
  * 
- * - \code small_dt = ... \endcode  Maximum allowed time step size (in simulation units) for time steps in the Fokker-Plank Explicit E-E f00 collision calculation. Set to `_h_ = _h_/float( integer(_h_/small_dt)+1)`
  * 
- * - \code smaller_dt = ... \endcode  Used only for the Inverse Bremsstrahlung (IB) module. It determines the maximum time step sized used in the IB calculation. The actual time step size used is (much like the one for the Fokker-Plank f00 EE collision previously given): `_h_ = _h_/float( integer(_h_/smaller_dt)+1)`
+ * \section switches Various Switches
  * 
- * For a helpful input web browser based calcuation worksheet, go here:
+ *\subsection collswitch Collision module
+ * - \code collisions_switch = [true | false] \endcode 
  * 
- * https://ucla-plasma-simulation-group.github.io/oshun-development/oshun_2d_cpp_calc.html
+ * - \code f00_collisions = [implicit | explicit] \endcode Indicates which f00 collision push should be performed.
  * 
- * \section algs Algorithms
+ * - \code flm_collisions = [true | false] \endcode Indicates whether the flm collision push should be performed.
  * 
- *\subsection algs_ocode Overall Code
- * - \code implicit_E = [true | false] \endcode
- * If true, then the implicit Electric Field solver is used.
+ * - \code small_dt = ... \endcode Specifies the timestep for explicit f_00 collisions
  * 
- * - \code RKLevel = [2,3,4] \endcode. The order of the explicit Runge-Kutta solver used for the main simulation loop. Each higher order is more expensive to compute but allows for larger time steps to be taken. The convergence of RK Solvers is such that the the solver will go unstable quickly (and the simulation will abort) if too large a time step is taken. By the same token, if the solver remains stable then the time step is appropriate and is valid to use.
+ * - \code smaller_dt = ... \endcode Specifies the timestep for laser heating loop using the explicit f00 collision formulation.
  * 
- *\subsection algs_dim 1D or Electrostatic switches
- * - \code if_implicitES = [true | false] \endcode
- *  Only used if _implicit_E_ is set to true. If the implicit Electric field solver is used, then  _if_implicitES_ = true will use an Electrostatic version of the implicit solver.
+ * - \code f00_exp_parabolic_approximation = ... \endcode Specifies the number of cells approximated using the parabolic approximation
  * 
- * - \code if_implicit1D = [true | false] \endcode Used in the l >= 1 Fokker-Planck collision operator. If _true_ then only the m=0 portion of the collision operator is calculated which can give a significant speed-up. It is valid to use this option if the problem is inherently 1-D along the x-axis. This is an approximation and will give some error.
+ * - \code f00_imp_RB_D_tolerance = ... \endcode Specifies the convergence tolerance for the D coefficient in the implicit f00 solver.
  * 
- *\subsection algs_coll Collision operator
- * - \code if_tridiagonal = [true | false] \endcode Used in the l >= 1 Fokker-Planck collision operator that is solved implicitly. If **if_tridiagonal** is set to _true_, then a significant speedup is achieved by using an approximate solving method where the matrix is treated as tri-diagonal (using a fast tri-diagonal method called the Thomas method). If _false_ then a full linear algebra matrix solver is used. This is more accurate but slower.
+ * - \code f00_imp_RB_D_iterations = ... \endcode Specifies the maximum number of iterations performed to calculate the Rosenbluth D coefficient in the implicit f00 solver.
  * 
- * - \code NB_algorithms = [4-6] \endcode The number of cells that are interpolated as a parabola (along the lower edge of velocity space) when doing the Fokker-Planck calculations (Approximation for speedup.).
+ * - \code flm_imp_tridiagonal = [true | false] \endcode Specifies whether full e-e collisions need to be performed for flm.
  * 
- *\subsection rstrt Restarts
  * 
- * - \code restart_time = ... \endcode  An integer. If set to a value >0 then the restart with index **restart_time** will be read in and the simulation stated from this point.
+ *\subsection vlasovswitch Vlasov Switches
+ * - \code implicit_B_push = [true | false] \endcode Specifies whether the implicit B field pusher should be used.
  * 
- * - \code n_restarts = ... \endcode  The number of restart points to write out during the entire simulation.
+ * \subsection fieldsolverswitch Field Solver
  * 
- *\subsection smth Smoothing
+ * - \code implicit_E = [true | false] \endcode Specifies whether implicit field solver should be used. Works great for collisional problems.
  * 
- * - \code smooth_x = ... \endcode  
- * 
- 
  * \section plasmaconditions Initial Plasma Conditions
- *\subsection coll Collisions
- * 
- * - \code Zeta = ... \endcode  Ion charge - used for electron-ion collisions
+ *\subsection init Density and Temperature
  * 
  * - \code density_np = ... \endcode  Density in units of 1/cm^3 that corresponds to a normalized simulation density of 1.0. Sets the real units for many of the quantities i.e. time
  * 
- *\subsection init Plasma Conditions
- * The plasma density and temperature can be initialized. An initial electric and magnetic field can also be specified.
+ * - \code super_gaussian_distribution = ... \endcode  Specify exponent of distribution according to SG theory. 2.0 specifies a Maxwellian.
+ * 
+ * - \code pth_ref = ... \endcode  reference thermal velocity. Only used for unit calculation at the beginning of simulation. Does not come into the code at all.
+ * 
+ * - \code hydrocharge = ... \endcode  Ion charge - used for electron-ion collisions
+ * 
+ * The plasma density and temperature can be initialized using the following.
  * These quantities can be uniform in space, specified by a function, or by using a piecewise linear interpolation by using
  * the following format (for a 1D system ranging from -100.0 to 100.0):
  * \code 
@@ -87,117 +91,123 @@
  * n(x) = fnc {1.0 + 0.01*sin(2*pi*x/200)}
  * n(x) = pcw {-100.0 1.0 100.0 1.0}
  * \endcode 
- * 
  * Note that the piecewise input needs to be supplied in pairs. The code requires
  * \code
  * n(x) = ...
  * T(x) = ...
- * Z(x) = ...
  * \endcode 
  * 
- *\subsection initEM Electromagnetic Fields
- * The code requires
+ * \subsection initj Current
+ * 
+ * \code init_f1 = [true | false] \endcode Switch indicating whether f1 needs to be non-zero
+ * 
+ * \code multiplier-f10(x) = ... \endcode Use input as n(x), T(x) above. This is effectively a C(x) such that 
+ * f10(x) = C(x) * (v^3 df00/dv)
+ * 
+ * \subsection bound Boundaries
+ * 
+ * \code bndX = [0 | 1] \endcode 0 - periodic, 1 - mirror
+ * 
+ * 
+ *\subsection initEM External Electromagnetic Fields
  * \code
  * Ex(x) = ...
+ * Ex(t) = ...
  * Ey(x) = ...
- * Ez(x,y) = ...
- * Bx(x,y) = ...
- * By(x,y) = ...
+ * Ey(t) = ...
+ * Ez(x) = ...
+ * Ez(t) = ...
+ * Bx(x) = ...
+ * Bx(t) = ...
+ * By(x) = ...
+ * By(t) = ...
  * Bz(x) = ...
+ * Bz(t) = ...
  * \endcode 
- * in the same formatting as the density specified in the plasma conditions
+ * in the same formatting as the density specified in the plasma conditions. 
+ * This toggle sets the fields to the specified value at every timestep if their value is > 0.
+ * This does not enable holding a certain at 0.
  * 
- *\subsection backgroundT Ambient Temperature
+ * \subsection wavedriver External Wave Driver
  * 
- * \code pt_amb = (double) \endcode 
+ * \code Ex(x,t) = ... \endcode Two variable function specified as above.
+ * \code Ey(x,t) = ... \endcode Two variable function specified as above.
+ * \code Ez(x,t) = ... \endcode Two variable function specified as above.
+ * \code Bx(x,t) = ... \endcode Two variable function specified as above.
+ * \code By(x,t) = ... \endcode Two variable function specified as above.
+ * \code Bz(x,t) = ... \endcode Two variable function specified as above.
+ * This toggle adds to the self consistent fields in the simulation. It can act as a ponderomotive driver
  * 
- * Background thermal velocity has to be > 0 to initialize a distribution function.
+ * \code rise_flat_fall_center \endcode Provide 4 numbers in a row separated by spaces for the rise time, flat time, fall time, and center of the pulse.
  * 
- *\subsection bc Boundary conditions
  * 
- * \code bndX = [0 | 1]\endcode 
- * \code bndY = [0 | 1]\endcode 
- * Boundary conditions in X/Y, 0 for periodic and 1 for mirroring
+ *\subsection hydro Initialization for ion fluid.
+ * 
+ * - \code hydro = [true | false]  \endcode
+ * 
+ * - \code hydroatomicmass = ... \endcode 
+ * 
+ * - \code MX_cooling = ... \endcode  Doesn't do anything for now
+ * 
+ * - \code Z(x) = ... \endcode  
+ * 
+ * - \code ni(x) = ... \endcode  
+ * 
+ * - \code Ti(x) = ... \endcode  
+ * 
+ * - \code Ux(x) = ... \endcode  
+ * 
  *
- *\subsection ib Inverse Bremsstrahlung (Laser Heating Source)
+ * \subsection IB Initialization for inverse Bremsstrahlung heating module
  * 
- * - \code polarization_direction = [0 | 1 | 2 | 3 ] \endcode  0 for nothing, 1 for x, 2 for y, 3 for z 
- * 
- * - \code inverse_bremsstrahlung = [0 | 1] \endcode  0 for off, 1 for on
- * 
- * - \code linear_Ivst = [true | false] \endcode  
- * 
- * - \code polynomial_Ivst = [true, false] \endcode  
- * 
- * - \code spot_w0 = ... \endcode 
- * 
- * - \code cntr_r0 = ... \endcode  
- * 
- * - \code cntr_x0 = ... \endcode 
+ * - \code inverse_bremsstrahlung = [true | false]  \endcode
  * 
  * - \code I_0 = ... \endcode  laser intensity in W/cm^2
  * 
  * - \code lambda_0 = ... \endcode  laser wavelength in microns
  * 
- * - \code rise_time = ... \endcode 
- * 
- * - \code flat_time = ... \endcode 
- * 
- * - \code fall_time = ... \endcode 
- * 
- * - \code ab_eta = ... \endcode 
- * 
- * - \code ab_depth = ... \endcode 
+ * - \code I(x) = ... \endcode
+ *
+ * - \code I(t) = ... \endcode
  * \section output Output
- * - \code nump1, nump2, nump3 = ... \endcode  Number of cells in each momentum direction for output
- * 
- * - \code numpx = ... \endcode  
- * 
- * - \code EHist = ... \endcode  energy history
- * 
- * - \code Ex, Ey, Ez = ... \endcode  electric field in X/Y/Z
- * 
- * - \code Bx, By, Bz = ... \endcode  electric field in X/Y/Z
- * 
- * - \code x1 = ... \endcode The species density in 2D.
- * 
- * - \code x1x2 = ... \endcode  The species density in 2D.
- * 
- * - \code pth = ... \endcode  The species temperature in 1D/2D
- * 
- * - \code G = ... \endcode 
- * 
- * - \code Px, Py, Pz = ... \endcode 
- * 
- * - \code Vx, Vy, Vz = ... \endcode  The current in each direction.
- * 
- * - \code VxVx, VxVy, VxVz, VyVy, VyVz, VzVz = ... \endcode  The momentum transport tensor
- * 
- * - \code Vsq = ... \endcode  Another temperature diagnostic
- * 
- * - \code Qx, Qy = ... \endcode  Heat flow
- * 
- * - \code Temperature = ... \endcode  
- * 
- * - \code Pressure = ... \endcode 
- * 
- * - \code ND = ... \endcode  Number of particles in Debye Sphere
- * 
- * - \code Nu = ... \endcode  Collision Frequency
- * 
- * - \code p1x1 = ... \endcode  Distribution function output, f(vx,x)
- * 
- * - \code p1x1x2 = ... \endcode  Distribution function output, f(vx,x,y)
- * 
- * - \code p1p2p3 = ... \endcode  Distribution function output, f(vx,vy,vz)
- * 
- * - \code denormalize_fields, denormalize_length = ... \endcode  Have output in real units
- * 
- * - \code only_output = ... \endcode  If you are loading a restart file, do not actually restart a simulation. Rather, read in the restart file and immediately do a diagnostic output. Then exit.
- * 
- * 
- * \section sample Sample Input Deck
+ * All can be [true | false]
  * \code 
  * 
+ * o_Ex = 
+ * o_Ey = 
+ * o_Ez = 
+ * o_Bx = 
+ * o_By = 
+ * o_Bz = 
+ * 
+ * o_x1x2 = 
+ * o_Temperature = 
+ * 
+ * o_Ex = 
+ * o_Ey = 
+ * o_Ez = 
+ * 
+ * o_Ex = 
+ * o_Ey = 
+ * o_Ez = 
+ * 
+ * o_Ex = 
+ * o_Ey = 
+ * o_Ez = 
+ * 
+ * o_p1x1 = 
+ * o_f0x1 = 
+ * o_f10x1 = 
+ * o_f11x1 =
+ * o_f20x1 =
+ * o_fl0x1 = 
+ * 
+ * o_Ux = 
+ * o_Uy =  
+ * o_Uz =  
+ * o_Z =  
+ * o_ni =  
+ * o_Ti =  
  * \endcode
+ * 
  */

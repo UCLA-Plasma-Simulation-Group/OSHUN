@@ -1,5 +1,5 @@
 /*! \brief Numerical Methods - Declarations
- * \author Michail Tzoufras, Archis Joglekar, Benjamin Winjum
+* \author PICKSC
  * \date   September 1, 2016
  * \file   nmethods.h
  * 
@@ -51,9 +51,9 @@ void TridiagonalSolve (const valarray<double>& a,
                        valarray<double>  d,
                        valarray<double>& x);
 
-void TridiagonalSolve (const valarray<complex<double>>& a,
-                       const valarray<complex<double>>& b,
-                       valarray<complex<double>>& c,
+void TridiagonalSolve (const valarray<complex<double> >& a,
+                       const valarray<complex<double> >& b,
+                       valarray<complex<double> >& c,
                        valarray<complex<double> >  d,
                        valarray<complex<double> >& x);
 //-------------------------------------------------------------------
@@ -74,7 +74,7 @@ bool Thomas_Tridiagonal(Array2D<double>& A,
 bool Thomas_Tridiagonal(Array2D<double>& A,
                         valarray<complex<double> >& d,
                         valarray<complex<double> >& xk);
-bool Thomas_Tridiagonal(Array2D<complex<double>>& A,
+bool Thomas_Tridiagonal(Array2D<complex<double> >& A,
                         valarray<complex<double> >& d,
                         valarray<complex<double> >& xk);
 //-------------------------------------------------------------------
@@ -84,26 +84,26 @@ bool Thomas_Tridiagonal(Array2D<complex<double>>& A,
 
 //-------------------------------------------------------------------
 complex<double> Det33(/*const valarray<double>& D, */
-        Array2D<complex <double>>& A);
+        Array2D<complex <double> >& A);
 //-------------------------------------------------------------------
-complex<double> Detx33(valarray<complex <double>>& D,
-                       Array2D<complex <double>>& A);
-//-------------------------------------------------------------------
-
-//-------------------------------------------------------------------
-complex<double> Dety33(valarray<complex <double>>& D,
-                       Array2D<complex <double>>& A);
+complex<double> Detx33(valarray<complex <double> >& D,
+                       Array2D<complex <double> >& A);
 //-------------------------------------------------------------------
 
 //-------------------------------------------------------------------
-complex<double> Detz33(valarray<complex <double>>& D,
-                       Array2D<complex <double>>& A);
+complex<double> Dety33(valarray<complex <double> >& D,
+                       Array2D<complex <double> >& A);
+//-------------------------------------------------------------------
+
+//-------------------------------------------------------------------
+complex<double> Detz33(valarray<complex <double> >& D,
+                       Array2D<complex <double> >& A);
 //-------------------------------------------------------------------
 
 //  Convert data structure to float structure
 valarray<float> vfloat(const valarray<double>& vDouble);
-// valarray<float> vfloat(const valarray<complex<double>>& vDouble);
-// valarray<float> vfloat_complex(const valarray<complex<double>>& vDouble);
+// valarray<float> vfloat(const valarray<complex<double> >& vDouble);
+// valarray<float> vfloat_complex(const valarray<complex<double> >& vDouble);
 
 vector<float>   vfloat(const vector<double> vDouble);
 vector<float>   vfloat(const vector<complex<double> > vDouble);
@@ -113,8 +113,8 @@ vector<float>   vfloat_complex(const vector<complex<double> > vDouble);
 //
 //  Convert data structure to float structure
 valarray<float> vfloat(const valarray<double>& vDouble);
-// valarray<float> vfloat(const valarray<complex<double>>& vDouble);
-// valarray<float> vfloat_complex(const valarray<complex<double>>& vDouble);
+// valarray<float> vfloat(const valarray<complex<double> >& vDouble);
+// valarray<float> vfloat_complex(const valarray<complex<double> >& vDouble);
 
 vector<float>   vfloat(const vector<double> vDouble);
 vector<float>   vfloat(const vector<complex<double> > vDouble);
@@ -122,6 +122,8 @@ vector<float>   vfloat_complex(const vector<complex<double> > vDouble);
 
 
 valarray<double> df_4thorder(const valarray<double>& f);
+valarray<double> df_4thorder(valarray<double>& f);
+
 Array2D<complex<double> > df1_4thorder(Array2D<complex<double> >& f);
 Array2D<complex<double> > df2_4thorder(Array2D<complex<double> >& f);
 

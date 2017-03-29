@@ -1,5 +1,5 @@
 /*! \brief Implicit Electric Field - Definitions
- * \author Michail Tzoufras, Archis Joglekar, Benjamin Winjum
+* \author PICKSC
  * \date   September 23, 2016
  * \file   implicitE.cpp
  * 
@@ -31,7 +31,7 @@
     #include "state.h"
     #include "fluid.h"
     #include "vlasov.h"
-    
+    #include "functors.h"
     #include "formulary.h"
     #include "nmethods.h"
     #include "collisions.h"
@@ -265,7 +265,7 @@
 
 //--------------------------------------------------------------
     void Electric_Field_Methods::Implicit_E_Field::
-    advance(Algorithms::RK4<State1D>* rk, State1D& Yin, collisions& coll, VlasovFunctor1D_implicitE_p2* rkF){//, double time, double dt){
+    advance(Algorithms::RK3<State1D>* rk, State1D& Yin, collisions& coll, VlasovFunctor1D_implicitE_p2* rkF){//, double time, double dt){
 //--------------------------------------------------------------
 //  Calculate the implicit electric field
 //--------------------------------------------------------------

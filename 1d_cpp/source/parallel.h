@@ -141,13 +141,13 @@
             int NODES() const;
             int BNDX()  const;
 
-//          Restart 
+//          Restart
 //             bool READ_RESTART() const;
-//             void Read_Restart(State1D& Y); 
-// 
+//             void Read_Restart(State1D& Y);
+
 //             bool WRITE_RESTART(const size_t step) const;
-//             void Write_Restart(size_t step, State1D& Y); 
-// 
+//             void Write_Restart(State1D& Y, size_t step);
+
 //             size_t T_IN() const;
           
 //          Information exchange
@@ -168,13 +168,10 @@
 
 //          Error Checking of the constructor
             bool error_check();
-
-//          Restart files 
-//             int restart_time;
-//             int restart_step;
         };
 //--------------------------------------------------------------
 //**************************************************************
+
 
 
     #endif

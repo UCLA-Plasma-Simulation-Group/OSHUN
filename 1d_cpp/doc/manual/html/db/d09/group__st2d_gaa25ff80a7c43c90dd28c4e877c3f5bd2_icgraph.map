@@ -1,0 +1,30 @@
+<map id="EMF1D::Bx" name="EMF1D::Bx">
+<area shape="rect" id="node2" href="$da/dce/namespace_setup___y.html#a1deb91546b0d38ea3770d717f62090fa" title="Setup_Y::applyexternalfields" alt="" coords="719,38,909,63"/>
+<area shape="rect" id="node4" href="$da/dce/namespace_setup___y.html#a085c30a37b1d41fa069fc07242aa1480" title="Setup_Y::applytravelingwave" alt="" coords="718,102,911,127"/>
+<area shape="rect" id="node5" href="$d0/d30/class_output___data_1_1_output___preprocessor__1_d.html#a96e3b653a7245f4e42dbeceb252b9205" title="Output_Data::Output\l_Preprocessor_1D::Bx" alt="" coords="178,207,334,246"/>
+<area shape="rect" id="node6" href="$db/d67/class_node___implicit_e___communications.html#adb626428859054738f2452897144bde5" title="Node_ImplicitE_Communications\l::mirror_bound_Xleft" alt="" coords="429,194,647,233"/>
+<area shape="rect" id="node8" href="$d1/dd4/class_node___communications.html#af717196e55a362169a6bb42d9967faa0" title="Node_Communications\l::mirror_bound_Xleft" alt="" coords="176,886,336,925"/>
+<area shape="rect" id="node10" href="$db/d67/class_node___implicit_e___communications.html#a64e8545715f4648ca411f2fcf65648cd" title="Node_ImplicitE_Communications\l::mirror_bound_Xright" alt="" coords="429,257,647,295"/>
+<area shape="rect" id="node11" href="$d1/dd4/class_node___communications.html#a4bc2cf1085c4e814227c7c1e4fd4e567" title="Node_Communications\l::mirror_bound_Xright" alt="" coords="176,815,336,854"/>
+<area shape="rect" id="node12" href="$d1/d4b/class_vlasov_functor1_d__explicit_e.html#a2be15fef05490c9a284a1c364cf91b08" title="VlasovFunctor1D_explicit\lE::operator()" alt="" coords="170,498,342,537"/>
+<area shape="rect" id="node20" href="$db/daa/class_vlasov_functor1_d__momentumpush.html#ad6dc2e46a70183d0520733f9964f4ac7" title="VlasovFunctor1D_momentumpush\l::operator()" alt="" coords="143,561,369,599"/>
+<area shape="rect" id="node21" href="$d4/d11/class_vlasov_functor1_d__f1__explicit_e.html#a879d4dc1d977e88cfd195191aff6b349" title="VlasovFunctor1D_f1\l_explicitE::operator()" alt="" coords="184,623,328,662"/>
+<area shape="rect" id="node22" href="$d5/d92/class_vlasov_functor1_d__implicit_e__p1.html#ae597d96a094217f68936a733e5d99740" title="VlasovFunctor1D_implicit\lE_p1::operator()" alt="" coords="170,686,342,725"/>
+<area shape="rect" id="node23" href="$d5/d50/class_vlasov_functor1_d__f1__implicit_e__p1.html#ae0b879ba33b105ee7a1a9c623a4510bc" title="VlasovFunctor1D_f1\l_implicitE_p1::operator()" alt="" coords="173,749,339,787"/>
+<area shape="rect" id="node24" href="$db/d67/class_node___implicit_e___communications.html#ada23453b9d3f2a334b8625f7a5edae59" title="Node_ImplicitE_Communications\l::sameNode_mirror_X" alt="" coords="147,270,365,309"/>
+<area shape="rect" id="node26" href="$d1/dd4/class_node___communications.html#afb93e819c04e37862dcb3233d67f8bf8" title="Node_Communications\l::sameNode_mirror_X" alt="" coords="176,435,336,474"/>
+<area shape="rect" id="node28" href="$d6/dc2/class_fluid___equation__1_d.html#a934797d984759f05fc91a6ae3dc57284" title="Fluid_Equation_1D::\lvelocity" alt="" coords="185,965,327,1003"/>
+<area shape="rect" id="node3" href="$df/d0a/main_8cpp.html#a3c04138a5bfe5d72780bb7e82a18e627" title="main" alt="" coords="969,162,1020,187"/>
+<area shape="rect" id="node7" href="$de/de9/class_parallel___environment__1_d.html#a8f495fb0127a862b3326427da0b7e4ff" title="Parallel_Environment\l_1D::Neighbor_ImplicitE\l_Communications" alt="" coords="732,179,897,231"/>
+<area shape="rect" id="node9" href="$de/de9/class_parallel___environment__1_d.html#ab455af3c48a5f804c229a2df387bee38" title="Parallel_Environment\l_1D::Neighbor_Communications" alt="" coords="707,594,921,633"/>
+<area shape="rect" id="node13" href="$d1/d4b/class_vlasov_functor1_d__explicit_e.html#a1b4eab6e473d4bbb11a1f1c433d74bff" title="VlasovFunctor1D_explicit\lE::~VlasovFunctor1D_explicitE" alt="" coords="436,534,641,573"/>
+<area shape="rect" id="node14" href="$d4/d45/class_vlasov_functor1_d__spatialpush.html#a8c00c789e2230d93d364a9ef9fc2d16e" title="VlasovFunctor1D_spatialpush\l::~VlasovFunctor1D_spatialpush" alt="" coords="432,597,645,635"/>
+<area shape="rect" id="node15" href="$db/daa/class_vlasov_functor1_d__momentumpush.html#aebc65f6e5fe7518eed06ba9be1c71aa2" title="VlasovFunctor1D_momentumpush\l::~VlasovFunctor1D_momentumpush" alt="" coords="417,659,659,698"/>
+<area shape="rect" id="node16" href="$d9/d2d/class_vlasov_functor1_d__explicit_e__implicit_b.html#af57379386a0e73284f4bb76527363c69" title="VlasovFunctor1D_explicit\lE_implicitB::~VlasovFunctor1\lD_explicitE_implicitB" alt="" coords="441,722,636,774"/>
+<area shape="rect" id="node17" href="$d5/d92/class_vlasov_functor1_d__implicit_e__p1.html#a1f5503ac4191c90e9dadab145d808796" title="VlasovFunctor1D_implicit\lE_p1::~VlasovFunctor1D\l_implicitE_p1" alt="" coords="452,798,624,850"/>
+<area shape="rect" id="node18" href="$da/d68/class_vlasov_functor1_d__implicit_e__implicit_b__p1.html#a1b3d0277c1a9573bce64760105652ba1" title="VlasovFunctor1D_implicit\lE_implicitB_p1::~VlasovFunctor1\lD_implicitE_implicitB_p1" alt="" coords="430,382,647,434"/>
+<area shape="rect" id="node19" href="$d7/d62/class_vlasov_functor1_d__implicit_e__p2.html#a03f82865c99926e4657d71e0d2195f8d" title="VlasovFunctor1D_implicit\lE_p2::~VlasovFunctor1D\l_implicitE_p2" alt="" coords="452,458,624,510"/>
+<area shape="rect" id="node25" href="$db/d67/class_node___implicit_e___communications.html#ae85d7a296a1b74cdc188433b5f6290ec" title="Node_ImplicitE_Communications\l::sameNode_bound_X" alt="" coords="429,131,647,170"/>
+<area shape="rect" id="node27" href="$d1/dd4/class_node___communications.html#a73eb391057ffd139b2da55fefe88715e" title="Node_Communications\l::sameNode_bound_X" alt="" coords="458,319,618,358"/>
+<area shape="rect" id="node29" href="$d5/d6d/class_hydro___functor.html#a829f8d3796f09865d03388d365413418" title="Hydro_Functor::operator()" alt="" coords="451,977,626,1002"/>
+</map>

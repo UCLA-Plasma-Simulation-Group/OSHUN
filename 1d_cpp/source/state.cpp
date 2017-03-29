@@ -1,5 +1,5 @@
 /*! \brief Fields, Distributions, Harmonics, States - Definitions
- * \author Michail Tzoufras, Archis Joglekar, Benjamin Winjum
+* \author PICKSC
  * \date   September 1, 2016
  * \file   state.cpp
  * 
@@ -140,43 +140,42 @@ SHarmonic1D& SHarmonic1D::Dp(){
     //--------------------------------------------------------//
     //--------------------------------------------------------//
     /// 2nd order
-//        valarray  <complex<double> >  plast(this->numx());
-//
-//        for (size_t i(0); i < plast.size(); ++i) {
-//            plast[i] = (*sh)(nump()-2,i) - (*sh)(nump()-1,i);
-//        }
-//        *sh = (*sh).Dd1();
-//        for (size_t i(0); i < plast.size(); ++i) {
-//           // TODO                The Dp at the zeroth cell is taken care off
-//           // (*sh)(0,i) = 0.0;   separately, both for the E-field and the collisions.
-//            (*sh)(nump()-1,i) = 2.0*plast[i];
-//        }
+        valarray  <complex<double> >  plast(this->numx());
+
+        for (size_t i(0); i < plast.size(); ++i) {
+            plast[i] = (*sh)(nump()-2,i) - (*sh)(nump()-1,i);
+        }
+        *sh = (*sh).Dd1();
+        for (size_t i(0); i < plast.size(); ++i) {
+          // TODO                The Dp at the zeroth cell is taken care off
+          // (*sh)(0,i) = 0.0;     //separately, both for the E-field and the collisions.
+            (*sh)(nump()-1,i) = 2.0*plast[i];
+        }
 
     //--------------------------------------------------------//
     //--------------------------------------------------------//
     /// 4th order
-    Array2D<complex<double> > df((*this).nump(),(*this).numx());
+    // Array2D<complex<double> > df((*this).nump(),(*this).numx());
 
-    for (long i2(0); i2<numx();++i2){
+    // for (long i2(0); i2<numx();++i2){
 
-        df(0,i2) = (*this)(1,i2)-(*this)(0,i2);
-        df(1,i2) = 1.0/12.0*((*this)(4,i2)-6.0*(*this)(3,i2)+18.0*(*this)(2,i2)-10.0*(*this)(1,i2)-3.0*(*this)(0,i2));
+    //     df(0,i2) = (*this)(1,i2)-(*this)(0,i2);
+    //     df(1,i2) = 1.0/12.0*((*this)(4,i2)-6.0*(*this)(3,i2)+18.0*(*this)(2,i2)-10.0*(*this)(1,i2)-3.0*(*this)(0,i2));
 
-        for (long i1(2); i1<nump()-2;++i1){
-            df(i1,i2) = 1.0/12.0*(-(*this)(i1+2,i2)+8.0*(*this)(i1+1,i2)-8.0*(*this)(i1-1,i2)+(*this)(i1-2,i2));
-        }
+    //     for (long i1(2); i1<nump()-2;++i1){
+    //         df(i1,i2) = 1.0/12.0*(-(*this)(i1+2,i2)+8.0*(*this)(i1+1,i2)-8.0*(*this)(i1-1,i2)+(*this)(i1-2,i2));
+    //     }
 
-        df(nump()-2,i2) = 0.0; //1.0/12.0*(3.0*(*this)(nump()-1,i2)+10.0*(*this)(nump()-2,i2)-18.0*(*this)(nump()-3,i2)+6.0*(*this)(nump()-4,i2)-(*this)(nump()-5,i2));
-        df(nump()-1,i2) = 0.0; //(*this)(nump()-1,i2)-(*this)(nump()-2,i2);
+    //     df(nump()-2,i2) = 0.0; //1.0/12.0*(3.0*(*this)(nump()-1,i2)+10.0*(*this)(nump()-2,i2)-18.0*(*this)(nump()-3,i2)+6.0*(*this)(nump()-4,i2)-(*this)(nump()-5,i2));
+    //     df(nump()-1,i2) = 0.0; //(*this)(nump()-1,i2)-(*this)(nump()-2,i2);
 
-    }
+    // }
 
-    for (long i2(0); i2<numx();++i2) {
-        for (long i1(0); i1 < nump(); ++i1) {
-            (*this)(i1, i2) = -2.0*df(i1, i2);
-        }
-    }
-
+    // for (long i2(0); i2<numx();++i2) {
+    //     for (long i1(0); i1 < nump(); ++i1) {
+    //         (*this)(i1, i2) = -2.0*df(i1, i2);
+    //     }
+    // }
 
     return *this;
 }
@@ -187,33 +186,21 @@ SHarmonic1D& SHarmonic1D::Dx(){
 
     //--------------------------------------------------------//
     //--------------------------------------------------------//
-    /// 4th order
-    Array2D<complex<double> > df((*this).nump(),(*this).numx());
-
-    for (long i1(0); i1<nump();++i1){
-
-        df(i1,0) = (*this)(i1,1)-(*this)(i1,0);
-        df(i1,1) = 1.0/12.0*((*this)(i1,4)-6.0*(*this)(i1,3)+18.0*(*this)(i1,2)-10.0*(*this)(i1,1)-3.0*(*this)(i1,0));
-
-        for (long i2(2); i2<numx()-2;++i2){
-            df(i1,i2) = 1.0/12.0*(-(*this)(i1,i2+2)+8.0*(*this)(i1,i2+1)-8.0*(*this)(i1,i2-1)+(*this)(i1,i2-2));
-        }
-
-        df(i1,numx()-2) = 1.0/12.0*(3.0*(*this)(i1,numx()-1)+10.0*(*this)(i1,numx()-2)-18.0*(*this)(i1,numx()-3)+6.0*(*this)(i1,numx()-4)-(*this)(i1,numx()-5));
-        df(i1,numx()-1) = (*this)(i1,numx()-1)-(*this)(i1,numx()-2);
-
-    }
-
-    for (long i2(0); i2 < numx();++i2) {
-        for (long i1(0); i1 < nump(); ++i1) {
-            (*this)(i1, i2) = -2.0*df(i1, i2);
-        }
-    }
-
-    //--------------------------------------------------------//
-    //--------------------------------------------------------//
     /// 2nd order
-//    *sh = (*sh).Dd2();           				// Worry about boundaries elsewhere
+    // for (size_t ix(0); ix < this->numx(); ++ix) {
+    //     for (size_t ip(0); ip < this->nump(); ++ip) {
+    //         (*sh)(ip,ix) = ix;
+    //     }
+    // }
+    *sh = (*sh).Dd2();           				// Worry about boundaries elsewhere
+    
+    // for (size_t ix(0); ix < this->numx(); ++ix) {
+    //     for (size_t ip(0); ip < this->nump(); ++ip) {
+    //         std::cout << "*sh(" << ip << "," << ix << ")" <<  (*sh)(ip,ix) << "\n";
+    //     }
+    // }
+
+                              
     //--------------------------------------------------------//
     //--------------------------------------------------------//
 
@@ -465,29 +452,37 @@ Field1D& Field1D::Dx(){
     //--------------------------------------------------------//
     //--------------------------------------------------------//
     /// 4th order
-    valarray<complex<double> > df(numx());
+    // valarray<complex<double> > df(numx());
 
-    df[0] = (*fi)[1]-(*fi)[0];
-    df[1] = 1.0/12.0*((*fi)[4]-6.0*(*fi)[3]+18.0*(*fi)[2]-10.0*(*fi)[1]-3.0*(*fi)[0]);
+    // df[0] = (*fi)[1]-(*fi)[0];
+    // df[1] = 1.0/12.0*((*fi)[4]-6.0*(*fi)[3]+18.0*(*fi)[2]-10.0*(*fi)[1]-3.0*(*fi)[0]);
 
-    for (long i(2); i < numx()-2; ++i) {
-        df[i] = 1.0/12.0*(-(*fi)[i+2]+8.0*(*fi)[i+1]-8.0*(*fi)[i-1]+(*fi)[i-2]);
-    }
+    // for (long i(2); i < numx()-2; ++i) {
+    //     df[i] = 1.0/12.0*(-(*fi)[i+2]+8.0*(*fi)[i+1]-8.0*(*fi)[i-1]+(*fi)[i-2]);
+    // }
 
-    df[numx()-2] = 1.0/12.0*(3.0*(*fi)[numx()-1]+10.0*(*fi)[numx()-2]-18.0*(*fi)[numx()-3]+6.0*(*fi)[numx()-4]-(*fi)[numx()-5]);
-    df[numx()-1] = (*fi)[numx()-1]-(*fi)[numx()-2];
+    // df[numx()-2] = 1.0/12.0*(3.0*(*fi)[numx()-1]+10.0*(*fi)[numx()-2]-18.0*(*fi)[numx()-3]+6.0*(*fi)[numx()-4]-(*fi)[numx()-5]);
+    // df[numx()-1] = (*fi)[numx()-1]-(*fi)[numx()-2];
 
-    for (long i(0); i < numx(); ++i)
-        (*fi)[i] = -2.0*df[i];
+    // for (long i(0); i < numx(); ++i)
+    //     (*fi)[i] = -2.0*df[i];
     //--------------------------------------------------------//
     //--------------------------------------------------------//
-    /// 2nd order
-//        for(long i(0); i< long(numx())-2; ++i) {
-//            (*fi)[i] -= (*fi)[i+2];
-//        }
-//        for(long i(numx()-3); i>-1; --i) {
-//            (*fi)[i+1] = (*fi)[i];
-//        }
+    // 2nd order
+        // df[0] = 2.0*((*fi)[0]-(*fi)[1]);
+        // for(long i(0); i < long(numx())-1; ++i) {
+        //     df[i] = (*fi)[i-1]-(*fi)[i+1];
+        // }
+        // df[numx()-1] = 2.0*((*fi)[numx()-2]-(*fi)[numx()-1]);
+        // *fi = df;
+       
+        for(long i(0); i< long(numx())-2; ++i) {
+            (*fi)[i] -= (*fi)[i+2];
+        }
+       
+        for(long i(numx()-3); i>-1; --i) {
+            (*fi)[i+1] = (*fi)[i];
+        }
     //--------------------------------------------------------//
     //--------------------------------------------------------//
     return *this;
@@ -763,13 +758,28 @@ DistFunc1D:: DistFunc1D(size_t l, size_t m, size_t np, double pma, size_t nx, do
 //      Generate container for the harmonics
     sz = ((mmax+1)*(2*lmax-mmax+2))/2;
     df = new vector<SHarmonic1D>(sz,SHarmonic1D(np,nx));
-
+    valarray<int> filter_ceiling(0,sz);
 //      Define the index for the triangular array 
     ind = -1;
-    for(int il=0; il < lmax+1 ; ++il){
-        for(int im=0; im < ((mmax < il)? mmax:il)+1; ++im){
-            ind(il,im) = ((il < mmax+1)?((il*(il+1))/2+im):
-                          (il*(mmax+1)-(mmax*(mmax+1))/2 + im));
+
+    if (mmax == 0)
+    {
+        for(int il(0); il < lmax+1 ; ++il){
+            ind(il,0) = il;
+
+            // filter_ceiling[il] = floor(il/ceil(lmax/np));
+            filter_ceiling[il] = ((il < np)?il:np);
+        }
+
+    }
+    else
+    {
+        for(int il=0; il < lmax+1 ; ++il){
+            for(int im=0; im < ((mmax < il)? mmax:il)+1; ++im){
+                ind(il,im) = ((il < mmax+1)?((il*(il+1))/2+im):
+                              (il*(mmax+1)-(mmax*(mmax+1))/2 + im));
+                filter_ceiling[ind(il,im)] = ((il < np)?il:np);
+            }
         }
     }
     // exit(1);
@@ -780,23 +790,39 @@ DistFunc1D:: DistFunc1D(size_t l, size_t m, size_t np, double pma, size_t nx, do
 //  Copy constructor
 DistFunc1D:: DistFunc1D(const DistFunc1D& other)
         : lmax(other.l0()), mmax(other.m0()), pmx(other.pmax()),
-          charge(other.q()), ma(other.mass()), ind(other.l0()+1,other.m0()+1)  {
+          charge(other.q()), ma(other.mass()), ind(other.l0()+1,other.m0()+1),
+          filter_ceiling(((mmax+1)*(2*lmax-mmax+2))/2)  {
 
 //      Generate container for the harmonics
     sz = ((mmax+1)*(2*lmax-mmax+2))/2;
     df = new vector<SHarmonic1D>(sz,SHarmonic1D(other(0).nump(),other(0).numx()));
+    
+
     for(size_t i(0); i < sz ; ++i){
         (*df).push_back(other(i));
     }
 
 //      Define the index for the triangular array 
     ind = -1;
-    for(int il=0; il < lmax+1 ; ++il){
-        for(int im=0; im < ((mmax < il)? mmax:il)+1; ++im){
-            ind(il,im) = ((il < mmax+1)?((il*(il+1))/2+im):
-                          (il*(mmax+1)-(mmax*(mmax+1))/2 + im));
+    if (mmax == 0)
+    {
+        for(int il(0); il < lmax+1 ; ++il){
+            ind(il,0) = il;
+            filter_ceiling[il] = (il < other(0).nump())?il:other(0).nump();
+        }
+
+    }
+    else
+    {
+        for(int il=0; il < lmax+1 ; ++il){
+            for(int im=0; im < ((mmax < il)? mmax:il)+1; ++im){
+                ind(il,im) = ((il < mmax+1)?((il*(il+1))/2+im):
+                              (il*(mmax+1)-(mmax*(mmax+1))/2 + im));
+                filter_ceiling[ind(il,im)] = (il*im < other(0).nump())?il*im:other(0).nump();
+            }
         }
     }
+    // exit(1);
 
 }
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -908,6 +934,7 @@ DistFunc1D& DistFunc1D::operator-=(const DistFunc1D& other){
 DistFunc1D& DistFunc1D::Filterp(){
     for(size_t i(0); i < dim() ; ++i) {
         (*df)[i].Filterp(i);
+        // (*df)[i].Filterp(filter_ceiling[i]);
     }
     return *this;
 }
@@ -918,12 +945,12 @@ DistFunc1D& DistFunc1D::Filterp(){
 valarray<double> DistFunc1D::getdensity(){
 
     valarray<double> out((*df)[0].numx());
-//    valarray<complex<double>> vr(Algorithms::MakeAxis(
-//            static_cast<complex<double>> (pmax()/(2.0*((*df)[0].nump())-1.0)),static_cast<complex<double>>(pmax()),(*df)[0].nump()
+//    valarray<complex<double> > vr(Algorithms::MakeAxis(
+//            static_cast<complex<double> > (pmax()/(2.0*((*df)[0].nump())-1.0)),static_cast<complex<double> >(pmax()),(*df)[0].nump()
 //    ));
 
-    valarray<complex<double>> vr(Algorithms::MakeCAxis(
-            static_cast<complex<double>> (0.0),static_cast<complex<double>>(pmax()),(*df)[0].nump()
+    valarray<complex<double> > vr(Algorithms::MakeCAxis(
+            static_cast<complex<double> > (0.0),static_cast<complex<double> >(pmax()),(*df)[0].nump()
     ));
 
     for (size_t i(0); i<(*df)[0].numx();++i){
@@ -939,12 +966,12 @@ valarray<double> DistFunc1D::getcurrent(size_t dir){
     // complex<double> ii(0.0,-1.0);
     valarray<double> out((*df)[0].numx());
 
-//    valarray<complex<double>> vr(Algorithms::MakeAxis(
-//            static_cast<complex<double>> (pmax()/(2.0*((*df)[0].nump())-1.0)),static_cast<complex<double>>(pmax()),(*df)[0].nump()
-//    ));
+   // valarray<complex<double> > vr(Algorithms::MakeAxis(
+   //         static_cast<complex<double> > (pmax()/(2.0*((*df)[0].nump()))),static_cast<complex<double> >(pmax()),(*df)[0].nump()
+   // ));
 
-    valarray<complex<double>> vr(Algorithms::MakeCAxis(
-            static_cast<complex<double>> (0.0),static_cast<complex<double>>(pmax()),(*df)[0].nump()
+    valarray<complex<double> > vr(Algorithms::MakeCAxis(
+            static_cast<complex<double> > (0.0),static_cast<complex<double> >(pmax()),(*df)[0].nump()
     ));
 
 
@@ -981,12 +1008,12 @@ valarray<double> DistFunc1D::getcurrent(size_t dir){
 valarray<double> DistFunc1D::getcurrent(size_t dir) const{
     // complex<double> ii(0.0,-1.0);
     valarray<double> out((*df)[0].numx());
-//    valarray<complex<double>> vr(Algorithms::MakeAxis(
-//            static_cast<complex<double>> (pmax()/(2.0*((*df)[0].nump())-1.0)),static_cast<complex<double>>(pmax()),(*df)[0].nump()
-//    ));
+   // valarray<complex<double> > vr(Algorithms::MakeAxis(
+   //         static_cast<complex<double> > (pmax()/(2.0*((*df)[0].nump()))),static_cast<complex<double> >(pmax()),(*df)[0].nump()
+   // ));
 
-    valarray<complex<double>> vr(Algorithms::MakeCAxis(
-            static_cast<complex<double>> (0.0),static_cast<complex<double>>(pmax()),(*df)[0].nump()
+    valarray<complex<double> > vr(Algorithms::MakeCAxis(
+            static_cast<complex<double> > (0.0),static_cast<complex<double> >(pmax()),(*df)[0].nump()
     ));
 
 
@@ -1023,21 +1050,24 @@ valarray<double> DistFunc1D::getcurrent(size_t dir) const{
 Array2D<double> DistFunc1D::getcurrent() const{
     // complex<double> ii(0.0,-1.0);
     Array2D<double> out(3,(*df)[0].numx());
-//        valarray<complex<double>> vr(Algorithms::MakeAxis(
-//            static_cast<complex<double>> (pmax()/(2.0*((*df)[0].nump())-1.0)),static_cast<complex<double>>(pmax()),(*df)[0].nump()
+//        valarray<complex<double> > vr(Algorithms::MakeAxis(
+//            static_cast<complex<double> > (pmax()/(2.0*((*df)[0].nump())-1.0)),static_cast<complex<double> >(pmax()),(*df)[0].nump()
 //            ));
 
-    valarray<complex<double>> vr(Algorithms::MakeCAxis(
-            static_cast<complex<double>> (0.0),static_cast<complex<double>>(pmax()),(*df)[0].nump()
+    valarray<complex<double> > vr(Algorithms::MakeCAxis(
+            static_cast<complex<double> > (0.0),static_cast<complex<double> >(pmax()),(*df)[0].nump()
     ));
 
+    double current_c1(4.0/3.0*M_PI*charge/ma);
+    double current_c2(2.0*current_c1);
+    double current_c3(-1.0*current_c2);
 
     for (size_t i(0); i<(*df)[0].numx();++i){
-        out(0,i) = (4.0/3.0*M_PI*charge/ma)*(Algorithms::relativistic_invg_moment((*df)[1].xVec(i),vr,3.0)).real();
+        out(0,i) = (current_c1)*(Algorithms::relativistic_invg_moment((*df)[1].xVec(i),vr,3.0)).real();
 
-        out(1,i) = (8.0/3.0*M_PI*charge/ma)*(Algorithms::relativistic_invg_moment((*df)[2].xVec(i),vr,3.0)).real();
+        out(1,i) = (current_c2)*(Algorithms::relativistic_invg_moment((*df)[2].xVec(i),vr,3.0)).real();
 
-        out(2,i) = (-8.0/3.0*M_PI*charge/ma)*(Algorithms::relativistic_invg_moment((*df)[2].xVec(i),vr,3.0)).imag();
+        out(2,i) = (current_c3)*(Algorithms::relativistic_invg_moment((*df)[2].xVec(i),vr,3.0)).imag();
 
     }
 
@@ -1051,12 +1081,12 @@ Array2D<double> DistFunc1D::getcurrent() const{
 valarray<double> DistFunc1D::getpressure(){
 
     valarray<double> out((*df)[0].numx());
-//    valarray<complex<double>> vr(Algorithms::MakeAxis(
-//            static_cast<complex<double>> (pmax()/(2.0*((*df)[0].nump())-1.0)),static_cast<complex<double>>(pmax()),(*df)[0].nump()
+//    valarray<complex<double> > vr(Algorithms::MakeAxis(
+//            static_cast<complex<double> > (pmax()/(2.0*((*df)[0].nump())-1.0)),static_cast<complex<double> >(pmax()),(*df)[0].nump()
 //    ));
 
-    valarray<complex<double>> vr(Algorithms::MakeCAxis(
-            static_cast<complex<double>> (0.0),static_cast<complex<double>>(pmax()),(*df)[0].nump()
+    valarray<complex<double> > vr(Algorithms::MakeCAxis(
+            static_cast<complex<double> > (0.0),static_cast<complex<double> >(pmax()),(*df)[0].nump()
     ));
 
     for (size_t i(0); i<(*df)[0].numx();++i){
@@ -1330,7 +1360,7 @@ Hydro1D:: Hydro1D(const Hydro1D& other){
     *ht = other.temperaturearray();
 
     hz = new valarray<double >(other.numx());
-    *hz = other.temperaturearray();
+    *hz = other.Zarray();
 
 }
 //  Destructor

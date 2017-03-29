@@ -1,41 +1,21 @@
 /*! \page examples Examples
  *  
- *  - \subpage eecoll 
- *  - \subpage ibheating
- *  
- *  - Thermal conduction 
- *  - Non-local heat flow 
- *  
- *  - Braginskii transport
- *  - Self-generated magnetic fields from laser heating
+ *  - \subpage kappa Braginskii transport
+ 
  */
 
- /*! \page eecoll Collisional Relaxation of non-Maxwellian distribution function
-  *  \image html f0-ee.png 
-  *  This test is effectively a 0D-3P test of the electron-electron collision operator. 
-  *  The \f$ f_0^0 \f$ component is initialized as a DLM distribution such that \f$ m=5 \f$.
-  *  Over time, self collisions relax the distribution to a Maxwell-Boltzmann distribution such that \f$ m=2 \f$.
+ /*! \page kappa Heat flow coefficient test (ala Epperlein Haines 1985 PoF)
   *  
-  *  Note that the low velocity part of the distribution relaxes much faster than the high velocity tail.
-  *  This can have far-reaching implications in inertial fusion because as the next example will show, laser heating
-  *  drives the distribution function towards \f$ m=5 \f$. Since electron-electron collisions relax the
-  *  low velocity electrons effectively, a realistic distribution function may exhibit a \f$ m \leq 5 \f$ shape 
-  *  near the tail while the low velocity portion resembles that of \f$ m \geq 2 \f$.
-  */
+  *  This test refers to the coefficients produced in Ref [1]. 
+  *  An iPython file is provided along with the requisite data processing routines
+  *  to recreate the following.
+  *  
+  *  <a href="ex1-Braginskii_transport.html" target="_blank"><b>Testing Heat Flow Calculation</b></a>
 
-
-/*! \page ibheating  Inverse-bremsstrahlung heating
-  * Initial Conditions: 
-  *  \f$Z = 12, n_{e0} = 1.5 \times 10^{21}/cc, T_{e0} = 0.002, a_0 = 0.025, \lambda_0 = 351 nm\f$ 
-  *  \image html f0-IB.png
-  *  This test is effectively a 0D-3P test of the electron-electron collision operator as the laser
-  *  adds energy to the distribution function through electron-electron collisions.
+  *  
+  *  References:
+  * 
+  * [1] - Eppelerin, E., Haines, M. (1985). Physics of Fluids, 29(4), 1029. <a href="http://dx.doi.org/10.1063/1.865901">10.1063/1.865901</a>
   *
-  *  The \f$ f_0^0 \f$ component is initialized as a Maxwell-Boltzmann distribution with \f$ T_0 = 0.002 m_e c^2
-  *  = 1 keV\f$ . Over time, self collisions modify the distribution to a DLM distribution such that \f$ m>2 \f$. 
-  *
-  *  Illustrated is the $f_0^0$ component over time. At \f$6000 \omega_{pe}^{-1}\f$, the plasma heats to 1.6 keV.
-  *  To compare the shape of the distribution function, the corresponding Maxwell-Boltzmann distribution is plotted. 
-  *  This shows the suppression of the number of high-velocity and low-velocity electrons in a laser heated distribution, 
-  *  and the increase in the number of mid-velocity electrons.
+  *  
   */

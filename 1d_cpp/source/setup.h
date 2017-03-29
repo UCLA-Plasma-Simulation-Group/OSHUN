@@ -1,12 +1,10 @@
 /*!\brief  Grid Setup - Declaration
- * \author Michail Tzoufras, Benjamin Winjum
+ * \author PICKSC
  * \date   September 1, 2016
  * \file   setup.h
  *
  * Declares a Grid_Info class
  * 
- * \todo Create a function parser
- * \todo Change plasma input parameters such that they accept a toggle between uniform, piecewise, and functional profiles
  */
 
     #ifndef DECL_SETUP_H
@@ -62,21 +60,23 @@ namespace Setup_Y {
     void checkparse(parser_t& parser, std::string& expression_str, expression_t& expression);
     void parseprofile(const valarray<double>& grid, std::string& str_profile, valarray<double>& profile);
     void parseprofile(const double& input, std::string& str_profile, double& ouput);
+    void parsetwovariableprofile(const valarray<double>& grid, const double& input, std::string& str_profile, valarray<double>& ouput);
     // void startmessages(State1D& Y);
     
     void init_f0(size_t s, SHarmonic1D& h, const valarray<double>& p, const valarray<double>& x, 
-    valarray<double>& density, valarray<double>& temperature,const double mass);    
+    valarray<double>& density, valarray<double>& temperature,const double mass, const valarray<double>& pedestal);    
 
     void init_f1(size_t s, SHarmonic1D& h, const valarray<double>& p, const valarray<double>& x, 
-    valarray<double>& density, valarray<double>& temperature, valarray<double>& jx, const SHarmonic1D& f0, const double mass);
+    valarray<double>& density, valarray<double>& temperature, valarray<double>& f10x, const SHarmonic1D& f0, const double mass);
 
     void init_f2(size_t s, SHarmonic1D& h, const valarray<double>& p, const valarray<double>& x, 
-    valarray<double>& density, valarray<double>& temperature, const double mass);
+    valarray<double>& density, valarray<double>& temperature, valarray<double>& f20x, const double mass);
 
 //      Initialize the appropriate density and temperature profiles (from the list below)
     void initialize(State1D &Y, Grid_Info &grid);
 
     void applyexternalfields(Grid_Info &grid, State1D &Y, double time);
+    void applytravelingwave(Grid_Info &grid, State1D &Y, double time);
 
 }
 

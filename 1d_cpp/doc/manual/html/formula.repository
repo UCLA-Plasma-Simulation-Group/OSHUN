@@ -1,0 +1,30 @@
+\form#0:$f^0$
+\form#1:$f^l$
+\form#2:$f^0_0$
+\form#3:$f^l_m$
+\form#4:$ \tilde{n} = n / n_0 = n / n_{input} $
+\form#5:$ \tilde{Z} = Z / Z0 $
+\form#6:$\tilde{t} = t / t_n = t \times \omega_{p0} = t \times \sqrt{n_0 e^2 / m \epsilon_0}$
+\form#7:$\tilde{v} = v / c $
+\form#8:$\tilde{x} = x / \lambda_n = x / (c / \omega_p) $
+\form#9:$\tilde{T} = T / T_n = T / m_e c^2$
+\form#10:$ t_stop $
+\form#11:$ n_outsteps $
+\form#12:$ clf_dp $
+\form#13:$ t_stop / n_outsteps $
+\form#14:$n_outsteps$
+\form#15:$dt_out = t_stop / n_outsteps$
+\form#16:$ t_{stop} $
+\form#17:$ n_{outsteps} $
+\form#18:$ t_{stop} / n_{outsteps} $
+\form#19:$n_{outsteps}$
+\form#20:$dt_out = t_{stop} / n_{outsteps}$
+\form#21:$ numh = (dt_out / clf_dp) + 1$
+\form#22:$clf_dp > timestep$
+\form#23:$numh$
+\form#24:$ h = dt_out / numh $
+\form#25:$ clf_{dp} $
+\form#26:$dt_{out} = t_{stop} / n_{outsteps}$
+\form#27:$ numh = (dt_{out} / clf_{dp}) + 1$
+\form#28:$clf_{dp} > timestep$
+\form#29:$ h = dt_{out} / numh $

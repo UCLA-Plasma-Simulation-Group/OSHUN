@@ -351,7 +351,7 @@
            
           // // Time loop: Update the valarray
           for (size_t h_step(0); h_step < num_h; ++h_step){
-              fin1 = RK4(fin1,fin2,h,&rkf00);
+//              fin1 = RK4(fin1,fin2,h,&rkf00);
           }
           // // std::cout << "\n\n 11 \n\n";
           // // Return updated data to the harmonic

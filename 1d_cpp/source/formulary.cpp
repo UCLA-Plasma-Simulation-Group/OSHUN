@@ -1,5 +1,5 @@
 /*! \brief Plasma Formulary and Units - Definitions
- * \author Michail Tzoufras, Archis Joglekar, Benjamin Winjum
+* \author PICKSC
  * \date   September 1, 2016
  * \file   formulary.cpp
  * 

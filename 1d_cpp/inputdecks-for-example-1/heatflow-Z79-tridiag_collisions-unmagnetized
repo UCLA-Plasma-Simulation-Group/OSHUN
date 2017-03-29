@@ -1,0 +1,241 @@
+//-----------------------------------------------------------------------
+// Parallel
+//-----------------------------------------------------------------------
+
+NnodesX = 4
+
+//-----------------------------------------------------------------------
+// Momentum Grid per species
+//-----------------------------------------------------------------------
+
+numsp = 1
+
+l0 = 4
+m0 = 4
+nump = 96
+pmax = 0.2
+mass = 1.0
+charge = -1.0
+
+//-----------------------------------------------------------------------
+// Spatial Grid
+//-----------------------------------------------------------------------
+
+Nx = 64
+
+xmin = 0.0
+xmax = 6000.0
+
+//-----------------------------------------------------------------------
+// Loop control
+//-----------------------------------------------------------------------
+
+clf_dp = 1.0;
+n_outsteps = 100;
+n_distoutsteps = 100;
+t_stop = 8000.0
+
+//-----------------------------------------------------------------------
+// Various switches
+//-----------------------------------------------------------------------
+
+/   ---   /   ---   /   ---   /   ---   /   ---   /   ---   /   ---   /
+/// Fokker-Planck
+collisions_switch = true
+f00_collisions = explicit
+flm_collisions = true
+
+//  Explicit f00 collisions options
+small_dt                            = 0.01
+smaller_dt                          = 0.0000125
+NB_algorithms                       = 4
+
+//  Implicit f00
+Rosenbluth_D_tolerance              = 1e-18
+Rosenbluth_D_maximum_iterations     = 100
+
+//  Implicit flm
+assume_tridiagonal_flm_collisions   = true
+
+/   ---   /   ---   /   ---   /   ---   /   ---   /   ---   /   ---   /
+
+/// Vlasov
+implicit_B_push                     = false
+
+/   ---   /   ---   /   ---   /   ---   /   ---   /   ---   /   ---   /
+
+/// Field Solver
+implicit_E                          = true
+
+//-----------------------------------------------------------------------
+//
+// Distribution Function Initialization
+//
+//-----------------------------------------------------------------------
+// Initialize f00 using density and temperature
+//-----------------------------------------------------------------------
+
+density_np                  = 1.0e21
+super_gaussian_distribution = 2.0
+pth_ref                     = 0.025							    // Reference thermal velocity
+hydrocharge = 79.0
+
+
+n(x) = cst{1.0}  
+T(x) = fnc{0.000625*(1+0.01*sin(pi*x/3000))}
+
+//-----------------------------------------------------------------------
+// Option to apply f10(x) = C(x) * (v^3 df00/dv) . Provide C(x)
+//-----------------------------------------------------------------------
+
+init_f1                     = false
+multiplier-f10(x) = fnc{1e-6*sin(pi*x)}
+
+f_pedestal = cst{0.0}
+
+//-----------------------------------------------------------------------
+// Boundary type (default periodic)
+// 0:periodic, 1:mirror, 2:fixed
+//-----------------------------------------------------------------------
+
+bndX = 0
+
+//-----------------------------------------------------------------------
+//      External Fields
+//-----------------------------------------------------------------------
+
+// ******** ------ ******** ------ ******** ------ ******** ------ //
+// The following knobs allow the user to FIX the fields at a certain value
+// ******** ------ ******** ------ ******** ------ ******** ------ //
+
+ext_fields = false
+
+Ex(x) = fnc{0.0}
+Ex(t) = cst{0.0}
+
+Ey(x) = cst{0.0}
+Ey(t) = fnc{0.0}
+
+Ez(x) = cst{0.0}
+Ez(t) = cst{0.0}
+
+Bx(x) = cst{0.0}
+Bx(t) = cst{0.0}
+
+By(x) = cst{0.0}
+By(t) = cst{0.0} 
+
+Bz(x) = cst{0.0} 
+Bz(t) = cst{0.0} 
+
+
+// ******** ------ ******** ------ ******** ------ ******** ------ //
+// The following knobs allow the user to ADD to the fields e.g. a driver.
+// ******** ------ ******** ------ ******** ------ ******** ------ //
+
+traveling_wave = false
+num_waves = 0
+Ex(x,t) = cst{0.0}
+Ey(x,t) = cst{0.0}
+Ez(x,t) = cst{0.0}
+Bx(x,t) = cst{0.0}
+By(x,t) = cst{0.0}
+Bz(x,t) = cst{0.0}
+
+// Time envelope info
+rise_flat_fall_center = 18 60 18 50
+
+//-----------------------------------------------------------------------
+//      Hydrodynamic parameters
+//-----------------------------------------------------------------------
+
+hydro = false
+hydroatomicmass = 100.0
+
+MX_cooling = false
+
+/   ---   /   ---   /   ---   /   ---   /   ---   /   ---   /   ---   /
+
+Z(x) = cst{1.0} fnc{(0.81-0.4*(tanh(0.005*(x+1500))-tanh(0.005*(x-1500))))}
+ni(x) = fnc{1.0/60.0*(9.1-4.5*(tanh(0.005*(x+1500))-tanh(0.005*(x-1500))))}
+Ti(x) = cst{0.0001}
+Ux(x) = cst{0.0}
+
+//-----------------------------------------------------------------------
+//      Laser parameters
+//-----------------------------------------------------------------------
+
+inverse_bremsstrahlung = false
+lambda_0 = 0.351
+I_0 = 3.0e17
+
+/   ---   /   ---   /   ---   /   ---   /   ---   /   ---   /   ---
+
+I(x) = cst{1.0}
+I(t) = fnc{exp(-0.01*(t-200)^2)}
+
+//-----------------------------------------------------------------------
+// Output
+//-----------------------------------------------------------------------
+
+o_EHist = false
+
+/   ---   /   ---   /   ---   /   ---   /   ---   /   ---   /   ---   /
+
+// Output options
+// Fields
+o_Ex = true
+o_Ey = false
+o_Ez = false
+o_Bx = true
+o_By = true
+o_Bz = true
+
+/   ---   /   ---   /   ---   /   ---   /   ---   /   ---   /   ---   /
+
+// Scalar Quantities 
+o_x1x2 = true       				// Density            
+o_Temperature = true 				// Temperature
+
+/   ---   /   ---   /   ---   /   ---   /   ---   /   ---   /   ---   /
+
+// Vector Quantities
+o_Jx = true
+o_Jy = false
+o_Jz = false
+
+o_Qx   = true
+o_Qy   = false
+o_Qz   = false
+
+o_vNx   = false
+o_vNy   = false
+o_vNz   = false
+
+/   ---   /   ---   /   ---   /   ---   /   ---   /   ---   /   ---   /
+
+// Distribution Function
+o_p1x1 = true
+
+o_f0x1 = true
+o_f10x1 = true
+o_f20x1 = true
+o_f11x1 = false
+o_fl0x1 = true
+
+/   ---   /   ---   /   ---   /   ---   /   ---   /   ---   /   ---   /
+
+// Fluid quantities
+o_Ux = false
+o_Uy = false
+o_Uz = false
+o_Z  = true
+o_ni = false
+o_Ti = false
+
+//-----------------------------------------------------------------------
+// Restart files
+//-----------------------------------------------------------------------
+if_restart = false
+restart_time = 1000
+n_restarts = 1000

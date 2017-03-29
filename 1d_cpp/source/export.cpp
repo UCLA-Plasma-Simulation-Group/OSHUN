@@ -1,5 +1,5 @@
 /*! \brief  Export Files - Definitions
- *  \author Michail Tzoufras, Benjamin Winjum, Archis Joglekar
+ * \author PICKSC
  *  \date   September 1, 2016
  *  \file   export.cpp
  * 
@@ -51,13 +51,21 @@
 int Export_Files::Makefolder(string _name){
 
     mode_t _permissions(S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
-    char*   foldername = new char [_name.size()];
-    strcpy(foldername, _name.c_str());
+    // char*   foldername = new char [_name.length() + 1];
+    
+
+    const char*   foldername = _name.data();
+    
+
+    // strcpy(foldername, _name.c_str());
+    
+    // vector<char> foldername(_name.c_str(), _name.c_str() + _name.size() + 1);
+
     int   status(mkdir(foldername,_permissions));
 
-    if (status != 0) cout << "Warning: Folder "<< _name<< " exists\n";
+    // if (status != 0) cout << "Warning: Folder "<< _name<< " exists\n";
 
-    delete[] foldername;
+    // delete[] foldername;
 
     return status;
 }
@@ -304,7 +312,9 @@ void Export_Files::Folders(){
 
     }
 
-    if ( Input::List().o_f0x1 || Input::List().o_p1x1 ||  Input::List().o_f10x1 ||  Input::List().o_f11x1) {
+    if ( Input::List().o_f0x1 || Input::List().o_p1x1 
+        ||  Input::List().o_f10x1 ||  Input::List().o_f11x1 ||  Input::List().o_f20x1
+        || Input::List().o_fl0x1) {
         if (Makefolder("OUTPUT/DISTR") != 0)
             cout<<"Warning: Folder 'OUTPUT/DISTR' exists" << endl;
 
@@ -407,6 +417,8 @@ Export_Files::DefaultTags::DefaultTags(size_t species){
         fvsx.push_back( "f0-x");//+stringify(s) );
         fvsx.push_back( "f10-x");
         fvsx.push_back( "f11-x");
+        fvsx.push_back( "f20-x");
+        fvsx.push_back( "fl0-x");
     }
 
 //  p-p-x
@@ -638,7 +650,7 @@ Export_Files::Xport::Xport(const Algorithms::AxisBundle<double>& _axis,
             Makefolder(folder);
 
 //          Generate a header file for this tag
-            Hdr[dTags.fvsx[i]] = Header( pr[i/3], xyz[0], imre[0],
+            Hdr[dTags.fvsx[i]] = Header( pr[i/5], xyz[0], imre[0],
                                          "f", 1.0, tlabel, tunits, tconv, folder);
 
         }
@@ -693,9 +705,11 @@ string Export_Files::Xport::oH5Fextension(size_t step, int species){
 
 //**************************************************************
 //--------------------------------------------------------------
-Export_Files::Restart_Facility::Restart_Facility(string homedir) {
+Export_Files::Restart_Facility::Restart_Facility(const int rank, string homedir) {
     hdir = homedir;
-    Makefolder(hdir+"RESTART/");
+
+    if (!rank) Makefolder(hdir+"RESTART/");
+
 //        if (Makefolder(hdir+"RESTART/") != 0) cout<<"Warning: Folder "<< hdir+"RESTART/"<<" exists\n";
 }
 
@@ -710,17 +724,22 @@ void Export_Files::Restart_Facility::Read(const int rank, const size_t re_step, 
 //      Open file
     ifstream  fin(filename.c_str(), ios::binary);
 
-//      Read distribution functions
-    for(size_t s(0); s < Y.Species(); ++s) {
-
-//NEED TO FIX TO ACCOMMODATE M'S
-
-//             for(size_t nh(0); nh < Y.DF(s).dim(); ++nh) {
-        for(size_t nh(0); nh < Y.DF(s).l0()+1; ++nh) {
-            for(size_t i(0); i < Y.SH(s,nh,0).dim(); ++i) {
-                fin.read((char *)(&Y.SH(s,nh,0)(i)), sizeof(Y.SH(s,nh,0)(i)));
+    if (fin)
+    {
+    //      Read distribution functions
+        for(size_t s(0); s < Y.Species(); ++s) {
+            for(size_t nh(0); nh < Y.DF(s).dim(); ++nh) {
+                for(size_t i(0); i < (Y.DF(s))(nh).dim(); ++i) {
+                    fin.read((char *)&(Y.DF(s))(nh)(i), sizeof((Y.DF(s))(nh)(i)));
+                }
             }
         }
+    }
+    else {
+        
+        if (!rank) std::cout << "\n\n ERROR :: No files to read! \n\n";
+        exit(1);
+
     }
 
 //      Read Ex
@@ -745,13 +764,11 @@ void Export_Files::Restart_Facility::Write(const int rank, const size_t re_step,
 
 //      Write distribution functions
     for(size_t s(0); s < Y.Species(); ++s) {
-
-//NEED TO FIX TO ACCOMMODATE M'S
-
-//             for(size_t nh(0); nh < Y.DF(s).dim(); ++nh) {
-        for(size_t nh(0); nh < Y.DF(s).l0()+1; ++nh) {
-            for(size_t i(0); i < Y.SH(s,nh,0).dim(); ++i) {
-                fout.write((char *)(&Y.SH(s,nh,0)(i)), sizeof(Y.SH(s,nh,0)(i)));
+        for (size_t s(0); s < Y.Species(); ++s) {
+            for (size_t nh(0); nh < Y.DF(s).dim(); ++nh) {
+                for (size_t i(0); i < (Y.DF(s))(nh).dim(); ++i) {
+                    fout.write((char *) &(Y.DF(s))(nh)(i), sizeof((Y.DF(s))(nh)(i)));
+                }
             }
         }
     }
@@ -1104,7 +1121,7 @@ Output_Data::fx1_1D::~fx1_1D(){
 //--------------------------------------------------------------
 //  Turn the Distribution function at some spatial location x0 
 //  into a cartesian grid.
-Array2D<float>  Output_Data::fx1_1D::operator()(DistFunc1D& df, size_t whichdist, size_t x0, size_t s) {
+Array2D<float>  Output_Data::fx1_1D::operator()(DistFunc1D& df, size_t l, size_t m, size_t x0, size_t s) {
 
     // valarray<float> fx1(0.0,Npx(s)); // this is a valarray<float>
     Array2D<float> fx1(Np(s),2); // this is a valarray<float>// 
@@ -1120,8 +1137,8 @@ Array2D<float>  Output_Data::fx1_1D::operator()(DistFunc1D& df, size_t whichdist
         // fx1(0.5*(Npx(s)-1)+1+ip,2) = (float( (df(whichdist))(ip,x0).imag() ));
         // fx1(0.5*(Npx(s)-1)-1-ip,2) = (float( (df(whichdist))(ip,x0).imag() ));
         // 
-        fx1(ip,0) = (float( (df(whichdist))(ip,x0).real() ));
-        fx1(ip,1) = (float( (df(whichdist))(ip,x0).imag() ));
+        fx1(ip,0) = (float( (df(l,m))(ip,x0).real() ));
+        fx1(ip,1) = (float( (df(l,m))(ip,x0).imag() ));
 
         // std::cout << "fx1(" << ip << ") = " << (df(whichdist))(ip,x0).real() << "\n";
         // << fx1(0.5*(Npx(s)-1)+1+ip,1) << "," << fx1(0.5*(Npx(s)-1)+1+ip,2) << "\n";
@@ -1383,6 +1400,12 @@ void Output_Data::Output_Preprocessor_1D::distdump(const State1D& Y, const Grid_
     }
     if (Input::List().o_f11x1){
         f11( Y, grid, tout, PE );
+    }
+    if (Input::List().o_f20x1){
+        f20( Y, grid, tout, PE );
+    }
+    if (Input::List().o_fl0x1){
+        fl0( Y, grid, tout, PE );
     }
 //    if (Input::List().o_p2p1x1){
 //        pxpy( Y, grid, tout, PE );
@@ -1853,7 +1876,7 @@ void Output_Data::Output_Preprocessor_1D::f0(const State1D& Y, const Grid_Info& 
 
         for (size_t i(0); i < outNxLocal; ++i) {
 
-            Array2D<float> data2D = f_x( Y.DF(s),0, i+Nbc, s);
+            Array2D<float> data2D = f_x( Y.DF(s),0,0, i+Nbc, s);
 
             for (size_t j(0); j < f_x.Np(s); ++j) {
                 // std::cout << "\n f0(" << i << "," << j << ") = (" << data2D(j,1) << "," << data2D(j,2) <<")";
@@ -1988,7 +2011,7 @@ void Output_Data::Output_Preprocessor_1D::f10(const State1D& Y, const Grid_Info&
 
         for (size_t i(0); i < outNxLocal; ++i) {
 
-            Array2D<float> data2D = f_x( Y.DF(s),1, i+Nbc, s);
+            Array2D<float> data2D = f_x( Y.DF(s), 1, 0, i+Nbc, s);
 
             for (size_t j(0); j < f_x.Np(s); ++j) {
                 // std::cout << "\n f0(" << i << "," << j << ") = (" << data2D(j,1) << "," << data2D(j,2) <<")";
@@ -2059,7 +2082,7 @@ void Output_Data::Output_Preprocessor_1D::f11(const State1D& Y, const Grid_Info&
 
         for (size_t i(0); i < outNxLocal; ++i) {
 
-            Array2D<float> data2D = f_x( Y.DF(s),2, i+Nbc, s);
+            Array2D<float> data2D = f_x( Y.DF(s),1,1, i+Nbc, s);
 
             for (size_t j(0); j < f_x.Np(s); ++j) {
                 // std::cout << "\n f0(" << i << "," << j << ") = (" << data2D(j,1) << "," << data2D(j,2) <<")";
@@ -2112,6 +2135,150 @@ void Output_Data::Output_Preprocessor_1D::f11(const State1D& Y, const Grid_Info&
 
 
 }
+//--------------------------------------------------------------
+//--------------------------------------------------------------
+void Output_Data::Output_Preprocessor_1D::f20(const State1D& Y, const Grid_Info& grid, const size_t tout,
+                                              const Parallel_Environment_1D& PE) {
+
+    size_t Nbc = Input::List().BoundaryCells;
+    MPI_Status status;
+
+    size_t outNxLocal(grid.axis.Nx(0) - 2*Nbc);
+    size_t outNxGlobal(grid.axis.Nxg(0));
+
+    for(int s(0); s < Y.Species(); ++s) {
+
+        int msg_sz(2*outNxLocal*f_x.Np(s));
+        Array3D<float> f0x1Global(f_x.Np(s),outNxGlobal,2); //, yglob_axis.dim());
+        float* f0xbuf = new float[msg_sz];
+
+        for (size_t i(0); i < outNxLocal; ++i) {
+
+            Array2D<float> data2D = f_x( Y.DF(s), 2, 0, i+Nbc, s);
+
+            for (size_t j(0); j < f_x.Np(s); ++j) {
+                // std::cout << "\n f0(" << i << "," << j << ") = (" << data2D(j,1) << "," << data2D(j,2) <<")";
+                f0xbuf[2*j+   2*i*f_x.Np(s)]=data2D(j,0);
+
+                f0xbuf[2*j+1+ 2*i*f_x.Np(s)]=data2D(j,1);
+            }
+        }
+
+        if (PE.NODES() > 1) {
+            if (PE.RANK()!=0) {
+                MPI_Send(f0xbuf, msg_sz, MPI_FLOAT, 0, PE.RANK(), MPI_COMM_WORLD);
+            }
+            else {
+                // Fill data for rank = 0
+                for(size_t i(0); i < outNxLocal; i++) {
+
+                    for (size_t j(0); j < f_x.Np(s); ++j) {
+                        f0x1Global(j,i,0) = f0xbuf[2*j+   2*i*f_x.Np(s)];
+                        f0x1Global(j,i,1) = f0xbuf[2*j+1+ 2*i*f_x.Np(s)];
+                    }
+                }
+                // Fill data for rank > 0
+                for (int rr = 1; rr < PE.NODES(); ++rr){
+                    MPI_Recv(f0xbuf, msg_sz, MPI_FLOAT, rr, rr, MPI_COMM_WORLD, &status);
+
+                    for(size_t i(0); i < outNxLocal; i++) {
+                        for (size_t j(0); j < f_x.Np(s); ++j) {
+                            f0x1Global(j,i + outNxLocal*rr,0) = f0xbuf[2*j+   2*i*f_x.Np(s)];
+                            f0x1Global(j,i + outNxLocal*rr,1) = f0xbuf[2*j+1+ 2*i*f_x.Np(s)];
+                        }
+                    }
+                }
+            }
+        }
+        else {
+            for(size_t i(0); i < outNxGlobal; i++) {
+
+                for (size_t j(0); j < f_x.Np(s); ++j) {
+                    f0x1Global(j,i,0) = f0xbuf[2*j+   2*i*f_x.Np(s)];
+                    f0x1Global(j,i,1) = f0xbuf[2*j+1+ 2*i*f_x.Np(s)];
+                }
+            }
+        }
+
+        if (PE.RANK() == 0) expo.Export_h5("f20-x", f0x1Global, tout, s);
+
+        delete[] f0xbuf;
+    }
+
+}
+//--------------------------------------------------------------
+//--------------------------------------------------------------
+//--------------------------------------------------------------
+void Output_Data::Output_Preprocessor_1D::fl0(const State1D& Y, const Grid_Info& grid, const size_t tout,
+                                              const Parallel_Environment_1D& PE) {
+
+    size_t Nbc = Input::List().BoundaryCells;
+    MPI_Status status;
+
+    size_t outNxLocal(grid.axis.Nx(0) - 2*Nbc);
+    size_t outNxGlobal(grid.axis.Nxg(0));
+
+    for(int s(0); s < Y.Species(); ++s) {
+
+        int msg_sz(2*outNxLocal*f_x.Np(s));
+        Array3D<float> f0x1Global(f_x.Np(s),outNxGlobal,2); //, yglob_axis.dim());
+        float* f0xbuf = new float[msg_sz];
+
+        for (size_t i(0); i < outNxLocal; ++i) {
+
+            Array2D<float> data2D = f_x( Y.DF(s), Y.DF(s).l0()-1,0, i+Nbc, s);
+
+            for (size_t j(0); j < f_x.Np(s); ++j) {
+                // std::cout << "\n f0(" << i << "," << j << ") = (" << data2D(j,1) << "," << data2D(j,2) <<")";
+                f0xbuf[2*j+   2*i*f_x.Np(s)]=data2D(j,0);
+
+                f0xbuf[2*j+1+ 2*i*f_x.Np(s)]=data2D(j,1);
+            }
+        }
+
+        if (PE.NODES() > 1) {
+            if (PE.RANK()!=0) {
+                MPI_Send(f0xbuf, msg_sz, MPI_FLOAT, 0, PE.RANK(), MPI_COMM_WORLD);
+            }
+            else {
+                // Fill data for rank = 0
+                for(size_t i(0); i < outNxLocal; i++) {
+
+                    for (size_t j(0); j < f_x.Np(s); ++j) {
+                        f0x1Global(j,i,0) = f0xbuf[2*j+   2*i*f_x.Np(s)];
+                        f0x1Global(j,i,1) = f0xbuf[2*j+1+ 2*i*f_x.Np(s)];
+                    }
+                }
+                // Fill data for rank > 0
+                for (int rr = 1; rr < PE.NODES(); ++rr){
+                    MPI_Recv(f0xbuf, msg_sz, MPI_FLOAT, rr, rr, MPI_COMM_WORLD, &status);
+
+                    for(size_t i(0); i < outNxLocal; i++) {
+                        for (size_t j(0); j < f_x.Np(s); ++j) {
+                            f0x1Global(j,i + outNxLocal*rr,0) = f0xbuf[2*j+   2*i*f_x.Np(s)];
+                            f0x1Global(j,i + outNxLocal*rr,1) = f0xbuf[2*j+1+ 2*i*f_x.Np(s)];
+                        }
+                    }
+                }
+            }
+        }
+        else {
+            for(size_t i(0); i < outNxGlobal; i++) {
+
+                for (size_t j(0); j < f_x.Np(s); ++j) {
+                    f0x1Global(j,i,0) = f0xbuf[2*j+   2*i*f_x.Np(s)];
+                    f0x1Global(j,i,1) = f0xbuf[2*j+1+ 2*i*f_x.Np(s)];
+                }
+            }
+        }
+
+        if (PE.RANK() == 0) expo.Export_h5("fl0-x", f0x1Global, tout, s);
+
+        delete[] f0xbuf;
+    }
+
+}
+//--------------------------------------------------------------
 //--------------------------------------------------------------
 //--------------------------------------------------------------    
 //--------------------------------------------------------------
@@ -2203,7 +2370,9 @@ void Output_Data::Output_Preprocessor_1D::T(const State1D& Y, const Grid_Info& g
             tbuf[i] = 4.0*M_PI*Algorithms::moment(  vfloat( (Y.SH(s,0,0)).xVec(i+Nbc) ), pra, 4);
             tbuf[i] /= 3.0*4.0*M_PI*Algorithms::moment(  vfloat( (Y.SH(s,0,0)).xVec(i+Nbc) ), pra, 2);
 
-            tbuf[i] *= convert_factor/Y.DF(s).mass();
+            // tbuf[i] *= convert_factor/Y.DF(s).mass();
+
+            tbuf[i] *= 1.0/Y.DF(s).mass();
 
         }
 
@@ -2251,7 +2420,7 @@ void Output_Data::Output_Preprocessor_1D::T(const State1D& Y, const Grid_Info& g
             }
         }
 
-        if (PE.RANK() == 0) expo.Export_h5("T_eV", tGlobal, tout, s);
+        if (PE.RANK() == 0) expo.Export_h5("T", tGlobal, tout, s);
 
     }
 
@@ -3502,15 +3671,16 @@ void Export_Files::Xport:: hinit_attr(H5::H5File &hfilehandle, const std::string
                                  size_t(static_cast<int>(dt_out
                                                          /Input::List().clf_dp))+1
                          ))};
+    
     hfile_add_attr(hfilehandle, "DT", dt);
 
-    float iter = { static_cast<float>(dt_out*step) };
-    hfile_add_attr(hfilehandle, "ITER", iter);
+    float time = { static_cast<float>(dt_out*step) };
+    hfile_add_attr(hfilehandle, "TIME", time);
 
     hfile_add_attr(hfilehandle, "NAME", tag);
 
-    float time = { static_cast<float>(dt_out*step*dt) };
-    hfile_add_attr(hfilehandle, "TIME", time);
+    // float time = { static_cast<float>(dt_out*step*dt) };
+    // hfile_add_attr(hfilehandle, "TIME", time);
 
     string timeunits = "1/\\omega_p";
     hfile_add_attr(hfilehandle, "TIME UNITS", timeunits);
@@ -3543,13 +3713,10 @@ void Export_Files::Xport:: hinit_attr2(H5::H5File &hfilehandle, const std::strin
                          ))};
     hfile_add_attr(hfilehandle, "DT", dt);
 
-    float iter = { static_cast<float>(dt_out*step) };
-    hfile_add_attr(hfilehandle, "ITER", iter);
+    float time = { static_cast<float>(dt_out*step) };
+    hfile_add_attr(hfilehandle, "TIME", time);
 
     hfile_add_attr(hfilehandle, "NAME", tag);
-
-    float time = { static_cast<float>(dt_out*step*dt) };
-    hfile_add_attr(hfilehandle, "TIME", time);
 
     string timeunits = "1/\\omega_p";
     hfile_add_attr(hfilehandle, "TIME UNITS", timeunits);
@@ -3709,6 +3876,9 @@ void Export_Files::Xport:: hfile_add_attr_todataset(H5::DataSet &hdatasethandle,
 
 }
 
-//--------------------------------------------------------------
+//-------------------------------------------------------------
+
+
+
 //**************************************************************
 //**************************************************************

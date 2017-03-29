@@ -12,8 +12,8 @@ numsp = 1
 
 l0 = 40
 m0 = 0
-nump = 256
-pmax = 0.6
+nump = 384
+pmax = 0.42
 mass = 1.0
 charge = -1.0
 
@@ -21,19 +21,19 @@ charge = -1.0
 // Spatial Grid
 //-----------------------------------------------------------------------
 
-Nx = 64
+Nx = 32
 
 xmin = 0.0
-xmax = 1.0
+xmax = 2.0
 
 //-----------------------------------------------------------------------
 // Loop control
 //-----------------------------------------------------------------------
 
-clf_dp = 0.01;
-n_outsteps = 1000;
-n_distoutsteps = 1000;
-t_stop = 600.0
+clf_dp = 0.01
+n_outsteps = 4000
+n_distoutsteps = 10
+t_stop = 400.0
 
 //-----------------------------------------------------------------------
 // Various switches
@@ -41,7 +41,9 @@ t_stop = 600.0
 
 /   ---   /   ---   /   ---   /   ---   /   ---   /   ---   /   ---   /
 /// Fokker-Planck
-collisions_switch = true
+collisions_switch = false
+f00_collisions = implicit
+flm_collisions = true
 
 //  Explicit f00 collisions options
 small_dt                            = 0.01
@@ -73,21 +75,21 @@ implicit_E                          = false
 // Initialize f00 using density and temperature
 //-----------------------------------------------------------------------
 
-density_np                  = 1.0e19
+density_np                  = 1.0e20
 super_gaussian_distribution = 2.0
 pth_ref                     = 0.07							    // Reference thermal velocity
 hydrocharge = 40.0
 
 
-n(x) = cst{1.0} fnc{0.01*(1.0+1e-2*sin(2*pi*x))}
-T(x) = fnc{0.07*0.07} fnc{0.000625*(1+0.01*sin(pi*x/3000))}
+n(x) = cst{1.0}  
+T(x) = fnc{0.07*0.07}
 
 //-----------------------------------------------------------------------
 // Option to apply f10(x) = C(x) * (v^3 df00/dv) . Provide C(x)
 //-----------------------------------------------------------------------
 
-init_f1                     = true
-multiplier-f10(x) = fnc{sin(2*pi*x)}
+init_f1                     = false
+multiplier-f10(x) = fnc{1e-12*sin(70*2.0*pi*x/100.0)}
 
 //-----------------------------------------------------------------------
 // Boundary type (default periodic)
@@ -102,11 +104,11 @@ bndX = 0
 
 ext_fields = false
 
-Ex(x) = fnc{0.0}
-Ex(t) = cst{0.0}
+Ex(x) = fnc{1e-18*sin(2.0*pi*x)}
+Ex(t) = fnc{1.0-1.0*tanh(2e3*t)  
 
-Ey(x) = cst{5e-3}
-Ey(t) = fnc{sin(t)}
+Ey(x) = cst{0.0}
+Ey(t) = cst{0.0}
 
 Ez(x) = cst{0.0}
 Ez(t) = cst{0.0}
@@ -114,15 +116,29 @@ Ez(t) = cst{0.0}
 Bx(x) = cst{0.0}
 Bx(t) = cst{0.0}
 
-By(x) = cst{0e-3}
-By(t) = cst{0.0} {0.5-0.5*tanh(1000000*(t-3.0))}
+By(x) = cst{0.0}
+By(t) = cst{0.0} 
 
-Bz(x) = cst{2e-3} //fnc{1e-3*sin(pi*x/5000.0)}
-Bz(t) = cst{0.0} //fnc{0.5-0.5*tanh(10*(t-.0))}//*exp(1e-6*t)}
+Bz(x) = cst{0.0}
+Bz(t) = cst{0.0} 
 
 
-traveling_waves = false
-Ex(x,t) = fnc{cos(pi/2*x-0.5*t)}
+traveling_wave = true
+num_waves = 1
+Ex(x,t) = fnc{1e-7*(sin(pi*x-1.079*t))}
+Ey(x,t) = cst{0.0}
+Ez(x,t) = cst{0.0}
+Bx(x,t) = cst{0.0}
+By(x,t) = cst{0.0}
+Bz(x,t) = cst{0.0}
+
+
+// Pulse info
+rise_flat_fall_center = 18 60 18 50
+
+envelope(t) = fnc{exp(-0.01*(t-10)^4)}
+
+f_pedestal = cst{0.0}
 
 //-----------------------------------------------------------------------
 //      Hydrodynamic parameters
@@ -144,14 +160,14 @@ Ux(x) = cst{0.0}
 //      Laser parameters
 //-----------------------------------------------------------------------
 
-inverse_bremsstrahlung = true
+inverse_bremsstrahlung = false
 lambda_0 = 0.351
-I_0 = 3.0e16
+I_0 = 3.0e17
 
 /   ---   /   ---   /   ---   /   ---   /   ---   /   ---   /   ---
 
 I(x) = cst{1.0}
-I(t) = fnc{exp(-(t-50)^2)+exp(-(t-100)^2)+exp(-(t-150)^2)}
+I(t) = fnc{exp(-0.01*(t-200)^2)}
 
 //-----------------------------------------------------------------------
 // Output
@@ -198,7 +214,9 @@ o_p1x1 = true
 
 o_f0x1 = true
 o_f10x1 = true
+o_f20x1 = true
 o_f11x1 = false
+o_fl0x1 = true
 
 /   ---   /   ---   /   ---   /   ---   /   ---   /   ---   /   ---   /
 
@@ -213,5 +231,6 @@ o_Ti = false
 //-----------------------------------------------------------------------
 // Restart files
 //-----------------------------------------------------------------------
-restart_time = 0
-n_restarts = 0
+if_restart = false
+restart_time = 1000
+n_restarts = 1000

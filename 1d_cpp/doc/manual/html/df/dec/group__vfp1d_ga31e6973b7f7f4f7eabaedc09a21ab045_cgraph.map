@@ -1,0 +1,22 @@
+<map id="self_collisions::advancef00" name="self_collisions::advancef00">
+<area shape="rect" id="node2" href="$da/dce/namespace_input.html#a48b39b70a0ab1d976662642491b3e2f2" title="Input::List" alt="" coords="983,33,1062,58"/>
+<area shape="rect" id="node3" href="$df/dec/group__vfp1d.html#ga85dbd48049a4e37eedca4acd2821899f" title="self_f00_implicit_collisions\l::loop" alt="" coords="233,126,411,165"/>
+<area shape="rect" id="node21" href="$df/dec/group__vfp1d.html#ga0d822d3151b481332e566dd75e5aafa6" title="self_f00_explicit_collisions\l::loop" alt="" coords="233,189,411,227"/>
+<area shape="rect" id="node4" href="$db/d09/group__st2d.html#ga59d310369b6ee8067eecbcaf8d5be993" title="SHarmonic1D::numx" alt="" coords="461,83,606,109"/>
+<area shape="rect" id="node5" href="$db/d09/group__st2d.html#ga92eae6dbcfcc5770299682b046c87739" title="SHarmonic1D::nump" alt="" coords="461,133,606,158"/>
+<area shape="rect" id="node6" href="$da/dce/namespace_setup___y.html#a3edc9de67ac25648cb16da03073ddd52" title="{ function_description } " alt="" coords="459,182,608,207"/>
+<area shape="rect" id="node8" href="$df/dec/group__vfp1d.html#ga2735a8cfca1d31639ecd0625b4872226" title="self_f00_implicit_step\l::getleftside" alt="" coords="459,242,608,281"/>
+<area shape="rect" id="node17" href="$d3/d6c/nmethods_8cpp.html#a344466e46998648d28f1ca474667109d" title="The tridiagonal solver for implicit collisions. " alt="" coords="462,449,605,474"/>
+<area shape="rect" id="node7" href="$da/dce/namespace_setup___y.html#a90d0d622278b4016566cccae8f4f7eff" title="Setup_Y::checkparse" alt="" coords="697,83,844,109"/>
+<area shape="rect" id="node9" href="$df/dec/group__vfp1d.html#gaa9a5ad3df87ba9f258fb533e1f7ba28e" title="self_f00_implicit_step\l::update_C_Rosenbluth" alt="" coords="690,133,851,171"/>
+<area shape="rect" id="node10" href="$df/dec/group__vfp1d.html#ga53d35120d02f80fe0a3e36df0d373d7e" title="self_f00_implicit_step\l::update_D_and_delta" alt="" coords="694,195,847,234"/>
+<area shape="rect" id="node13" href="$d4/d2d/class_formulary.html#acc0f6cf26d8fd2df1c7004f6c4d429dc" title="Formulary::LOGee" alt="" coords="956,302,1088,327"/>
+<area shape="rect" id="node15" href="$d4/d2d/class_formulary.html#ad53ecf903054c64e3de99fda9eca97f4" title="Formulary::LOGei" alt="" coords="959,351,1086,377"/>
+<area shape="rect" id="node16" href="$df/dec/group__vfp1d.html#gacf8da403e416ec956d5a895fba1b50d8" title="self_f00_implicit_step\l::update_D_inversebremsstrahlung" alt="" coords="656,310,885,349"/>
+<area shape="rect" id="node11" href="$df/dec/group__vfp1d.html#gabc99601bf5eb04762c7336a6ed6c8e40" title="self_f00_implicit_step\l::update_D_Rosenbluth" alt="" coords="942,162,1103,201"/>
+<area shape="rect" id="node12" href="$df/dec/group__vfp1d.html#ga95061d5efc2426763736cdaf2487374e" title="self_f00_implicit_step\l::calc_delta_ChangCooper" alt="" coords="933,225,1112,263"/>
+<area shape="rect" id="node14" href="$d4/d2d/class_formulary.html#af076e582efbede70fe29ca2313fc19c5" title="Formulary::Units" alt="" coords="1160,327,1279,353"/>
+<area shape="rect" id="node18" href="$dd/d03/class_array2_d.html#a1e12b23c24a402b5238a91f7dd538d75" title="Array2D::dim1" alt="" coords="717,425,824,450"/>
+<area shape="rect" id="node19" href="$dd/d03/class_array2_d.html#a8f75ad6d94fc616a1257b69fc1391515" title="Array2D::dim2" alt="" coords="717,474,824,499"/>
+<area shape="rect" id="node20" href="$d3/d6c/nmethods_8cpp.html#a11e2a28cd8cdab77320407c906b3a643" title="Set up tridiagonal solver. " alt="" coords="710,523,830,549"/>
+</map>

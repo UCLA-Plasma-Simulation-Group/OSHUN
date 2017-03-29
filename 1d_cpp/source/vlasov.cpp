@@ -1,6 +1,5 @@
 /*! \brief  Vlasov Equation - Definitions
- * \author Michail Tzoufras, Benjamin Winjum, Archis Joglekar
- * \date   October 10, 2016
+ * \author PICKSC
  * \file   vlasov.cpp
  *
  * Includes spatial advection, electric field advection, and electric field update routines
@@ -38,12 +37,13 @@
 
 Current_1D::Current_1D( double pmin, double pmax, size_t Np,
                         size_t Nx )
-        : Jx(Nx), Jy(Nx), Jz(Nx){
+        : Jx(Nx), Jy(Nx), Jz(Nx), small(0.5*pmax/Np) {
 //          pr(Algorithms::MakeAxis(complex<double>(pmin),
 //                                  complex<double>(pmax),
 //                                  Np)),
 //          invg(pr) {
-
+    small *= small; small *= small; small *= 0.5*pmax/Np; 
+    small *= 0.2; small *= 1.0/(1.5*pmax/Np); 
 //    for (size_t i(0); i < pr.size(); ++i) {
 //        invg[i] = 1.0 / (sqrt(1.0+pr[i]*pr[i]));
 //    }
@@ -52,7 +52,6 @@ Current_1D::Current_1D( double pmin, double pmax, size_t Np,
 
 void Current_1D::operator()(const DistFunc1D& Din, Field1D& Exh, Field1D& Eyh, Field1D& Ezh) {
 
-    complex<double> c01(0.0,1.0);
     Array2D<double> temp(3,Din(0).numx());
 
     temp = Din.getcurrent();
@@ -66,6 +65,20 @@ void Current_1D::operator()(const DistFunc1D& Din, Field1D& Exh, Field1D& Eyh, F
     Exh += Jx;
     Eyh += Jy;
     Ezh += Jz;
+
+}
+
+void Current_1D::es1d(const DistFunc1D& Din, Field1D& Exh) {
+
+    valarray<double> temp(Din(0).numx());
+
+    temp = Din.getcurrent(0);
+
+    for (size_t i(0); i < Jx.numx(); ++i) {
+        Jx(i) = complex<double >(temp[i]);//+4.0/3.0*3.1415926*small*Din(1,0)(1,i);
+    }
+
+    Exh += Jx;
 
 }
 //--------------------------------------------------------------
@@ -85,9 +98,9 @@ Electric_Field_1D::Electric_Field_1D(size_t Nl, size_t Nm,
           C1(Nl+1), C2(Nl+1,Nm+1), C3(Nl+1), C4(Nl+1,Nm+1),
           Hp0(Nl+1),
           H(Np,Nx), G(Np,Nx), TMP(Np,Nx),
-//          pr(Algorithms::MakeAxis(complex<double>(pmin),
-//                                  complex<double>(pmax),
-//                                  Np)),
+         // pr(Algorithms::MakeAxis(complex<double>(complex<double>(pmax/2.0/Np)),
+         //                         complex<double>(pmax),
+         //                         Np)),
 
           pr(Algorithms::MakeCAxis(complex<double>(0.0),
                                   complex<double>(pmax),
@@ -102,7 +115,7 @@ Electric_Field_1D::Electric_Field_1D(size_t Nl, size_t Nm,
         invpr[i] = 1.0/pr[i];
     }
     double idp = (-1.0)/ (2.0*(pmax-pmin)/double(Np)); // -1/(2dp)
-
+    // double idp = (-1.0)/ (2.0*(pmax-pmax/2.0/double(Np))/double(Np-1));
 
 //       - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //       Calculate the A1 * l/(l+1) * 1/(2Dp), A2 * (-1)/(2Dp) parameters
@@ -373,19 +386,19 @@ void Electric_Field_1D::es1d(const DistFunc1D& Din,
     complex<double> ii(0.0,1.0);
 
     valarray<complex<double> > Ex(FEx.array());
-    valarray<complex<double> > Em(FEz.array());
-    Em *= (-1.0)*ii;
-    Em += FEy.array();
-    valarray<complex<double> > Ep(FEz.array());
-    Ep *= ii;
-    Ep += FEy.array();
+    // valarray<complex<double> > Em(FEz.array());
+    // Em *= (-1.0)*ii;
+    // Em += FEy.array();
+    // valarray<complex<double> > Ep(FEz.array());
+    // Ep *= ii;
+    // Ep += FEy.array();
 
     Ex *= Din.q();
-    Em *= Din.q();
-    Ep *= Din.q();
+    // Em *= Din.q();
+    // Ep *= Din.q();
 
     size_t l0(Din.l0());
-    size_t m0(Din.m0());
+    // size_t m0(Din.m0());
 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -393,7 +406,6 @@ void Electric_Field_1D::es1d(const DistFunc1D& Din,
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     MakeG00(Din(0,0));
     Ex *= A1(0,0); TMP = G; Dh(1,0) += G.mxaxis(Ex);
-
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //      m = 0, l = 1
@@ -820,6 +832,7 @@ void Electric_Field_1D::MakeG00(SHarmonic1D& f) {
     complex<double> p0p1_sq( pr[0]*pr[0]/(pr[1]*pr[1]) ),
             inv_mp0p1_sq( 1.0/(1.0-p0p1_sq) ),
             g_r = -4.0*(pr[1]-pr[0]) * pr[0]/(pr[1]*pr[1]),
+            // g_r = 2.0*(pr[0]/pr[1]/pr[1]),
             f00;
 
     for (size_t i(0); i < f.numx(); ++i) {
@@ -952,41 +965,6 @@ void Magnetic_Field_1D::operator()(const DistFunc1D& Din,
     for (size_t l(m0+1); l < l0+1; ++l){
         FLM = Din(l,m0);                                     Dh(l,m0  )  += FLM.mxaxis(Bx);
         FLM = Din(l,m0); Bm *= A2(l,m0)/A2(l-1,m0);          Dh(l,m0-1)  += FLM.mxaxis(Bm);
-    }
-
-}
-//--------------------------------------------------------------
-//--------------------------------------------------------------
-void Magnetic_Field_1D::es1d(const DistFunc1D& Din,
-                                   const Field1D& FBx, const Field1D& FBy, const Field1D& FBz,
-                                   DistFunc1D& Dh) {
-//--------------------------------------------------------------
-//  This is the core calculation for the magnetic field
-//--------------------------------------------------------------
-
-    complex<double> ii(0.0,1.0);
-
-    valarray<complex<double> > Bx(FBx.array());
-    valarray<complex<double> > Bm(FBy.array());
-    Bm *= (-1.0)*ii;
-    Bm += FBz.array();
-    valarray<complex<double> > Bp(FBy.array());
-    Bp *= ii;
-    Bp += FBz.array();
-
-    Bx *= Din.q();
-    Bm *= Din.q();
-    Bp *= Din.q();
-
-    size_t l0(B1.size()-1);
-    size_t m0(A1.size()-1);
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - -
-//      m = 0, 1 < l < l0+1
-// - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    Bp *= A3;
-    for (size_t l(1); l < l0+1; ++l){
-        FLM = Din(l,0);      Dh(l,1) += FLM.mxaxis(Bp);
     }
 
 }
@@ -1226,9 +1204,9 @@ Spatial_Advection_1D::Spatial_Advection_1D(size_t Nl, size_t Nm,
 //--------------------------------------------------------------
         : A1(Nl+1,Nm+1), A2(Nl+1,Nm+1),
           fd1(Np,Nx), fd2(Np,Nx),
-//          vr(Algorithms::MakeAxis(complex<double>(pmin),
-//                                  complex<double>(pmax),
-//                                  Np)) {
+         // vr(Algorithms::MakeAxis(complex<double>(pmax/2.0/Np),
+         //                         complex<double>(pmax),
+         //                         Np)) {
 
           vr(Algorithms::MakeCAxis(complex<double>(0.0),
                                   complex<double>(pmax),
@@ -1305,27 +1283,22 @@ void Spatial_Advection_1D::es1d(const DistFunc1D& Din, DistFunc1D& Dh) {
     valarray<complex<double> > vt(vr); vt *= 1.0/Din.mass();
 
     size_t l0(Din.l0());
-    size_t m0(Din.m0());
 
-    for (size_t m(0); m < 1; ++m){
+    fd1 = Din(0,0);     fd1 = fd1.Dx();
 
-        fd1 = Din(m,m);     fd1 = fd1.Dx();
+    vt *= A1(0,0);                          Dh(1,0) += fd1.mpaxis(vt);
 
-        vt *= A1(m,m);                          Dh(m+1,m) += fd1.mpaxis(vt);
+    for (size_t l(1); l < l0; ++l) {
+        fd1 = Din(l,0);  //std::cout << "\n \n before dx, l = " << l << " \n";          
+        fd1 = fd1.Dx(); //std::cout << " \n after dx\n";
 
-        for (size_t l(m+1); l < l0; ++l) {
-            fd1 = Din(l,m);            fd1 = fd1.Dx();
-
-            vt *= A2(l,m)/A1(l-1,m);    fd2 = fd1;  Dh(l-1,m) += fd1.mpaxis(vt);
-            vt *= A1(l,m)/A2(l  ,m);                Dh(l+1,m) += fd2.mpaxis(vt);
-        }
-
-        fd1 = Din(l0,m);            fd1 = fd1.Dx();
-        vt *= A2(l0,m)/A1(l0-1,m);                 Dh(l0-1,m) += fd1.mpaxis(vt);
-        vt *= 1.0/A2(l0,m);
+        vt *= A2(l,0)/A1(l-1,0);    fd2 = fd1;  Dh(l-1,0) += fd1.mpaxis(vt);
+        vt *= A1(l,0)/A2(l  ,0);                Dh(l+1,0) += fd2.mpaxis(vt);
     }
-
-
+    
+    fd1 = Din(l0,0);            fd1 = fd1.Dx();
+    vt *= A2(l0,0)/A1(l0-1,0);                 Dh(l0-1,0) += fd1.mpaxis(vt);
+    // vt *= 1.0/A2(l0,0);
 }
 //--------------------------------------------------------------
 //--------------------------------------------------------------
@@ -1448,293 +1421,3 @@ void Ampere_1D::operator()(EMF1D& EMFin, EMF1D& EMFh) {
 //--------------------------------------------------------------
 //--------------------------------------------------------------
 //**************************************************************
-
-//**************************************************************
-
-//**************************************************************
-//--------------------------------------------------------------
-//  Functor to be used in the Runge-Kutta methods with explicit 
-//  E-field solver
-
-//--------------------------------------------------------------
-//  Constructor
-VlasovFunctor1D_explicitE::VlasovFunctor1D_explicitE(vector<size_t> Nl,vector<size_t> Nm,vector<double> pmax, vector<size_t> Np,
-                                                     double xmin, double xmax, size_t Nx) {
-//--------------------------------------------------------------
-
-    for (size_t s(0); s < Nl.size(); ++s){
-
-        SA.push_back( Spatial_Advection_1D(Nl[s], Nm[s], 0.0, pmax[s], Np[s], xmin, xmax, Nx) );
-
-        EF.push_back( Electric_Field_1D(Nl[s], Nm[s], 0.0, pmax[s], Np[s], xmin, xmax, Nx) );
-
-        JX.push_back( Current_1D(0.0, pmax[s], Np[s], Nx) );
-
-        BF.push_back( Magnetic_Field_1D(Nl[s], Nm[s], 0.0, pmax[s], Np[s], xmin, xmax, Nx) );
-
-        AM.push_back( Ampere_1D(xmin, xmax, Nx) );
-
-        FA.push_back( Faraday_1D(xmin, xmax, Nx) );
-
-    }
-}
-//--------------------------------------------------------------
-
-
-//--------------------------------------------------------------
-//  Collect all of the terms
-void VlasovFunctor1D_explicitE::operator()(const State1D& Yin, State1D& Yslope){
-//--------------------------------------------------------------
-
-    Yslope = 0.0;
-
-    for (size_t s(0); s < Yin.Species(); ++s) {
-
-        if (Yin.DF(s).l0() == 1) {
-
-            SA[s].f1only(Yin.DF(s),Yslope.DF(s));
-
-            EF[s].f1only(Yin.DF(s),Yin.EMF().Ex(),Yin.EMF().Ey(),Yin.EMF().Ez(),Yslope.DF(s));
-
-            BF[s].f1only(Yin.DF(s),Yin.EMF().Bx(),Yin.EMF().By(),Yin.EMF().Bz(),Yslope.DF(s));
-
-        }
-        else if (Yin.DF(s).m0() == 0) {
-
-            SA[s].es1d(Yin.DF(s),Yslope.DF(s));
-
-            EF[s].es1d(Yin.DF(s),Yin.EMF().Ex(),Yin.EMF().Ey(),Yin.EMF().Ez(),Yslope.DF(s));
-
-        }
-
-        else {
-
-            SA[s](Yin.DF(s),Yslope.DF(s));
-
-            EF[s](Yin.DF(s),Yin.EMF().Ex(),Yin.EMF().Ey(),Yin.EMF().Ez(),Yslope.DF(s));
-
-            BF[s](Yin.DF(s),Yin.EMF().Bx(),Yin.EMF().By(),Yin.EMF().Bz(),Yslope.DF(s));
-
-        }
-
-
-
-        JX[s](Yin.DF(s),Yslope.EMF().Ex(),Yslope.EMF().Ey(),Yslope.EMF().Ez());
-
-        AM[s](Yin.EMF(),Yslope.EMF());
-
-        FA[s](Yin.EMF(),Yslope.EMF());
-
-        Yslope.DF(s) = Yslope.DF(s).Filterp();
-    }
-
-}
-
-void VlasovFunctor1D_explicitE::operator()(const State1D& Yin, State1D& Yslope, size_t direction){}
-void VlasovFunctor1D_explicitE::operator()(const State1D& Yin, const State1D& Y2in, State1D& Yslope){}
-
-//--------------------------------------------------------------
-//  Constructor
-VlasovFunctor1D_explicitEB::VlasovFunctor1D_explicitEB(vector<size_t> Nl,vector<size_t> Nm,vector<double> pmax, vector<size_t> Np,
-                                                       double xmin, double xmax, size_t Nx) {
-//--------------------------------------------------------------
-
-    for (size_t s(0); s < Nl.size(); ++s){
-
-        SA.push_back( Spatial_Advection_1D(Nl[s], Nm[s], 0.0, pmax[s], Np[s], xmin, xmax, Nx) );
-
-        EF.push_back( Electric_Field_1D(Nl[s], Nm[s], 0.0, pmax[s], Np[s], xmin, xmax, Nx) );
-
-        JX.push_back( Current_1D(0.0, pmax[s], Np[s], Nx) );
-
-        AM.push_back( Ampere_1D(xmin, xmax, Nx) );
-
-        FA.push_back( Faraday_1D(xmin, xmax, Nx) );
-
-    }
-}
-//--------------------------------------------------------------
-
-
-//--------------------------------------------------------------
-//  Collect all of the terms
-void VlasovFunctor1D_explicitEB::operator()(const State1D& Yin, State1D& Yslope){
-//--------------------------------------------------------------
-
-    Yslope = 0.0;
-
-    for (size_t s(0); s < Yin.Species(); ++s) {
-
-        if (Yin.DF(s).l0() == 1) {
-            SA[s].f1only(Yin.DF(s),Yslope.DF(s));
-            EF[s].f1only(Yin.DF(s),Yin.EMF().Ex(),Yin.EMF().Ey(),Yin.EMF().Ez(),Yslope.DF(s));
-        }
-        else{
-            SA[s](Yin.DF(s),Yslope.DF(s));
-            EF[s](Yin.DF(s),Yin.EMF().Ex(),Yin.EMF().Ey(),Yin.EMF().Ez(),Yslope.DF(s));
-        }
-
-        JX[s](Yin.DF(s),Yslope.EMF().Ex(),Yslope.EMF().Ey(),Yslope.EMF().Ez());
-
-        AM[s](Yin.EMF(),Yslope.EMF());
-
-        FA[s](Yin.EMF(),Yslope.EMF());
-
-        Yslope.DF(s) = Yslope.DF(s).Filterp();
-    }
-
-}
-
-void VlasovFunctor1D_explicitEB::operator()(const State1D& Yin, State1D& Yslope, size_t direction){}
-void VlasovFunctor1D_explicitEB::operator()(const State1D& Yin, const State1D& Y2in, State1D& Yslope){}
-//--------------------------------------------------------------
-//  Functor to be used in the Runge-Kutta methods with implicit
-//  E-field solver
-
-//--------------------------------------------------------------
-//  Constructor
-VlasovFunctor1D_implicitE_p1::VlasovFunctor1D_implicitE_p1(vector<size_t> Nl,vector<size_t> Nm,vector<double> pmax, vector<size_t> Np,
-                                                           double xmin, double xmax, size_t Nx) {
-// //--------------------------------------------------------------
-
-    for (size_t s(0); s < Nl.size(); ++s){
-
-        SA.push_back( Spatial_Advection_1D(Nl[s], Nm[s], 0.0, pmax[s], Np[s], xmin, xmax, Nx) );
-
-        BF.push_back( Magnetic_Field_1D(Nl[s], Nm[s], 0.0, pmax[s], Np[s], xmin, xmax, Nx) );
-
-    }
-
-}
-
-//--------------------------------------------------------------
-//
-//
-void VlasovFunctor1D_implicitE_p1::operator()(const State1D& Yin, State1D& Yslope){
-//--------------------------------------------------------------
-
-    Yslope = 0.0;
-
-    for (size_t s(0); s < Yin.Species(); ++s) {
-
-
-        if (Yin.DF(s).l0() == 1) {
-            SA[s].f1only(Yin.DF(s),Yslope.DF(s));
-            BF[s].f1only(Yin.DF(s),Yin.EMF().Bx(),Yin.EMF().By(),Yin.EMF().Bz(),Yslope.DF(s));
-        }
-        else {
-            SA[s](Yin.DF(s),Yslope.DF(s));
-            BF[s](Yin.DF(s),Yin.EMF().Bx(),Yin.EMF().By(),Yin.EMF().Bz(),Yslope.DF(s));
-        }
-
-        Yslope.DF(s) = Yslope.DF(s).Filterp();
-
-
-    }
-
-}
-void VlasovFunctor1D_implicitE_p1::operator()(const State1D& Yin, State1D& Yslope, size_t direction){}
-void VlasovFunctor1D_implicitE_p1::operator()(const State1D& Yin, const State1D& Y2in, State1D& Yslope){}
-//--------------------------------------------------------------
-//  Constructor
-VlasovFunctor1D_implicitEB_p1::VlasovFunctor1D_implicitEB_p1(vector<size_t> Nl,vector<size_t> Nm,vector<double> pmax, vector<size_t> Np,
-                                                             double xmin, double xmax, size_t Nx) {
-// //--------------------------------------------------------------
-
-    for (size_t s(0); s < Nl.size(); ++s){
-
-        SA.push_back( Spatial_Advection_1D(Nl[s], Nm[s], 0.0, pmax[s], Np[s], xmin, xmax, Nx) );
-
-    }
-
-}
-
-//--------------------------------------------------------------
-//
-//
-void VlasovFunctor1D_implicitEB_p1::operator()(const State1D& Yin, State1D& Yslope){
-//--------------------------------------------------------------
-
-    Yslope = 0.0;
-
-    for (size_t s(0); s < Yin.Species(); ++s) {
-
-        if (Yin.DF(s).l0() == 1)    SA[s].f1only(Yin.DF(s),Yslope.DF(s));
-        else                        SA[s](Yin.DF(s),Yslope.DF(s));
-
-        Yslope.DF(s) = Yslope.DF(s).Filterp();
-
-    }
-
-}
-void VlasovFunctor1D_implicitEB_p1::operator()(const State1D& Yin, State1D& Yslope, size_t direction){}
-void VlasovFunctor1D_implicitEB_p1::operator()(const State1D& Yin, const State1D& Y2in, State1D& Yslope){}
-//--------------------------------------------------------------
-//  Constructor
-VlasovFunctor1D_implicitE_p2::VlasovFunctor1D_implicitE_p2(vector<size_t> Nl,vector<size_t> Nm,vector<double> pmax, vector<size_t> Np,
-                                                           double xmin, double xmax, size_t Nx) {
-// //--------------------------------------------------------------
-
-    for (size_t s(0); s < Nl.size(); ++s){
-
-        FA.push_back( Faraday_1D(xmin, xmax, Nx) );
-        EF.push_back( Electric_Field_1D(Nl[s], Nm[s], 0.0, pmax[s], Np[s], xmin, xmax, Nx) );
-
-    }
-
-}
-
-
-//------------------------------------------------------------------------------------------------------
-void VlasovFunctor1D_implicitE_p2::operator()(const State1D& Yin, State1D& Yslope){
-// //---------------------------------------------------------------------------------------------------
-
-    Yslope = 0.0;
-
-    for (size_t s(0); s < Yin.Species(); ++s) {
-        FA[s](Yin.EMF(),Yslope.EMF());
-
-        if (Yin.DF(s).l0() == 1) EF[s].f1only(Yin.DF(s),Yin.EMF().Ex(),Yin.EMF().Ey(),Yin.EMF().Ez(),Yslope.DF(s));
-        else                     EF[s](Yin.DF(s),Yin.EMF().Ex(),Yin.EMF().Ey(),Yin.EMF().Ez(),Yslope.DF(s));
-
-        Yslope.DF(s) = Yslope.DF(s).Filterp();
-
-    }
-
-}
-
-// //--------------------------------------------------------------------------------------------------
-void VlasovFunctor1D_implicitE_p2::operator()(const State1D& Yin, State1D& Yslope, size_t direction){
-// //--------------------------------------------------------------------------------------------------
-
-    Yslope = 0.0;
-
-    if (direction == 1)
-    {
-        for (size_t s(0); s < Yin.Species(); ++s) {
-            if (Yin.DF(s).l0() == 1) EF[s].Implicit_Ex_f1only(Yin.DF(s),Yin.EMF().Ex(),Yslope.DF(s));
-            else                     EF[s].Implicit_Ex(Yin.DF(s),Yin.EMF().Ex(),Yslope.DF(s));
-            Yslope.DF(s) = Yslope.DF(s).Filterp();
-        }
-    }
-    else if (direction == 2)
-    {
-        for (size_t s(0); s < Yin.Species(); ++s) {
-            if (Yin.DF(s).l0() == 1) EF[s].Implicit_Ey_f1only(Yin.DF(s),Yin.EMF().Ey(),Yslope.DF(s));
-            else                     EF[s].Implicit_Ey(Yin.DF(s),Yin.EMF().Ey(),Yslope.DF(s));
-            Yslope.DF(s) = Yslope.DF(s).Filterp();
-        }
-    }
-    else
-    {
-        // complex<double> ii(0.0,1.0);
-        for (size_t s(0); s < Yin.Species(); ++s) {
-            if (Yin.DF(s).l0() == 1) EF[s].Implicit_Ez_f1only(Yin.DF(s),Yin.EMF().Ez(),Yslope.DF(s));
-            else                     EF[s].Implicit_Ez(Yin.DF(s),Yin.EMF().Ez(),Yslope.DF(s));
-            Yslope.DF(s) = Yslope.DF(s).Filterp();
-        }
-    }
-
-}
-void VlasovFunctor1D_implicitE_p2::operator()(const State1D& Yin, const State1D& Y2in, State1D& Yslope){}
-// //**************************************************************

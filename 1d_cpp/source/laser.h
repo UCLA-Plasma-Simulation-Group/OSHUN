@@ -1,5 +1,5 @@
 /*!\brief  Laser source - Declarations
- * \author Michail Tzoufras, Ben Winjum, Adam Tableman, Archis Joglekar
+ * \author PICKSC
  * \date   August 9, 2016
  * \file   laser.h
  *
@@ -10,10 +10,6 @@
  * - Ray tracing (TBD)
  * - Antenna (TBD)
  * 
- * 
- * \todo External field
- * \todo Phenomenological heat source
- * \todo Ray tracing
  */
 //**************************************************************
 

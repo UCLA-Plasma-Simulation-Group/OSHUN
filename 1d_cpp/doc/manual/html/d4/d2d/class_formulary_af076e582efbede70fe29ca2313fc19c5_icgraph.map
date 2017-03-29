@@ -1,0 +1,37 @@
+<map id="Formulary::Units" name="Formulary::Units">
+<area shape="rect" id="node2" href="$d4/d2d/class_formulary.html#acc0f6cf26d8fd2df1c7004f6c4d429dc" title="Formulary::LOGee" alt="" coords="172,336,304,361"/>
+<area shape="rect" id="node20" href="$d4/d2d/class_formulary.html#a0c449250f7e1ad48f1b4d03ffc6ae208" title="Formulary::Tau_e" alt="" coords="404,615,529,640"/>
+<area shape="rect" id="node22" href="$d4/d2d/class_formulary.html#acd444fa3286328882aaf5f4301f10fed" title="Formulary::MFP" alt="" coords="893,864,1010,889"/>
+<area shape="rect" id="node25" href="$d4/d2d/class_formulary.html#ad53ecf903054c64e3de99fda9eca97f4" title="Formulary::LOGei" alt="" coords="175,540,302,565"/>
+<area shape="rect" id="node31" href="$d4/d2d/class_formulary.html#ab45aafb145c0df665e95f1924617014c" title="Formulary::Tau_i" alt="" coords="406,763,527,788"/>
+<area shape="rect" id="node32" href="$d4/d2d/class_formulary.html#a83526a5bf9aa5728b67db08607946110" title="Formulary::LOGii" alt="" coords="177,968,300,993"/>
+<area shape="rect" id="node35" href="$d4/d2d/class_formulary.html#a1ca1a027cb0bbb3ba336d6a0b4388c6b" title="Formulary::vth" alt="" coords="185,813,292,839"/>
+<area shape="rect" id="node3" href="$df/dec/group__vfp1d.html#ga2735a8cfca1d31639ecd0625b4872226" title="self_f00_implicit_step\l::getleftside" alt="" coords="647,199,796,237"/>
+<area shape="rect" id="node6" href="$d4/d2d/class_formulary.html#aa698bdc356928fab2c0a915ae18910f5" title="Formulary::LOGee" alt="" coords="401,120,532,145"/>
+<area shape="rect" id="node7" href="$df/dec/group__vfp1d.html#ga5c6cc3738116f87488d332c63bd78857" title="Resets coefficients and integrals to use in the matrix solve. " alt="" coords="384,449,550,488"/>
+<area shape="rect" id="node10" href="$df/dec/group__vfp1d.html#gae03e8eb8ec1ee86afb119d478ee77e7c" title="Resets coefficients and integrals to use in the matrix solve. " alt="" coords="393,387,541,425"/>
+<area shape="rect" id="node15" href="$df/d0a/main_8cpp.html#ae5da516a26fca0362bf8ecac4c44b330" title="startmessages" alt="" coords="668,575,776,600"/>
+<area shape="rect" id="node17" href="$df/dec/group__vfp1d.html#gae1981f7d44ce6a5b554889349f090fd6" title="self_f00_implicit_step\l::takestep" alt="" coords="647,261,796,300"/>
+<area shape="rect" id="node18" href="$df/dec/group__vfp1d.html#gadcba2cdef5990bc14eab7d277145af49" title="self_f00_explicit_step\l::takestep" alt="" coords="392,5,541,44"/>
+<area shape="rect" id="node24" href="$df/dec/group__vfp1d.html#gacf8da403e416ec956d5a895fba1b50d8" title="self_f00_implicit_step\l::update_D_inversebremsstrahlung" alt="" coords="352,272,581,311"/>
+<area shape="rect" id="node4" href="$df/dec/group__vfp1d.html#ga85dbd48049a4e37eedca4acd2821899f" title="self_f00_implicit_collisions\l::loop" alt="" coords="863,199,1041,237"/>
+<area shape="rect" id="node5" href="$df/dec/group__vfp1d.html#ga31e6973b7f7f4f7eabaedc09a21ab045" title="self_collisions::advancef00" alt="" coords="1089,205,1269,231"/>
+<area shape="rect" id="node8" href="$df/dec/group__vfp1d.html#gab1b1dbbdf1d884e9aac2db88e652d1ac" title="Advance f1_loop for 2D code. " alt="" coords="639,449,805,488"/>
+<area shape="rect" id="node9" href="$df/dec/group__vfp1d.html#ga8dce984df350972fd07cd303ac2aedc6" title="Advance flm_loop for 2D code. " alt="" coords="639,512,805,551"/>
+<area shape="rect" id="node11" href="$df/dec/group__vfp1d.html#ga5ce053ead6aef311ec84d2e63274600b" title="Advance f1_loop for 2D code. " alt="" coords="633,324,810,363"/>
+<area shape="rect" id="node13" href="$df/dec/group__vfp1d.html#ga01f8c17c04ef1d707da1e5a54d0e4fd1" title="Advance flm_loop for 2D code. " alt="" coords="633,387,810,425"/>
+<area shape="rect" id="node12" href="$df/dec/group__vfp1d.html#gafad2a07235f2b30117b42bd8aff053ca" title="self_collisions::advancef1" alt="" coords="866,331,1038,356"/>
+<area shape="rect" id="node14" href="$df/dec/group__vfp1d.html#gaf982b2143f6dcc9c01d2adde9df14545" title="self_collisions::advanceflm" alt="" coords="862,393,1041,419"/>
+<area shape="rect" id="node16" href="$df/d0a/main_8cpp.html#a3c04138a5bfe5d72780bb7e82a18e627" title="main" alt="" coords="927,575,977,600"/>
+<area shape="rect" id="node19" href="$df/dec/group__vfp1d.html#gaf73f4a0fadc57f08a589b47d23e00e65" title="self_f00_RKfunctor\l::operator()" alt="" coords="654,5,789,44"/>
+<area shape="rect" id="node21" href="$d4/d2d/class_formulary.html#a7894b36ec90bc07cb995b0e8d22d6f51" title="Formulary::MFP" alt="" coords="663,813,780,839"/>
+<area shape="rect" id="node23" href="$d4/d2d/class_formulary.html#ae9236e98a7cc0b853860769ca85559f8" title="Formulary::Tau_e" alt="" coords="659,624,784,649"/>
+<area shape="rect" id="node26" href="$dc/ddc/class_i_b__f00.html#acecfdbcd165841adebef9377943c5fca" title="IB_f00::Getslope" alt="" coords="406,713,527,739"/>
+<area shape="rect" id="node30" href="$d4/d2d/class_formulary.html#a9407548c7fa760408dd91612645f54ca" title="Formulary::LOGei" alt="" coords="403,664,530,689"/>
+<area shape="rect" id="node27" href="$db/dce/class_r_k4___i_b.html#a338a88dc8d2f22ece0ccc566fb4357ea" title="RK4_IB::F" alt="" coords="680,713,763,739"/>
+<area shape="rect" id="node28" href="$db/dce/class_r_k4___i_b.html#a84e908bde4127c633ee31495c2ad9bec" title="RK4_IB::advance" alt="" coords="889,713,1014,739"/>
+<area shape="rect" id="node29" href="$dc/d77/class_inverse_bremsstrahlung.html#ac23cf62adb40d7ad2ed80b7817b94ae3" title="InverseBremsstrahlung\l::loop" alt="" coords="1100,707,1259,745"/>
+<area shape="rect" id="node33" href="$df/dec/group__vfp1d.html#gad16fb39f464b668ce9430216839f14a4" title="Collisions between species 1 and 2 in 0,0 harmonic. " alt="" coords="383,965,550,1004"/>
+<area shape="rect" id="node34" href="$df/dec/group__vfp1d.html#gadf89b5666c62cf3e38ba11585bcc80f8" title="interspecies_f00_RKfunctor\l::operator()" alt="" coords="629,965,814,1004"/>
+<area shape="rect" id="node36" href="$d4/d2d/class_formulary.html#a061c84c609d58593c7d917d0b473dbe4" title="Formulary::vth" alt="" coords="413,864,520,889"/>
+</map>

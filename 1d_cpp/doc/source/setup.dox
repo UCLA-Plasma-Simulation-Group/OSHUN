@@ -1,9 +1,9 @@
 /*! \page setup Setup
   * \section install Installation and Execution
- * Required Packages: 
- * 1. gcc-6
- * 2. open-mpi
- * 3. HDF5 - Needs to be compiled with c++11 standards
+ * Tested with Packages: 
+ * 1. gcc-6 and intel/17.0.1
+ * 2. open-mpi/1.10
+ * 3. HDF5 - Needs to be compiled with c++
  * 
  * These packages can be easily installed with a package manager, such as the one provided with each Linux distribution.
  * 

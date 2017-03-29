@@ -1,15 +1,9 @@
 /*!\brief  Vlasov Equation - Declarations
- * \author Michail Tzoufras, Benjamin Winjum, Archis Joglekar
- * \date   October 10, 2016
+ * \author PICKSC
  * \file   vlasov.h
  *
- * Includes declarations for spatial advection, electric field advection, current, and 
- * the RK1D Functor responsible for stepping forward
- * 
- * \todo Needs Spatial Advection 2D
- * \todo Electric Field 2D
- * \todo RK2D Functor
- * 
+ * Includes declarations for spatial advection, electric field advection, bfield and current
+ *
  */
 
 #ifndef DECL_VLASOVMAXWELL_H
@@ -98,9 +92,6 @@ public:
     void operator()(const DistFunc1D& Din,
                     const Field1D& FBx, const Field1D& FBy, const Field1D& FBz,
                     DistFunc1D& Dh);
-    void es1d(const DistFunc1D& Din,
-                const Field1D& FBx, const Field1D& FBy, const Field1D& FBz,
-                DistFunc1D& Dh);
     void f1only(const DistFunc1D& Din,
                 const Field1D& FBx, const Field1D& FBy, const Field1D& FBz,
                 DistFunc1D& Dh);
@@ -130,9 +121,12 @@ public:
 //          Advance
     void operator()(const DistFunc1D& Din,
                     Field1D& FExh, Field1D& FEyh, Field1D& FEzh);
+    void es1d(const DistFunc1D& Din,
+                    Field1D& FExh);
 
 private:
     Field1D Jx, Jy, Jz;
+    double small;
 //            valarray< complex<double> >  pr, invg;
 };
 //--------------------------------------------------------------
@@ -172,153 +166,6 @@ private:
 
 };
 //--------------------------------------------------------------
-
-//--------------------------------------------------------------
-//  Functor to be used in the Runge-Kutta methods 
-class VlasovFunctor1D_explicitE : public Algorithms::AbstFunctor<State1D> {
-//--------------------------------------------------------------    	
-public:
-//          Constructor
-    VlasovFunctor1D_explicitE(vector<size_t> Nl, vector<size_t> Nm,
-                              vector<double> pmax, vector<size_t> Np,
-                              double xmin, double xmax, size_t Nx);
-    ~VlasovFunctor1D_explicitE(){ };
-
-//          Collect all the operators and apply on Yin
-    void operator()(const State1D& Yin, State1D& Yslope);
-    void operator()(const State1D& Yin, const State1D& Y2in, State1D& Yslope);
-    void operator()(const State1D& Yin, State1D& Yslope, size_t dir);
-    // void implicit_rest(const State1D& Yin, State1D& Yslope);
-    // void implicit_E(const State1D& Yin, State1D& Yslope, size_t dir);
-
-
-
-private:
-    vector<Spatial_Advection_1D> SA;
-    vector<Electric_Field_1D>    EF;
-    vector<Current_1D>           JX;
-    vector<Ampere_1D>    		 AM;
-    vector<Magnetic_Field_1D>    BF;
-    vector<Faraday_1D>    		 FA;
-//            vector<Hydro_Advection_1D>   HA;
-
-};
-//--------------------------------------------------------------
-
-//--------------------------------------------------------------
-//  Functor to be used in the Runge-Kutta methods
-class VlasovFunctor1D_explicitEB : public Algorithms::AbstFunctor<State1D> {
-//--------------------------------------------------------------
-public:
-//          Constructor
-    VlasovFunctor1D_explicitEB(vector<size_t> Nl, vector<size_t> Nm,
-                               vector<double> pmax, vector<size_t> Np,
-                               double xmin, double xmax, size_t Nx);
-    ~VlasovFunctor1D_explicitEB(){ };
-
-//          Collect all the operators and apply on Yin
-    void operator()(const State1D& Yin, State1D& Yslope);
-    void operator()(const State1D& Yin, const State1D& Y2in, State1D& Yslope);
-    void operator()(const State1D& Yin, State1D& Yslope, size_t dir);
-    // void implicit_rest(const State1D& Yin, State1D& Yslope);
-    // void implicit_E(const State1D& Yin, State1D& Yslope, size_t dir);
-
-
-
-private:
-    vector<Spatial_Advection_1D> SA;
-    vector<Electric_Field_1D>    EF;
-    vector<Current_1D>           JX;
-    vector<Ampere_1D>    		 AM;
-//    vector<Magnetic_Field_1D>    BF;
-    vector<Faraday_1D>    		 FA;
-//            vector<Hydro_Advection_1D>   HA;
-
-};
-//--------------------------------------------------------------
-
-//--------------------------------------------------------------
-//  Functor to be used in the Runge-Kutta methods 
-class VlasovFunctor1D_implicitE_p1 : public Algorithms::AbstFunctor<State1D> {
-//--------------------------------------------------------------        
-public:
-//          Constructor
-    VlasovFunctor1D_implicitE_p1(vector<size_t> Nl, vector<size_t> Nm,
-                                 vector<double> pmax, vector<size_t> Np,
-                                 double xmin, double xmax, size_t Nx);
-    ~VlasovFunctor1D_implicitE_p1(){ };
-
-//          Collect all the operators and apply on Yin
-    void operator()(const State1D& Yin, State1D& Yslope);
-    void operator()(const State1D& Yin, const State1D& Y2in, State1D& Yslope);
-    void operator()(const State1D& Yin, State1D& Yslope, size_t dir);
-
-private:
-    vector<Spatial_Advection_1D> SA;
-    // vector<Electric_Field_1D>    EF;
-    // vector<Current_1D>           JX;
-    // vector<Ampere_1D>            AM;
-    vector<Magnetic_Field_1D>    BF;
-//            vector<Faraday_1D>           FA;
-//            vector<Hydro_Advection_1D>   HA;
-};
-//--------------------------------------------------------------
-//--------------------------------------------------------------
-//  Functor to be used in the Runge-Kutta methods
-class VlasovFunctor1D_implicitEB_p1 : public Algorithms::AbstFunctor<State1D> {
-//--------------------------------------------------------------
-public:
-//          Constructor
-    VlasovFunctor1D_implicitEB_p1(vector<size_t> Nl, vector<size_t> Nm,
-                                  vector<double> pmax, vector<size_t> Np,
-                                  double xmin, double xmax, size_t Nx);
-    ~VlasovFunctor1D_implicitEB_p1(){ };
-
-//          Collect all the operators and apply on Yin
-    void operator()(const State1D& Yin, State1D& Yslope);
-    void operator()(const State1D& Yin, const State1D& Y2in, State1D& Yslope);
-    void operator()(const State1D& Yin, State1D& Yslope, size_t dir);
-
-private:
-    vector<Spatial_Advection_1D> SA;
-    // vector<Electric_Field_1D>    EF;
-    // vector<Current_1D>           JX;
-    // vector<Ampere_1D>            AM;
-//    vector<Magnetic_Field_1D>    BF;
-//            vector<Faraday_1D>           FA;
-//            vector<Hydro_Advection_1D>   HA;
-};
-//--------------------------------------------------------------
-//--------------------------------------------------------------
-//  Functor to be used in the Runge-Kutta methods 
-class VlasovFunctor1D_implicitE_p2 : public Algorithms::AbstFunctor<State1D> {
-//--------------------------------------------------------------        
-public:
-//          Constructor
-    VlasovFunctor1D_implicitE_p2(vector<size_t> Nl, vector<size_t> Nm,
-                                 vector<double> pmax, vector<size_t> Np,
-                                 double xmin, double xmax, size_t Nx);
-    ~VlasovFunctor1D_implicitE_p2(){ };
-
-//          Collect all the operators and apply on Yin
-    void operator()(const State1D& Yin, State1D& Yslope);
-    void operator()(const State1D& Yin, const State1D& Y2in, State1D& Yslope);
-    void operator()(const State1D& Yin, State1D& Yslope, size_t dir);
-
-
-private:
-    // vector<Spatial_Advection_1D> SA;
-    vector<Electric_Field_1D>    EF;
-    // vector<Current_1D>           JX;
-    // vector<Ampere_1D>            AM;
-    // vector<Magnetic_Field_1D>    BF;
-    vector<Faraday_1D>           FA;
-};
-//--------------------------------------------------------------
-
-
-
-/** @} */
 
 
 #endif

@@ -1,5 +1,5 @@
 /*! \brief Fields, Distributions, Harmonics, States - Declarations
- * \author Michail Tzoufras, Archis Joglekar, Benjamin Winjum
+* \author PICKSC
  * \date   September 1, 2016
  * \file   state.h
  * 
@@ -382,7 +382,7 @@ private:
     double pmx, charge, ma;
 
     Array2D<int> ind;
-
+    valarray<int> filter_ceiling;
 
 public:
 

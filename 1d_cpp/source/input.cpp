@@ -1,29 +1,12 @@
-///////////////////////////////////////////////////////////
-//   Contributing authors : Michail Tzoufras, Benjamin Winjum
-//
-//  Last Modified:  September 1 2016
-///////////////////////////////////////////////////////////
-
-//   
-//   This cpp file contains the definitions for the input
-//
-///////////////////////////////////////////////////////////
-//
-// 
-//   class Export_Formatted_Data::
-//
-//   This class receives the output matrices and saves the 
-//   data in txt files with recognizable name after it attaches
-//   a small header with information necessary for plotting. 
-//
-// 
-//   class Restart_Facility::
-//
-//   This class writes restart files from each node, and 
-//   reads restart files for each node.  
-///////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////
-
+/*! \brief Input reader - Definitions
+ * \author PICKSC
+ * \date   March 2017
+ * \file   input.cpp
+ * 
+ * Contains:
+ * 1) input reader
+ * 2) default values for input variables.
+ */
 //  Standard libraries
 #include <iostream>
 #include <vector>
@@ -43,7 +26,136 @@
 
 //**************************************************************
 //--------------------------------------------------------------
-Input::Input_List::Input_List() {
+Input::Input_List::Input_List(): 
+    isthisarestart(0),
+    NnodesX(4),
+    numsp(1),
+    l0(6),
+    m0(4), 
+    nump(96), 
+    Nx(32),
+    xmin(-1000.0), 
+    xmax(1000.0),
+    clf_dp(1.0),
+    if_tridiagonal(1),
+    implicit_E(1),
+    implicit_B(0),
+    collisions(1),
+    f00_implicitorexplicit(2),
+    flm_collisions(0),
+    BoundaryCells(3),
+    bndX(0),
+    n_outsteps(1000), 
+    n_distoutsteps(100),
+    t_stop(8000),
+    restart_time(10000.0),
+    n_restarts(100),
+
+//          Output
+    o_EHist(0),
+    o_Ex(0), o_Ey(0), o_Ez(0), o_Bx(0), o_By(0), o_Bz(0), o_x1x2(0), o_pth(0), o_p2p1x1(0), o_p1p2p3(0),
+    o_G(0), o_Px(0), o_PxPx(0), o_Py(0), o_PxPy(0), o_PyPy(0), o_Pz(0), o_PxPz(0), o_PyPz(0), o_PzPz(0),
+    o_Vx(0), o_VxVx(0), o_Vy(0), o_VxVy(0), o_VyVy(0), o_VxVz(0), o_VyVz(0), o_VzVz(0),
+    o_Vsq(0), o_Qx(0), o_Qy(0), o_Qz(0),
+    o_vNx(0), o_vNy(0), o_vNz(0),
+    o_Jx(0), o_Jy(0), o_Jz(0),
+    o_Pressure(0), o_Temperature(0), o_ND(0), o_Nu(0), o_p1x1(0), o_f0x1(0), o_f10x1(0), o_f11x1(0), o_f20x1(0), o_fl0x1(0),
+    o_Ux(0), o_Uy(0), o_Uz(0), o_Z(0), o_ni(0), o_Ti(0),
+    
+    numpx(96), nump1(96), nump2(96), nump3(96),
+
+//          Electron-ion collisions
+    density_np(1.0e21),
+
+//          Electron-electron collisions
+    RB_D_itmax(100),
+    RB_D_tolerance(1e-12),
+    small_dt(1e-1),
+    smaller_dt(1e-5),
+    NB_algorithms(4),
+
+
+//          Hydro parameters
+    hydromotion(0),
+    hydromass(100), hydrocharge(79),
+    polarization_direction(0),
+    init_f1(0), init_f2(0),
+    MX_cooling(0),
+    super_gaussian_m(2.0),
+
+    pth_ref(0.025),
+        
+
+    hydro_dens_profile_str("cst{0.0}"),
+    hydro_temp_profile_str("cst{0.0}"),
+    hydro_vel_profile_str("cst{0.0}"),
+    hydro_Z_profile_str("cst{0.0}"),
+
+
+// ----------------------------------------------------------------------
+        /// External fields
+//
+    ext_fields(0),trav_wave(0),num_waves(0),
+    IB_heating(0),
+    I_0(0.0), lambda_0(0.351),
+
+    intensity_profile_str("cst{0.0}"),
+    intensity_time_profile_str("cst{0.0}"),
+    ex_time_profile_str("cst{0.0}"),
+    ey_time_profile_str("cst{0.0}"),
+    ez_time_profile_str("cst{0.0}"),
+    bx_time_profile_str("cst{0.0}"),
+    by_time_profile_str("cst{0.0}"),
+    bz_time_profile_str("cst{0.0}"),
+    ex_profile_str("cst{0.0}"),
+    ey_profile_str("cst{0.0}"),
+    ez_profile_str("cst{0.0}"),
+    bx_profile_str("cst{0.0}"),
+    by_profile_str("cst{0.0}"),
+    bz_profile_str("cst{0.0}")
+    // ex_wave_profile_str("cst{0.0}"),
+    // ey_wave_profile_str("cst{0.0}"),
+    // ez_wave_profile_str("cst{0.0}"),
+    // bx_wave_profile_str("cst{0.0}"),
+    // by_wave_profile_str("cst{0.0}"),
+    // bz_wave_profile_str("cst{0.0}"),
+    // wave_time_envelope_str("cst{0.0}")
+
+// ----------------------------------------------------------------------
+// ----------------------------------------------------------------------
+        // std::vector< double > pmax;
+// ----------------------------------------------------------------------
+// ----------------------------------------------------------------------
+        /// Initialization
+
+        // std::vector<std::string> dens_profile_str;
+        // std::vector<std::string> temp_profile_str;
+        // std::vector<std::string> f10x_profile_str;
+        // std::vector<std::string> f20x_profile_str;
+        // std::vector<std::string> f_pedestal;
+
+        // std::vector<double> qs;
+        // std::vector<double> mass;
+        // std::vector<size_t> ls;
+        // std::vector<size_t> ms;
+        // std::vector<size_t> ps;
+        // std::vector<double> pth;
+
+        // std::vector<size_t> Npx;
+        // std::vector<size_t> Npy;
+        // std::vector<size_t> Npz;
+
+
+        // std::vector<size_t> NxGlobal;
+        // std::vector<size_t> NxLocalnobnd;
+        // std::vector<size_t> NxLocal;
+
+        // std::vector<double> xminGlobal,
+        // std::vector<double> xmaxGlobal,
+        // std::vector<double> xminLocal,
+        // std::vector<double> xmaxLocal,
+        // std::vector<double> globdx
+         {
 //--------------------------------------------------------------
 //  The constructor for the input_list structure
 //--------------------------------------------------------------
@@ -57,6 +169,34 @@ Input::Input_List::Input_List() {
     if (deckfile.is_open()) {
 
         while (deckfile >> deckstring) {
+
+            if (deckstring == "if_restart") {
+                deckfile >> deckequalssign;
+                if(deckequalssign != "=") {
+                    std::cout << "Error reading " << deckstring << std::endl;
+                    exit(1);
+                }
+                deckfile >> deckstringbool;
+                isthisarestart = (deckstringbool[0] == 't' || deckstringbool[0] == 'T');
+            }
+
+            if (deckstring == "n_restarts") {
+                deckfile >> deckequalssign;
+                if(deckequalssign != "=") {
+                    std::cout << "Error reading " << deckstring << std::endl;
+                    exit(1);
+                }
+                deckfile >> n_restarts;
+            }
+
+            if (deckstring == "restart_time") {
+                deckfile >> deckequalssign;
+                if(deckequalssign != "=") {
+                    std::cout << "Error reading " << deckstring << std::endl;
+                    exit(1); 
+                }
+                deckfile >> restart_time;
+            }
 
             if (deckstring == "NnodesX") {
                 deckfile >> deckequalssign;
@@ -141,7 +281,7 @@ Input::Input_List::Input_List() {
                 for (size_t s(0);s<numsp;++s)
                 {
                     deckfile >> deckreal;
-                    qs.push_back(deckreal);
+                    qs.push_back(-1.0*deckreal);
                     // std::cout<< "q = " << deckreal << "\n";
                 }
             }
@@ -231,6 +371,23 @@ Input::Input_List::Input_List() {
                 ext_fields = (deckstringbool[0] == 't' || deckstringbool[0] == 'T');
 
             }
+            if (deckstring == "traveling_wave") {
+                deckfile >> deckequalssign;
+                if(deckequalssign != "=") {
+                    std::cout << "Error reading " << deckstring << std::endl;
+                    exit(1);
+                }
+                deckfile >> deckstringbool;
+                trav_wave = (deckstringbool[0] == 't' || deckstringbool[0] == 'T');
+            }
+            if (deckstring == "num_waves") {
+                deckfile >> deckequalssign;
+                if(deckequalssign != "=") {
+                    std::cout << "Error reading " << deckstring << std::endl;
+                    exit(1);
+                }
+                deckfile >> num_waves;
+            }
             if (deckstring == "small_dt") {
                 deckfile >> deckequalssign;
                 if(deckequalssign != "=") {
@@ -307,6 +464,32 @@ Input::Input_List::Input_List() {
                 deckfile >> deckstringbool;
                 collisions = (deckstringbool[0] == 't' || deckstringbool[0] == 'T');
             }
+            if (deckstring == "f00_collisions") {
+                deckfile >> deckequalssign;
+                if(deckequalssign != "=") {
+                    std::cout << "Error reading " << deckstring << std::endl;
+                    exit(1);
+                }
+                deckfile >> deckstringbool;
+                if (deckstringbool[0] == 'i' || deckstringbool[0] == 'I'){
+                    f00_implicitorexplicit = 2;
+                }
+                else if (deckstringbool[0] == 'e' || deckstringbool[0] == 'E'){
+                    f00_implicitorexplicit = 1;
+                }
+                if (deckstringbool[0] == 'f' || deckstringbool[0] == 'F'){
+                    f00_implicitorexplicit = 0;
+                }
+            }
+            if (deckstring == "flm_collisions") {
+                deckfile >> deckequalssign;
+                if(deckequalssign != "=") {
+                    std::cout << "Error reading " << deckstring << std::endl;
+                    exit(1);
+                }
+                deckfile >> deckstringbool;
+                flm_collisions = (deckstringbool[0] == 't' || deckstringbool[0] == 'T');
+            }
             if (deckstring == "MX_cooling") {
                 deckfile >> deckequalssign;
                 if(deckequalssign != "=") {
@@ -319,6 +502,14 @@ Input::Input_List::Input_List() {
 
 
 
+            if (deckstring == "t_stop") {
+                deckfile >> deckequalssign;
+                if(deckequalssign != "=") {
+                    std::cout << "Error reading " << deckstring << std::endl;
+                    exit(1);
+                }
+                deckfile >> t_stop;
+            }
             if (deckstring == "n_outsteps") {
                 deckfile >> deckequalssign;
                 if(deckequalssign != "=") {
@@ -326,6 +517,10 @@ Input::Input_List::Input_List() {
                     exit(1);
                 }
                 deckfile >> n_outsteps;
+                // if (fmod(t_stop,n_outsteps) != 0){
+                //     std::cout << "\n Need n_outsteps to be a n integer divisor of t_stop i.e. remainder (t_stop / n_outsteps) = 0 \n";
+                //     exit(1);
+                // }
             }
 
             if (deckstring == "n_distoutsteps") {
@@ -335,33 +530,12 @@ Input::Input_List::Input_List() {
                     exit(1);
                 }
                 deckfile >> n_distoutsteps;
-                n_distoutsteps = n_outsteps/n_distoutsteps; // How many regular outputs per dist output
+                // if (fmod(t_stop,n_distoutsteps) != 0){
+                //     std::cout << "\n Need n_distoutsteps to be a n integer divisor of t_stop i.e. remainder (t_stop / n_distoutsteps) = 0 \n";
+                //     exit(1);
+                // }
             }
 
-            if (deckstring == "t_stop") {
-                deckfile >> deckequalssign;
-                if(deckequalssign != "=") {
-                    std::cout << "Error reading " << deckstring << std::endl;
-                    exit(1);
-                }
-                deckfile >> t_stop;
-            }
-            if (deckstring == "restart_time") {
-                deckfile >> deckequalssign;
-                if(deckequalssign != "=") {
-                    std::cout << "Error reading " << deckstring << std::endl;
-                    exit(1);
-                }
-                deckfile >> restart_time;
-            }
-            if (deckstring == "n_restarts") {
-                deckfile >> deckequalssign;
-                if(deckequalssign != "=") {
-                    std::cout << "Error reading " << deckstring << std::endl;
-                    exit(1);
-                }
-                deckfile >> n_restarts;
-            }
             if (deckstring == "bndX") {
                 deckfile >> deckequalssign;
                 if(deckequalssign != "=") {
@@ -775,6 +949,24 @@ Input::Input_List::Input_List() {
                 deckfile >> deckstringbool;
                 o_f11x1 = (deckstringbool[0] == 't' || deckstringbool[0] == 'T');
             }
+            if (deckstring == "o_f20x1") {
+                deckfile >> deckequalssign;
+                if(deckequalssign != "=") {
+                    std::cout << "Error reading " << deckstring << std::endl;
+                    exit(1);
+                }
+                deckfile >> deckstringbool;
+                o_f20x1 = (deckstringbool[0] == 't' || deckstringbool[0] == 'T');
+            }
+            if (deckstring == "o_fl0x1") {
+                deckfile >> deckequalssign;
+                if(deckequalssign != "=") {
+                    std::cout << "Error reading " << deckstring << std::endl;
+                    exit(1);
+                }
+                deckfile >> deckstringbool;
+                o_fl0x1 = (deckstringbool[0] == 't' || deckstringbool[0] == 'T');
+            }
             if (deckstring == "o_p2p1x1") {
                 deckfile >> deckequalssign;
                 if(deckequalssign != "=") {
@@ -933,6 +1125,15 @@ Input::Input_List::Input_List() {
                 deckfile >> deckstringbool;
                 init_f1 = (deckstringbool[0] == 't' || deckstringbool[0] == 'T');
             }
+            if (deckstring == "init_f2") {
+                deckfile >> deckequalssign;
+                if(deckequalssign != "=") {
+                    std::cout << "Error reading " << deckstring << std::endl;
+                    exit(1);
+                }
+                deckfile >> deckstringbool;
+                init_f2 = (deckstringbool[0] == 't' || deckstringbool[0] == 'T');
+            }
             if (deckstring == "polarization_direction") {
                 deckfile >> deckequalssign;
                 if(deckequalssign != "=") {
@@ -998,6 +1199,18 @@ Input::Input_List::Input_List() {
                     temp_profile_str.push_back(deckstring);
                 }
             }
+            if (deckstring == "f_pedestal") {
+                deckfile >> deckequalssign;
+                if(deckequalssign != "=") {
+                    std::cout << "Error reading " << deckstring << std::endl;
+                    exit(1);
+                }
+                for (size_t s(0);s<numsp;++s)
+                {
+                    deckfile >> deckstring;
+                    f_pedestal.push_back(deckstring);
+                }
+            }
             if (deckstring == "multiplier-f10(x)") {
                 deckfile >> deckequalssign;
                 if(deckequalssign != "=") {
@@ -1008,6 +1221,18 @@ Input::Input_List::Input_List() {
                 {
                     deckfile >> deckstring;
                     f10x_profile_str.push_back(deckstring);
+                }
+            }
+            if (deckstring == "multiplier-f20(x)") {
+                deckfile >> deckequalssign;
+                if(deckequalssign != "=") {
+                    std::cout << "Error reading " << deckstring << std::endl;
+                    exit(1);
+                }
+                for (size_t s(0);s<numsp;++s)
+                {
+                    deckfile >> deckstring;
+                    f20x_profile_str.push_back(deckstring);
                 }
             }
             if (deckstring == "ni(x)") {
@@ -1071,7 +1296,7 @@ Input::Input_List::Input_List() {
                     exit(1);
                 }
                 deckfile >> deckstring;
-                Ex_profile_str = deckstring;
+                ex_profile_str = deckstring;
             }
             if (deckstring == "Ey(x)") {
                 deckfile >> deckequalssign;
@@ -1080,7 +1305,7 @@ Input::Input_List::Input_List() {
                     exit(1);
                 }
                 deckfile >> deckstring;
-                Ey_profile_str = deckstring;
+                ey_profile_str = deckstring;
             }
             if (deckstring == "Ez(x)") {
                 deckfile >> deckequalssign;
@@ -1089,7 +1314,7 @@ Input::Input_List::Input_List() {
                     exit(1);
                 }
                 deckfile >> deckstring;
-                Ez_profile_str = deckstring;
+                ez_profile_str = deckstring;
             }
             if (deckstring == "Bx(x)") {
                 deckfile >> deckequalssign;
@@ -1098,7 +1323,7 @@ Input::Input_List::Input_List() {
                     exit(1);
                 }
                 deckfile >> deckstring;
-                Bx_profile_str = deckstring;
+                bx_profile_str = deckstring;
             }
             if (deckstring == "By(x)") {
                 deckfile >> deckequalssign;
@@ -1107,7 +1332,7 @@ Input::Input_List::Input_List() {
                     exit(1);
                 }
                 deckfile >> deckstring;
-                By_profile_str = deckstring;
+                by_profile_str = deckstring;
             }
             if (deckstring == "Bz(x)") {
                 deckfile >> deckequalssign;
@@ -1116,7 +1341,7 @@ Input::Input_List::Input_List() {
                     exit(1);
                 }
                 deckfile >> deckstring;
-                Bz_profile_str = deckstring;
+                bz_profile_str = deckstring;
             }
             if (deckstring == "Ex(t)") {
                 deckfile >> deckequalssign;
@@ -1172,6 +1397,114 @@ Input::Input_List::Input_List() {
                 deckfile >> deckstring;
                 bz_time_profile_str = deckstring;
             }
+            if (deckstring == "Ex(x,t)") {
+                deckfile >> deckequalssign;
+                if(deckequalssign != "=") {
+                    std::cout << "Error reading " << deckstring << std::endl;
+                    exit(1);
+                }
+                for (size_t n(0);n<num_waves;++n)
+                {
+                    deckfile >> deckstring;
+                    ex_wave_profile_str.push_back(deckstring);
+                }
+            }
+            if (deckstring == "Ey(x,t)") {
+                deckfile >> deckequalssign;
+                if(deckequalssign != "=") {
+                    std::cout << "Error reading " << deckstring << std::endl;
+                    exit(1);
+                }
+                for (size_t n(0);n<num_waves;++n)
+                {
+                    deckfile >> deckstring;
+                    ey_wave_profile_str.push_back(deckstring);
+                }
+            }
+            if (deckstring == "Ez(x,t)") {
+                deckfile >> deckequalssign;
+                if(deckequalssign != "=") {
+                    std::cout << "Error reading " << deckstring << std::endl;
+                    exit(1);
+                }
+                for (size_t n(0);n<num_waves;++n)
+                {
+                    deckfile >> deckstring;
+                    ez_wave_profile_str.push_back(deckstring);
+                }
+            }
+            if (deckstring == "Bx(x,t)") {
+                deckfile >> deckequalssign;
+                if(deckequalssign != "=") {
+                    std::cout << "Error reading " << deckstring << std::endl;
+                    exit(1);
+                }
+                for (size_t n(0);n<num_waves;++n)
+                {    
+                    deckfile >> deckstring;
+                    bx_wave_profile_str.push_back(deckstring);
+                }
+            }
+            if (deckstring == "By(x,t)") {
+                deckfile >> deckequalssign;
+                if(deckequalssign != "=") {
+                    std::cout << "Error reading " << deckstring << std::endl;
+                    exit(1);
+                }
+                for (size_t n(0);n<num_waves;++n)
+                {
+                    deckfile >> deckstring;
+                    by_wave_profile_str.push_back(deckstring);
+                }
+            }
+            if (deckstring == "Bz(x,t)") {
+                deckfile >> deckequalssign;
+                if(deckequalssign != "=") {
+                    std::cout << "Error reading " << deckstring << std::endl;
+                    exit(1);
+                }
+                for (size_t n(0);n<num_waves;++n)
+                {
+                    deckfile >> deckstring;
+                    bz_wave_profile_str.push_back(deckstring);
+                }
+            }
+            if (deckstring == "envelope(t)") {
+                deckfile >> deckequalssign;
+                if(deckequalssign != "=") {
+                    std::cout << "Error reading " << deckstring << std::endl;
+                    exit(1);
+                }
+                for (size_t n(0);n<num_waves;++n)
+                {
+                    deckfile >> deckstring;
+                    wave_time_envelope_str.push_back(deckstring);
+                }
+            }
+
+            if (deckstring == "rise_flat_fall_center") {
+                deckfile >> deckequalssign;
+                if(deckequalssign != "=") {
+                    std::cout << "Error reading " << deckstring << std::endl;
+                    exit(1);
+                }
+                for (size_t n(0);n<num_waves;++n)
+                {
+                    deckfile >> deckreal;
+                    trav_wave_rise.push_back(deckreal);
+                    
+
+                    deckfile >> deckreal;
+                    trav_wave_flat.push_back(deckreal);
+                    
+
+                    deckfile >> deckreal;
+                    trav_wave_fall.push_back(deckreal);
+                    
+                    deckfile >> deckreal;
+                    trav_wave_center.push_back(deckreal);                    
+                }
+            }
 
 
 
@@ -1195,6 +1528,8 @@ Input::Input_List::Input_List() {
         oTags.push_back("f0-x");
         oTags.push_back("f10-x");
         oTags.push_back("f11-x");
+        oTags.push_back("f20-x");
+        oTags.push_back("fl0-x");
         oTags.push_back("pxpy-x");
         oTags.push_back("Ex");
         oTags.push_back("Ey");
@@ -1204,6 +1539,7 @@ Input::Input_List::Input_List() {
         oTags.push_back("Bz");
         oTags.push_back("n");
         oTags.push_back("T_eV");
+        oTags.push_back("T");
         oTags.push_back("Jx");
         oTags.push_back("Jy");
         oTags.push_back("Jz");
@@ -1224,23 +1560,17 @@ Input::Input_List::Input_List() {
 
         // Determination of the local computational domain (i.e. the x-axis and the y-axis)
 
-        BoundaryCells = 2;
+        BoundaryCells = 4;
 
         for (size_t i(0); i < xminGlobal.size(); ++i){
-
             NxLocalnobnd.push_back(NxGlobal[i]/ NnodesX) ;
             NxLocal.push_back(NxLocalnobnd[i] + 2 * BoundaryCells);
             xminLocal.push_back(0.0);
             xmaxLocal.push_back(0.0);
             globdx.push_back((xmaxGlobal[i]-xminGlobal[i])/(double (NxGlobal[i]) ));
         }
-
-
-
-
-
-
-    } else {
+    } 
+    else {
         std::cout << "Unable to open inputdeck" << std::endl;
         exit(1);
     }

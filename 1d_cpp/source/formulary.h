@@ -1,5 +1,5 @@
 /*! \brief Plasma Formulary and Units - Declarations
- * \author Michail Tzoufras, Archis Joglekar
+* \author PICKSC
  * \date   September 1, 2016
  * \file   formulary.h
  * 

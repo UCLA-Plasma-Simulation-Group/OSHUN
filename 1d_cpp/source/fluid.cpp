@@ -1,5 +1,5 @@
 /*! \brief  Fluid Equation - Definitions
- * \author Archis Joglekar
+ * \author PICKSC
  * \date   October 10, 2016
  * \file   fluid.cpp
  *
@@ -40,10 +40,16 @@ Hydro_Functor::Hydro_Functor(double xmin, double xmax, size_t numx):
 void Hydro_Functor::operator()(const State1D& Yin, State1D& Yslope){
     Yslope = 0.0;
 
+    valarray<double> electronpressure(0.0,szx), electrondensity(0.0, szx);
+    Array2D<double> electroncurrent(3,szx);
+
+    electrondensity = Yin.DF(0).getdensity();
+    electronpressure = Yin.DF(0).getpressure();
+
     FEQ.density(         Yin.HYDRO(), Yslope.HYDRO());
     FEQ.chargefraction(  Yin.HYDRO(), Yslope.HYDRO());
-    FEQ.velocity(        Yin        , Yslope.HYDRO());
-    FEQ.updateE(         Yin.HYDRO(), Yslope.EMF()  );
+    FEQ.velocity(        Yin        , Yslope.HYDRO(), electrondensity, electronpressure, electroncurrent);
+    FEQ.updateE(         Yin.HYDRO(), Yslope.EMF());
 }
 //-------------------------------------------------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -60,6 +66,7 @@ Fluid_Equation_1D::Fluid_Equation_1D(double xmin, double xmax, size_t Nx)
   : idx(Nx/(xmax-xmin)), szx(Nx), dummy(0.0,Nx)
     {
         Nbc = Input::List().BoundaryCells;
+
     }
 
 //------------------------------------------------------------------------------------------
@@ -69,15 +76,16 @@ void Fluid_Equation_1D::density(const Hydro1D& Hin, Hydro1D& Hslope){
     for (size_t ix(0);ix<szx;++ix)
         d_nvx[ix] = d_nvx[ix] * Hin.vx(ix);
 
-    Hslope.density(0)       += -idx * d_nvx[0];
+    d_nvx = df_4thorder(d_nvx);
+
+    Hslope.density(0)       -= idx * d_nvx[0];
 
     for (size_t ix(1);ix<szx-1;++ix)
     {
-        Hslope.density(ix)  += -idx * d_nvx[ix];
-        // std::cout << "\n\n hydrodensity[" << ix << "] = " << Hin.density(ix) ;
+        Hslope.density(ix)  -= idx * d_nvx[ix];
     }
 
-    Hslope.density(szx - 1) += -idx * d_nvx[szx-1];
+    Hslope.density(szx - 1) -= idx * d_nvx[szx-1];
 
 }
 //---------------------------------------------------------------------------------------------
@@ -87,135 +95,161 @@ void Fluid_Equation_1D::chargefraction(const Hydro1D& Hin, Hydro1D& Hslope){
     for (size_t ix(0);ix<szx;++ix)
         d_nZx[ix] = d_nZx[ix] * Hin.Z(ix);
 
-    Hslope.Z(0)       += -idx * d_nZx[0];
+    d_nZx = df_4thorder(d_nZx);    
+
+    Hslope.Z(0)       -= idx * d_nZx[0];
 
     for (size_t ix(1);ix<szx-1;++ix)
     {
-        Hslope.Z(ix)  += -idx * d_nZx[ix];
-        // std::cout << "\n\n hydrodensity[" << ix << "] = " << Hin.density(ix) ;
+        Hslope.Z(ix)  -= idx * d_nZx[ix];
     }
 
-    Hslope.Z(szx - 1) += -idx *  d_nZx[szx-1];
+    Hslope.Z(szx - 1) -= idx *  d_nZx[szx-1];
 
 }
 //---------------------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------
-void Fluid_Equation_1D::velocity(const State1D& Yin, Hydro1D& Hslope){
+void Fluid_Equation_1D::velocity(const State1D& Yin , Hydro1D& Hslope, 
+    valarray<double>& electrondensity, valarray<double>& electronpressure, Array2D<double>& electroncurrent){
 
     double Zeovermi = Yin.HYDRO().charge()/Yin.HYDRO().mass();
-    valarray<double> d_ionpressure(Yin.HYDRO().densityarray()), d_vx(Yin.HYDRO().vxarray()), d_vy(Yin.HYDRO().vxarray()), d_vz(Yin.HYDRO().vxarray());
+    valarray<double> eventuallynetPovern(Yin.HYDRO().densityarray()), d_vx(Yin.HYDRO().vxarray()), d_vy(Yin.HYDRO().vxarray()), d_vz(Yin.HYDRO().vxarray());
+    valarray<double> eventuallychargeseparation(electronpressure);
+    Array2D<double> netcurrent(3,szx);
 
-    for (size_t ix(0);ix<szx;++ix)
-        d_ionpressure[ix] = d_ionpressure[ix] * Yin.HYDRO().temperature(ix);
 
-    d_ionpressure = df_4thorder(d_ionpressure);
+    for (size_t ix(0);ix<szx;++ix){
+        eventuallynetPovern[ix] = eventuallynetPovern[ix] * Yin.HYDRO().temperature(ix);
+    }
+
+    eventuallynetPovern = df_4thorder(eventuallynetPovern);
+    eventuallychargeseparation = df_4thorder(eventuallychargeseparation);
+
+    for (size_t ix(0);ix<szx;++ix){
+
+        // Net pressure
+        eventuallynetPovern[ix] = eventuallynetPovern[ix] / Yin.HYDRO().density(ix) + eventuallychargeseparation[ix] / electrondensity[ix];
+
+        // Net current
+        netcurrent(0,ix) = Yin.HYDRO().Z(ix)*Yin.HYDRO().charge()*Yin.HYDRO().density(ix)*Yin.HYDRO().vx(ix) - electroncurrent(0,ix);
+        netcurrent(1,ix) = Yin.HYDRO().Z(ix)*Yin.HYDRO().charge()*Yin.HYDRO().density(ix)*Yin.HYDRO().vy(ix) - electroncurrent(1,ix);
+        netcurrent(2,ix) = Yin.HYDRO().Z(ix)*Yin.HYDRO().charge()*Yin.HYDRO().density(ix)*Yin.HYDRO().vz(ix) - electroncurrent(2,ix);
+
+        // Net charge separation
+        eventuallychargeseparation[ix] = Yin.HYDRO().Z(ix)*Yin.HYDRO().charge()*Yin.HYDRO().density(ix)-electrondensity[ix];
+    }
+    
     d_vx = df_4thorder(d_vx);
     d_vy = df_4thorder(d_vy);
     d_vz = df_4thorder(d_vz);
 
 
-    Hslope.vx(0)  += - idx * d_ionpressure[0] / Yin.HYDRO().density(0) / Yin.HYDRO().mass()
-                                    +   Zeovermi * (Yin.EMF().Ex()(0).real()
-                                    +   Yin.HYDRO().vy(0) * Yin.EMF().Bz()(0).real()
-                                    -   Yin.HYDRO().vz(0) * Yin.EMF().By()(0).real()); //+ Rie/ni;
+    Hslope.vx(0)  += - idx * eventuallynetPovern[0] / Yin.HYDRO().mass()
+                                    +   Zeovermi * eventuallychargeseparation[0] * (Yin.EMF().Ex()(0).real()
+                                    +   netcurrent(1,0) * Yin.EMF().Bz()(0).real()
+                                    -   netcurrent(2,0) * Yin.EMF().By()(0).real()); //+ Rie/ni;
 
-    Hslope.vx(0) -= Yin.HYDRO().vx(0) * (idx * d_vx[0]);
+    Hslope.vx(0) -= netcurrent(0,0) * (idx * d_vx[0]);
 
     for (size_t ix(1);ix<szx-1;++ix)
     {
 
-        Hslope.vx(ix)  += -0.5 * idx * d_ionpressure[ix] / Yin.HYDRO().density(ix) / Yin.HYDRO().mass()
-                                    +   Zeovermi * (Yin.EMF().Ex()(ix).real()
-                                    +   Yin.HYDRO().vy(ix) * Yin.EMF().Bz()(ix).real()
-                                    -   Yin.HYDRO().vz(ix) * Yin.EMF().By()(ix).real()); //+ Rie/ni;
-        Hslope.vx(ix) -= Yin.HYDRO().vx(ix) * (idx * d_vx[ix]);
+        Hslope.vx(ix)  += -0.5 * idx * eventuallynetPovern[ix] / Yin.HYDRO().mass()
+                                    +   Zeovermi * eventuallychargeseparation[ix] * (Yin.EMF().Ex()(ix).real()
+                                    +   netcurrent(1,ix) * Yin.EMF().Bz()(ix).real()
+                                    -   netcurrent(2,ix) * Yin.EMF().By()(ix).real()); //+ Rie/ni;
+        Hslope.vx(ix) -= netcurrent(0,ix) * (idx * d_vx[ix]);
     }
 
-    Hslope.vx(szx - 1) += -idx * d_ionpressure[szx - 1] / Yin.HYDRO().density(szx - 1) / Yin.HYDRO().mass()
-                                    +   Zeovermi * (Yin.EMF().Ex()(szx - 1).real()
-                                    +   Yin.HYDRO().vy(szx - 1) * Yin.EMF().Bz()(szx - 1).real()
-                                    -   Yin.HYDRO().vz(szx - 1) * Yin.EMF().By()(szx - 1).real()); //+ Rie/ni
-    Hslope.vx(szx - 1) -= Yin.HYDRO().vx(szx - 1) * (idx * d_vx[szx - 1]);
+    Hslope.vx(szx - 1) += -idx * eventuallynetPovern[szx - 1] / Yin.HYDRO().mass()
+                                    +   Zeovermi * eventuallychargeseparation[szx - 1] * (Yin.EMF().Ex()(szx - 1).real()
+                                    +   netcurrent(1,szx - 1) * Yin.EMF().Bz()(szx - 1).real()
+                                    -   netcurrent(2,szx - 1) * Yin.EMF().By()(szx - 1).real()); //+ Rie/ni
+    Hslope.vx(szx - 1) -= netcurrent(0,szx - 1) * (idx * d_vx[szx - 1]);
 
     /// ----------------------------------------------------------------------
     /// Momentum equation - y direction
     /// ----------------------------------------------------------------------
-    Hslope.vy(0) += Zeovermi *
-                            (   Yin.HYDRO().vz(0) * Yin.EMF().Bx()(0).real()
-                            -   Yin.HYDRO().vx(0) * Yin.EMF().Bz()(0).real()
-                            +   Yin.EMF().Ey()(0).real());
+    Hslope.vy(0) +=  Zeovermi *
+                            (   netcurrent(2,0) * Yin.EMF().Bx()(0).real()
+                            -   netcurrent(0,0) * Yin.EMF().Bz()(0).real()
+                            +   eventuallychargeseparation[0] * Yin.EMF().Ey()(0).real());
 
     for (size_t ix(1);ix<szx-1;++ix)
     {
-        Hslope.vy(ix) += Zeovermi *
-                            (   Yin.HYDRO().vz(ix) * Yin.EMF().Bx()(ix).real()
-                            -   Yin.HYDRO().vx(ix) * Yin.EMF().Bz()(ix).real()
-                            +   Yin.EMF().Ey()(ix).real());
+        Hslope.vy(ix) +=  Zeovermi *
+                            (   netcurrent(2,ix) * Yin.EMF().Bx()(ix).real()
+                            -   netcurrent(0,ix) * Yin.EMF().Bz()(ix).real()
+                            +   eventuallychargeseparation[ix] * Yin.EMF().Ey()(ix).real());
     }
 
-    Hslope.vy(szx - 1) += Zeovermi *
-                            (   Yin.HYDRO().vz(szx - 1) * Yin.EMF().Bx()(szx - 1).real()
-                            -   Yin.HYDRO().vx(szx - 1) * Yin.EMF().Bz()(szx - 1).real()
-                            +   Yin.EMF().Ey()(szx - 1).real());
+    Hslope.vy(szx - 1) +=  Zeovermi *
+                            (   netcurrent(2,szx - 1) * Yin.EMF().Bx()(szx - 1).real()
+                            -   netcurrent(0,szx - 1) * Yin.EMF().Bz()(szx - 1).real()
+                            +   eventuallychargeseparation[szx - 1] * Yin.EMF().Ey()(szx - 1).real());
 
 
     /// ----------------------------------------------------------------------
     /// Momentum equation - z direction
     /// ----------------------------------------------------------------------
-    Hslope.vz(0) += Zeovermi *
-                            (   Yin.HYDRO().vx(0) * Yin.EMF().By()(0).real()
-                            -   Yin.HYDRO().vy(0) * Yin.EMF().Bx()(0).real()
-                            +   Yin.EMF().Ez()(0).real());
+    Hslope.vz(0) +=  Zeovermi *
+                            (   netcurrent(0,0) * Yin.EMF().By()(0).real()
+                            -   netcurrent(1,0) * Yin.EMF().Bx()(0).real()
+                            +   eventuallychargeseparation[0] * Yin.EMF().Ez()(0).real());
 
     for (size_t ix(1);ix<szx-1;++ix)
     {
-        Hslope.vz(ix) += Zeovermi *
-                            (   Yin.HYDRO().vx(ix) * Yin.EMF().By()(ix).real()
-                            -   Yin.HYDRO().vy(ix) * Yin.EMF().Bx()(ix).real()
-                            +   Yin.EMF().Ez()(ix).real());
+        Hslope.vz(ix) +=  Zeovermi *
+                            (   netcurrent(0,ix) * Yin.EMF().By()(ix).real()
+                            -   netcurrent(1,ix) * Yin.EMF().Bx()(ix).real()
+                            +   eventuallychargeseparation[ix] * Yin.EMF().Ez()(ix).real());
     }
 
-    Hslope.vz(szx - 1) += Zeovermi *
-                            (   Yin.HYDRO().vx(szx - 1) * Yin.EMF().By()(szx - 1).real()
-                            -   Yin.HYDRO().vy(szx - 1) * Yin.EMF().Bx()(szx - 1).real()
-                            +   Yin.EMF().Ez()(szx - 1).real());
+    Hslope.vz(szx - 1) +=  Zeovermi *
+                            (   netcurrent(0,szx - 1) * Yin.EMF().By()(szx - 1).real()
+                            -   netcurrent(1,szx - 1) * Yin.EMF().Bx()(szx - 1).real()
+                            +   eventuallychargeseparation[szx - 1] * Yin.EMF().Ez()(szx - 1).real());
 }
 //------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------
 void Fluid_Equation_1D::updateE(Hydro1D& HYDRO,
                                 EMF1D& EMF){
 
-    for (size_t ix(0);ix<szx;++ix){
-//        EMF.Ex()(ix) -= dCdt[ix]; //+0.5*dC2xdx[ix]+(hydrocharge*electrondensity[ix]-hydrodensity[ix]); // Needs JxB in 2D
-//        EMF.Ey()(ix) += -1.0*hydrovelocity[ix]*EMF.Bz()(ix);//+jx[ix]*Bz(ix)-jz[ix]*Bx(ix);
-//        EMF.Ez()(ix) += hydrovelocity[ix]*EMF.By()(ix);//-jx[ix]*By(ix)-jy[ix]*Bx(ix);
+    
 
-        EMF.Ex()(ix) += HYDRO.charge()*HYDRO.vx(ix)*HYDRO.density(ix);
-        EMF.Ey()(ix) += HYDRO.charge()*HYDRO.vy(ix)*HYDRO.density(ix);
-        EMF.Ez()(ix) += HYDRO.charge()*HYDRO.vz(ix)*HYDRO.density(ix);
+
+
+    for (size_t ix(0);ix<szx;++ix){
+        // EMF.Ex()(ix) -= 0.0;//dCdt[ix]; //+0.5*dC2xdx[ix]+(hydrocharge*electrondensity[ix]-hydrodensity[ix]); // Needs JxB in 2D
+        // EMF.Ey()(ix) += -1.0*HYDRO.Z(ix)*HYDRO.charge()*HYDRO.vx(ix)*EMF.Bz()(ix);//+jx[ix]*Bz(ix)-jz[ix]*Bx(ix);
+        // EMF.Ez()(ix) += HYDRO.Z(ix)*HYDRO.charge()*HYDRO.vx(ix)*EMF.By()(ix);//-jx[ix]*By(ix)-jy[ix]*Bx(ix);
+
+        // EMF.Ex()(ix) += HYDRO.Z(ix)*HYDRO.charge()*HYDRO.vx(ix)*HYDRO.density(ix);
+        // EMF.Ey()(ix) += HYDRO.Z(ix)*HYDRO.charge()*HYDRO.vy(ix)*HYDRO.density(ix);
+        // EMF.Ez()(ix) += HYDRO.Z(ix)*HYDRO.charge()*HYDRO.vz(ix)*HYDRO.density(ix);
     }
 }
 
 //------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------
 
-//void Fluid_Equation_1D:: calcquantities(const State1D& Yin){
-//
+// void Fluid_Equation_1D:: calcquantities(const State1D& Yin){
+
 //    Yin.HYDRO().kineticspeciespressurearray()=0.0;
-//
+
 //    for (size_t s(0);s<Yin.Species();++s){
-//
+
 //        Yin.HYDRO().kineticspeciespressurearray() += Yin.DF(s).getpressure();
-//        Yin.HYDRO().jxarray() += (Yin.DF(s).getcurrent(0));
-//        Yin.HYDRO().jyarray() += (Yin.DF(s).getcurrent(1));
-//        Yin.HYDRO().jzarray() += (Yin.DF(s).getcurrent(2));
+//        // Yin.HYDRO().jxarray() += (Yin.DF(s).getcurrent(0));
+//        // Yin.HYDRO().jyarray() += (Yin.DF(s).getcurrent(1));
+//        // Yin.HYDRO().jzarray() += (Yin.DF(s).getcurrent(2));
 //        // std::cout << "kinetic pressure[" << ix << "]=" << Yin.HYDRO().kpressure(ix) << "\n";
 //        // }
 //    }
-//
+
 //    Yin.HYDRO().electrondensityarray() =  Yin.DF(0).getdensity();
-//
-//}
+
+// }
 
 //------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------
@@ -243,7 +277,7 @@ Hydro_Advection_1D::Hydro_Advection_1D(size_t Nl, size_t Nm,
          for (size_t i(0); i < pr.size(); ++i) {
              invpr[i] = 1.0/pr[i];
          }
-         idp = (-1.0)/ (2.0*(pmax-pmin)/double(Np-1)); // -1/(2dp)
+         idp = (-1.0)/ (2.0*(pmax-pmin)/double(Np)); // -1/(2dp)
          idx = (-1.0) / (2.0*(xmax-xmin)/double(Nx)); // -1/(2dx)
 
          Nbc = Input::List().BoundaryCells;
@@ -438,7 +472,7 @@ void Hydro_Advection_1D::operator()(const DistFunc1D& Din, const Hydro1D& hydro,
 
         for (size_t i(0); i < f.numx(); ++i) {
              f00    = ( f(0,i) - f(1,i) * p0p1_sq) * inv_mp0p1_sq;  
-             G(0,i) = ( f(1,0) - f00) * g_r;
+             G(0,i) = ( f(1,i) - f00) * g_r;
         }
     }
 

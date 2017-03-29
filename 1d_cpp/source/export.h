@@ -1,5 +1,5 @@
 /*! \brief  Export Files - Declarations
- *  \author Michail Tzoufras, Benjamin Winjum, Archis Joglekar
+ * \author PICKSC
  *  \date   September 1, 2016
  *  \file   export.h
  * 
@@ -213,7 +213,7 @@ namespace Export_Files{
     class Restart_Facility {
 //--------------------------------------------------------------
     public:
-        Restart_Facility(string homedir="");
+        Restart_Facility(const int rank, string homedir="");
         
         void Read(const int rank, const size_t re_step, State1D& Y);
         void Write(const int rank, const size_t re_step, State1D& Y);
@@ -380,7 +380,7 @@ private:
         ~fx1_1D();
 
 //      Methods
-        Array2D<float> operator()(DistFunc1D& df, size_t whichdist, size_t x0, size_t s) ;
+        Array2D<float> operator()(DistFunc1D& df, size_t l, size_t m, size_t x0, size_t s) ;
 
 //      Access
         size_t Species()         const { return nump.size(); }
@@ -451,8 +451,12 @@ private:
         void f0(const State1D& Y, const Grid_Info& grid, const size_t tout,
                                         const Parallel_Environment_1D& PE);
         void f10(const State1D& Y, const Grid_Info& grid, const size_t tout,
-                                        const Parallel_Environment_1D& PE);
+                                        const Parallel_Environment_1D& PE);        
         void f11(const State1D& Y, const Grid_Info& grid, const size_t tout,
+                                        const Parallel_Environment_1D& PE);
+        void f20(const State1D& Y, const Grid_Info& grid, const size_t tout,
+                                        const Parallel_Environment_1D& PE);        
+        void fl0(const State1D& Y, const Grid_Info& grid, const size_t tout,
                                         const Parallel_Environment_1D& PE);
         void n(const State1D& Y, const Grid_Info& grid, const size_t tout,
                                         const Parallel_Environment_1D& PE);
@@ -494,6 +498,5 @@ private:
     };
 
 }
-//**************************************************************
 
     #endif

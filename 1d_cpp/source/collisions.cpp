@@ -1,5 +1,5 @@
 /*! \brief Collisions - Definitions
- * \author Michail Tzoufras, Archis Joglekar, Benjamin Winjum
+ * \author PICKSC
  * \date   September 1, 2016
  * \file   collisions.cpp
  * 
@@ -33,8 +33,6 @@
 #include "setup.h"
 #include "formulary.h"
 #include "nmethods.h"
-//#include "f00_implicit_collisions.h"
-#include "interspeciescollisions.h"
 #include "collisions.h"
 
 
@@ -1370,8 +1368,15 @@ self_collisions::self_collisions(const DistFunc1D& DFin, const double& deltat)
 //-------------------------------------------------------------------
 void self_collisions::advancef00(SHarmonic1D& f00, valarray<double>& Zarray, const double time,SHarmonic1D& f00h){
 //-------------------------------------------------------------------
-//    self_f00_exp_collisions.loop(f00,f00h);
-    self_f00_imp_collisions.loop(f00,Zarray,time,f00h);
+    
+    if (Input::List().f00_implicitorexplicit){
+        if (Input::List().f00_implicitorexplicit == 2) {
+            self_f00_imp_collisions.loop(f00,Zarray,time,f00h);
+        }
+        else if (Input::List().f00_implicitorexplicit == 1) {
+            self_f00_exp_collisions.loop(f00,f00h);
+        }   
+    }
 }
 //-------------------------------------------------------------------
 //-------------------------------------------------------------------
@@ -1398,7 +1403,7 @@ collisions::collisions(const State1D& Yin, const double& deltat):Yh(Yin)
 
         if (Yin.Species() > 1){
             for (size_t sind(0); sind < Yin.Species(); ++sind){
-                if (s!=sind) unself_f00_coll.push_back(interspecies_f00_explicit_collisions(Yin.DF(s),Yin.DF(sind),deltat));
+//                if (s!=sind) unself_f00_coll.push_back(interspecies_f00_explicit_collisions(Yin.DF(s),Yin.DF(sind),deltat));
             }
 
 
@@ -1414,13 +1419,12 @@ void collisions::advance(State1D& Yin, const Clock& W)
 {
     Yh = complex<double>(0.0,0.0);
 
+    if (Input::List().f00_implicitorexplicit > 0) advancef0(Yin,W,Yh);
     
-    advancef0(Yin,W,Yh);
-    
-    advancef1(Yin,Yh);
-    
-    advanceflm(Yin,Yh);
-    
+    if (Input::List().flm_collisions){
+        advancef1(Yin,Yh);
+        advanceflm(Yin,Yh);
+    }    
 
     for (size_t s(0); s < Yin.Species(); ++s){
         for (size_t i(0); i < Yin.DF(s).dim(); ++i){

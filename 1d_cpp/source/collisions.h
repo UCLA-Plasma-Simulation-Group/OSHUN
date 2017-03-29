@@ -1,5 +1,5 @@
 /*! \brief Collisions - Declarations
- * \author Michail Tzoufras, Archis Joglekar, Benjamin Winjum
+ * \author PICKSC
  * \date   September 1, 2016
  * \file   collisions.h
  * 
@@ -9,8 +9,6 @@
  * 2) implicit algorithm used for e-e + e-i collisions on f_lm
  * And all their containers.
  * 
- * \todo Implicit Method that cycles over m for 2D
- * \todo Generalized collision operator for collisions between different species
  */
 
 #ifndef DECLERATION_FOKKER_PLANCK_H
@@ -342,7 +340,7 @@ class self_f00_explicit_step {
 
         private:
         //  Variables
-            self_f00_explicit_collisions self_f00_exp_collisions;
+           self_f00_explicit_collisions self_f00_exp_collisions;
             self_f00_implicit_collisions self_f00_imp_collisions;
             self_flm_implicit_collisions self_flm_collisions;
         };
@@ -374,7 +372,7 @@ class self_f00_explicit_step {
             State1D Yh;
             vector<self_collisions> self_coll;
             // vector<interspecies_collisions> unself_coll;
-            vector<interspecies_f00_explicit_collisions> unself_f00_coll;
+//            vector<interspecies_f00_explicit_collisions> unself_f00_coll;
         };
 
     #endif

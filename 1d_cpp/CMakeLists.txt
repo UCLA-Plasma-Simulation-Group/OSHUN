@@ -33,9 +33,8 @@ set(SOURCE_FILES
         source/implicitE.h
         source/input.cpp
         source/input.h
-        source/interspeciescollisions.cpp
-        source/interspeciescollisions.h
-
+#        source/interspeciescollisions.cpp
+#        source/interspeciescollisions.h
         source/fluid.cpp
         source/fluid.h
         source/lib-algorithms.h
@@ -50,7 +49,7 @@ set(SOURCE_FILES
         source/state.cpp
         source/state.h
         source/vlasov.cpp
-        source/vlasov.h)
+        source/vlasov.h source/functors.cpp source/functors.h)
 
 add_executable(oshun1d ${SOURCE_FILES})
 

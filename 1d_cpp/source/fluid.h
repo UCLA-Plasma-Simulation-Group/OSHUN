@@ -11,7 +11,9 @@
             /// Momentum (and Energy and Density?) Update
             void density(const Hydro1D& Hin, Hydro1D& Hslope);//State1D& Yin, double deltat);
             void chargefraction(const Hydro1D& Hin, Hydro1D& Hslope);//State1D& Yin, double deltat);
-            void velocity(const State1D& Hin, Hydro1D& Hslope); //State1D& Yin,double deltat);
+            void velocity(const State1D& Yin, Hydro1D& Hslope,
+                            valarray<double>& electrondensity, valarray<double>& electronpressure,
+                            Array2D<double>& electroncurrent); //State1D& Yin,double deltat);
             // void energy()(const valarray<double>& energy, valarray<double>& newenergy);
             
 

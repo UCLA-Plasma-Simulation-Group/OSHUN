@@ -7,7 +7,7 @@ COMPILER = mpicxx
 
 # GNU compilers#
 OPTFLAGS = -O2 -std=c++0x -ftree-vectorize
-DBGFLAGS = -v -g -O0 -Wall -pedantic 
+DBGFLAGS = -v -g -O0 -Wall -pedantic -std=c++0x
 
 # HDF5 libraries
 H5LIB =  -lhdf5_cpp -lhdf5 
@@ -20,7 +20,7 @@ EXEC_DIR = ../bin
 TMP_DIR = ./tmp
 
 
-OBJECTS = input.o state.o formulary.o setup.o vlasov.o nmethods.o interspeciescollisions.o collisions.o fluid.o implicitE.o parallel.o export.o main.o
+OBJECTS = input.o state.o formulary.o setup.o vlasov.o nmethods.o functors.o collisions.o fluid.o implicitE.o parallel.o export.o main.o
 
 EXEC = oshun1d.e
 
@@ -31,7 +31,7 @@ BUILDOBJECTS = ${addprefix ${TMP_DIR}/,${OBJECTS}}
 BUILDEXEC = ${addprefix ${EXEC_DIR}/,${EXEC}}
 
 ${BUILDEXEC} : ${BUILDOBJECTS}
-	-${COMPILER} ${OPTFLAGS} $(H5LIB) -o ${BUILDEXEC} \
+	-${COMPILER} ${OPTFLAGS} -o ${BUILDEXEC} $(H5LIB) \
 	${BUILDOBJECTS} 
 
 clean ::
@@ -40,7 +40,7 @@ clean ::
 	rm -f ${TMP_DIR}/${BUILDOBJECTS}
 
 debug :
-	${COMPILER} ${DBGFLAGS} $(H5LIB) -o ${BUILDEXEC} \
+	${COMPILER} ${DBGFLAGS} -o ${BUILDEXEC} $(H5LIB)\
 	%.cpp
 
 ./tmp/%.o: %.cpp

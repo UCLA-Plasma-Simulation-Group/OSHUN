@@ -1,5 +1,5 @@
 /*! \brief Underlying data structures
- * \author Michail Tzoufras, Benjamin Winjum
+ * \author PICKSC
  * \date   September 1, 2016
  * \file   lib-array.h
  *
@@ -511,7 +511,40 @@ template<class T> Array2D<T>& Array2D<T>::Dd1(){
     for(long i(d1*d2-3); i>-1; --i) {
         (*v)[i+1] = (*v)[i];
     }
+
+
+   //  Array2D<T> temp(*this);
+
+   //  for (long i2(0); i2<long(d2);++i2){
+
+
+   //      /// Second Order
+   //      temp(0,i2) = 2.0*((*this)(0,i2)-(*this)(1,i2));
+
+
+        
+   //      // temp(i1,1) = 1.0/12.0*((*this)(i1,4)-6.0*(*this)(i1,3)+18.0*(*this)(i1,2)-10.0*(*this)(i1,1)-3.0*(*this)(i1,0));
+        
+   //      for (long i1(1); i1<long(d1)-1;++i1){
+   //          // temp(i1,i2) = 1.0/12.0*(-(*this)(i1,i2+2)+8.0*(*this)(i1,i2+1)-8.0*(*this)(i1,i2-1)+(*this)(i1,i2-2));
+            
+   //          /// Second Order
+   //          temp(i1,i2) = (*this)(i1-1,i2) - (*this)(i1+1,i2);
+   //      }
+
+
+
+
+   //      // temp(i1,long(d2)-2) = 1.0/12.0*(3.0*(*this)(i1,long(d2)-1)+10.0*(*this)(i1,long(d2)-2)-18.0*(*this)(i1,long(d2)-3)+6.0*(*this)(i1,long(d2)-4)-(*this)(i1,long(d2)-5));
+   //      // temp(i1,long(d2)-1) = (*this)(i1,long(d2)-1)-(*this)(i1,long(d2)-2);
+
+   //      /// Second Order
+   //      temp(long(d1)-1,i2) = 2.0*((*this)(long(d1)-2,i2)-(*this)(long(d1)-1,i2));
+   // }
+
+   // *this = temp;
     return *this;
+
 }
 
 // (minus) Central difference for elements with distance d1 (row-wise)
@@ -521,34 +554,49 @@ template<class T> Array2D<T>& Array2D<T>::Dd1(){
 //          3 7 11 15 19       -8 -8 -8 -8 19
 // Requires at least 3 elements in d2 
 template<class T> Array2D<T>& Array2D<T>::Dd2(){
-//    Array2D<T> temp(*this);
-//
-//
-//    for (long i1(0); i1<long(d1);++i1){
-//
-//        temp(i1,0) = (*this)(i1,1)-(*this)(i1,0);
-//        temp(i1,1) = 1.0/12.0*((*this)(i1,4)-6.0*(*this)(i1,3)+18.0*(*this)(i1,2)-10.0*(*this)(i1,1)-3.0*(*this)(i1,0));
-//
-//        for (long i2(2); i2<long(d2)-2;++i2){
-//            temp(i1,i2) = 1.0/12.0*(-(*this)(i1,i2+2)+8.0*(*this)(i1,i2+1)-8.0*(*this)(i1,i2-1)+(*this)(i1,i2-2));
-//        }
-//
-//        temp(i1,long(d2)-2) = 1.0/12.0*(3.0*(*this)(i1,long(d2)-1)+10.0*(*this)(i1,long(d2)-2)-18.0*(*this)(i1,long(d2)-3)+6.0*(*this)(i1,long(d2)-4)-(*this)(i1,long(d2)-5));
-//        temp(i1,long(d2)-1) = (*this)(i1,long(d2)-1)-(*this)(i1,long(d2)-2);
-//
-//    }
+   //  Array2D<T> temp(*this);
 
-//    *this = temp;
-//    return temp;
+   //  for (long i1(0); i1<long(d1);++i1){
+   //      /// Second Order
+   //      temp(i1,0) = 2.0*((*this)(i1,0)-(*this)(i1,1));
+   //      // std::cout << "this(" << i1 << ")" << (*this)(i1,0) << "\n";
+   //      // std::cout << "temp(" << i1 << ")" << temp(i1,0) << "\n";
 
-    long twod1(2*d1);
+   //      // temp(i1,1) = 1.0/12.0*((*this)(i1,4)-6.0*(*this)(i1,3)+18.0*(*this)(i1,2)-10.0*(*this)(i1,1)-3.0*(*this)(i1,0));
+   //      for (long i2(1); i2<long(d2)-1;++i2){
+   //          // temp(i1,i2) = 1.0/12.0*(-(*this)(i1,i2+2)+8.0*(*this)(i1,i2+1)-8.0*(*this)(i1,i2-1)+(*this)(i1,i2-2));
+   //          /// Second Order
+   //          temp(i1,i2) = (*this)(i1,i2-1) - (*this)(i1,i2+1);
+   //          // std::cout << "this(" << i1 << "," << i2 << ")" << (*this)(i1,i2) << "\n";
+   //      }
+   //      // temp(i1,long(d2)-2) = 1.0/12.0*(3.0*(*this)(i1,long(d2)-1)+10.0*(*this)(i1,long(d2)-2)-18.0*(*this)(i1,long(d2)-3)+6.0*(*this)(i1,long(d2)-4)-(*this)(i1,long(d2)-5));
+   //      // temp(i1,long(d2)-1) = (*this)(i1,long(d2)-1)-(*this)(i1,long(d2)-2);
+   //      /// Second Order
+   //      temp(i1,long(d2)-1) = 2.0*((*this)(i1,long(d2)-2)-(*this)(i1,long(d2)-1));
+   //      // std::cout << "this(" << i1 << "," << long(d2)-1 << ")" << (*this)(i1,long(d2)-1) << "\n";
+   // }
+
+   // *this = temp;
+   //  return *this;
+   
+
+    ////////////////// Has boundary errors unless boundary cells increased for each RK level
+    /// 
+   // std::cout << "\n d1*d2-twod1 = " << long(d1*d2)-2*d1 << "\n";
+
+   long twod1(2*d1);
     for(long i(0); i< long(d1*d2)-twod1; ++i) {
+        // std::cout << "v[" << i << "] = " << (*v)[i] 
+        // <<  ", v[" << i+twod1 << "] = " << (*v)[i+twod1] << "\n";
+
         (*v)[i] -= (*v)[i+twod1];
     }
+    
     for(long i(d1*d2-twod1-1); i>-1; --i) {
         (*v)[i+d1] = (*v)[i];
     }
     return *this;
+   ////////////////// ////////////////// //////////////////
 }
 //--------------------------------------------------------------
 

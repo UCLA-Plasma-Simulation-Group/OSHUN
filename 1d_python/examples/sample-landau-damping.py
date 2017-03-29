@@ -264,13 +264,13 @@ def attempt7():
 
 # ld_setup__standing_wave__3rd_order
 #	work ok.. 
-#CFG = ld_setup__standing_wave__3rd_order()
+CFG = ld_setup__standing_wave__3rd_order()
 #CFG = attempt2()
 #CFG = attempt3()
 #CFG = attempt4()
 #CFG = attempt5()
 #CFG = attempt6()
-CFG = attempt7()
+# CFG = attempt7()
 
 
 

@@ -8,8 +8,6 @@
  * 2) implicit algorithm used for e-e + e-i collisions on f_lm
  * And all their containers.
  * 
- * \todo Implicit Method that cycles over m for 2D
- * \todo Generalized collision operator for collisions between different species
  */
 
 #ifndef DECLARATION_INTERSPECIES_FP_H
