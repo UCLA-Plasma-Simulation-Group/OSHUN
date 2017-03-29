@@ -1,6 +1,0 @@
-<map id="df_4thorder" name="df_4thorder">
-<area shape="rect" id="node2" href="$d6/dc2/class_fluid___equation__1_d.html#a6001e5c2f1b89b8dbb838f96d46d399c" title="Fluid_Equation_1D::\lchargefraction" alt="" coords="143,5,285,44"/>
-<area shape="rect" id="node4" href="$d6/dc2/class_fluid___equation__1_d.html#ab1fad8e1421ee401a60dfdfdf1aa9818" title="Momentum (and Energy and Density?) Update. " alt="" coords="143,68,285,107"/>
-<area shape="rect" id="node5" href="$d6/dc2/class_fluid___equation__1_d.html#a934797d984759f05fc91a6ae3dc57284" title="Fluid_Equation_1D::\lvelocity" alt="" coords="143,131,285,169"/>
-<area shape="rect" id="node3" href="$d5/d6d/class_hydro___functor.html#a829f8d3796f09865d03388d365413418" title="Hydro_Functor::operator()" alt="" coords="333,75,508,100"/>
-</map>

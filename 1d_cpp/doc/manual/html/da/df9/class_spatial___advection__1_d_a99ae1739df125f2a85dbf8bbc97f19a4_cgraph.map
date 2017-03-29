@@ -1,9 +1,0 @@
-<map id="Spatial_Advection_1D::operator()" name="Spatial_Advection_1D::operator()">
-<area shape="rect" id="node2" href="$db/d09/group__st2d.html#ga2c7588ee92b69be2057da23bcf9ce339" title="SHarmonic1D::Dx" alt="" coords="219,29,347,55"/>
-<area shape="rect" id="node5" href="$db/d09/group__st2d.html#ga16f2ba81a31207df1bf15946cf099afe" title="DistFunc1D::l0" alt="" coords="228,79,337,104"/>
-<area shape="rect" id="node6" href="$db/d09/group__st2d.html#gaf366e27a515e67e2c96ad85a2c73aaa6" title="DistFunc1D::m0" alt="" coords="224,128,341,153"/>
-<area shape="rect" id="node7" href="$db/d09/group__st2d.html#gaa38928a907df32a89e1fd1a6ef242432" title="DistFunc1D::mass" alt="" coords="218,177,348,203"/>
-<area shape="rect" id="node8" href="$db/d09/group__st2d.html#ga64939111a35bff37b8c4e4a266b96827" title="SHarmonic1D::mpaxis" alt="" coords="206,227,360,252"/>
-<area shape="rect" id="node3" href="$db/d09/group__st2d.html#ga92eae6dbcfcc5770299682b046c87739" title="SHarmonic1D::nump" alt="" coords="408,5,553,31"/>
-<area shape="rect" id="node4" href="$db/d09/group__st2d.html#ga59d310369b6ee8067eecbcaf8d5be993" title="SHarmonic1D::numx" alt="" coords="408,55,553,80"/>
-</map>

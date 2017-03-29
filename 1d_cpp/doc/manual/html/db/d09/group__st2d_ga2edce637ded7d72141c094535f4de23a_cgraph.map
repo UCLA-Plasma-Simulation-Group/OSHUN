@@ -1,8 +1,0 @@
-<map id="Field2D::operator()" name="Field2D::operator()">
-<area shape="rect" id="node2" href="$db/d09/group__st2d.html#ga2c7588ee92b69be2057da23bcf9ce339" title="SHarmonic1D::Dx" alt="" coords="211,5,339,31"/>
-<area shape="rect" id="node4" href="$db/d09/group__st2d.html#ga9e8ed6f6f915c3e02538b7c8b7348bf9" title="SHarmonic1D::operator*=" alt="" coords="188,55,362,80"/>
-<area shape="rect" id="node5" href="$db/d09/group__st2d.html#ga90d78f456ba8705f644751879a112d68" title="SHarmonic1D::operator+=" alt="" coords="187,104,364,129"/>
-<area shape="rect" id="node6" href="$db/d09/group__st2d.html#gad86e2d1c1b65ee02d5faef8fde48c46c" title="SHarmonic1D::operator&#45;=" alt="" coords="188,153,362,179"/>
-<area shape="rect" id="node7" href="$db/d09/group__st2d.html#ga789d734194cee61dadbcd915a53eec08" title="SHarmonic1D::operator=" alt="" coords="190,203,360,228"/>
-<area shape="rect" id="node3" href="$dd/d03/class_array2_d.html#a81cc1d607c5bdea03691dffa626cf182" title="Array2D::Dd2" alt="" coords="412,5,514,31"/>
-</map>

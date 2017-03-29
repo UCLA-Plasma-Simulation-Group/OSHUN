@@ -1,9 +1,0 @@
-<map id="VlasovFunctor1D_explicitE::operator()" name="VlasovFunctor1D_explicitE::operator()">
-<area shape="rect" id="node2" href="$d1/d4b/class_vlasov_functor1_d__explicit_e.html#a1b4eab6e473d4bbb11a1f1c433d74bff" title="VlasovFunctor1D_explicit\lE::~VlasovFunctor1D_explicitE" alt="" coords="244,5,448,44"/>
-<area shape="rect" id="node3" href="$d9/d2d/class_vlasov_functor1_d__explicit_e__implicit_b.html#af57379386a0e73284f4bb76527363c69" title="VlasovFunctor1D_explicit\lE_implicitB::~VlasovFunctor1\lD_explicitE_implicitB" alt="" coords="248,68,444,120"/>
-<area shape="rect" id="node4" href="$da/d68/class_vlasov_functor1_d__implicit_e__implicit_b__p1.html#a1b3d0277c1a9573bce64760105652ba1" title="VlasovFunctor1D_implicit\lE_implicitB_p1::~VlasovFunctor1\lD_implicitE_implicitB_p1" alt="" coords="237,144,455,196"/>
-<area shape="rect" id="node5" href="$d5/d92/class_vlasov_functor1_d__implicit_e__p1.html#a1f5503ac4191c90e9dadab145d808796" title="VlasovFunctor1D_implicit\lE_p1::~VlasovFunctor1D\l_implicitE_p1" alt="" coords="260,220,432,272"/>
-<area shape="rect" id="node6" href="$d7/d62/class_vlasov_functor1_d__implicit_e__p2.html#a03f82865c99926e4657d71e0d2195f8d" title="VlasovFunctor1D_implicit\lE_p2::~VlasovFunctor1D\l_implicitE_p2" alt="" coords="260,296,432,348"/>
-<area shape="rect" id="node7" href="$db/daa/class_vlasov_functor1_d__momentumpush.html#aebc65f6e5fe7518eed06ba9be1c71aa2" title="VlasovFunctor1D_momentumpush\l::~VlasovFunctor1D_momentumpush" alt="" coords="225,372,467,411"/>
-<area shape="rect" id="node8" href="$d4/d45/class_vlasov_functor1_d__spatialpush.html#a8c00c789e2230d93d364a9ef9fc2d16e" title="VlasovFunctor1D_spatialpush\l::~VlasovFunctor1D_spatialpush" alt="" coords="239,435,453,473"/>
-</map>

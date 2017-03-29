@@ -1,5 +1,0 @@
-<map id="self_f00_implicit_step::update_D_and_delta" name="self_f00_implicit_step::update_D_and_delta">
-<area shape="rect" id="node2" href="$df/dec/group__vfp1d.html#ga95061d5efc2426763736cdaf2487374e" title="self_f00_implicit_step\l::calc_delta_ChangCooper" alt="" coords="206,5,385,44"/>
-<area shape="rect" id="node3" href="$da/dce/namespace_input.html#a48b39b70a0ab1d976662642491b3e2f2" title="Input::List" alt="" coords="256,68,335,93"/>
-<area shape="rect" id="node4" href="$df/dec/group__vfp1d.html#gabc99601bf5eb04762c7336a6ed6c8e40" title="self_f00_implicit_step\l::update_D_Rosenbluth" alt="" coords="215,117,376,156"/>
-</map>

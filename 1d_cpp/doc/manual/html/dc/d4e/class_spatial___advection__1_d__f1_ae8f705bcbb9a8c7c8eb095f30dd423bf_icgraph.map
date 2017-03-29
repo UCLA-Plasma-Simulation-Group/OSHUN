@@ -1,7 +1,0 @@
-<map id="Spatial_Advection_1D_f1::operator()" name="Spatial_Advection_1D_f1::operator()">
-<area shape="rect" id="node2" href="$d4/d11/class_vlasov_functor1_d__f1__explicit_e.html#a5b4388fa2ba98fdf7718fdd7b6063057" title="VlasovFunctor1D_f1\l_explicitE::~VlasovFunctor1\lD_f1_explicitE" alt="" coords="221,5,408,57"/>
-<area shape="rect" id="node3" href="$d0/d26/class_vlasov_functor1_d__f1__explicit_e_b.html#a522e3aec3cff301b249f6cb87d5a8fd1" title="VlasovFunctor1D_f1\l_explicitEB::~VlasovFunctor1\lD_f1_explicitEB" alt="" coords="217,81,412,133"/>
-<area shape="rect" id="node4" href="$d5/d50/class_vlasov_functor1_d__f1__implicit_e__p1.html#a1952871ff942b39440cf53813295f940" title="VlasovFunctor1D_f1\l_implicitE_p1::~VlasovFunctor1\lD_f1_implicitE_p1" alt="" coords="210,157,419,209"/>
-<area shape="rect" id="node5" href="$dd/d1c/class_vlasov_functor1_d__f1__implicit_e__p2.html#acfd346a1b8569a33a81954a5799a39b8" title="VlasovFunctor1D_f1\l_implicitE_p2::~VlasovFunctor1\lD_f1_implicitE_p2" alt="" coords="210,233,419,285"/>
-<area shape="rect" id="node6" href="$da/d57/class_vlasov_functor1_d__f1__implicit_e_b__p1.html#afc039c928d8f802c38b5afefdf2a0fe1" title="VlasovFunctor1D_f1\l_implicitEB_p1::~VlasovFunctor1\lD_f1_implicitEB_p1" alt="" coords="206,309,423,361"/>
-</map>

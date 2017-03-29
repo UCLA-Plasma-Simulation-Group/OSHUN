@@ -1,8 +1,0 @@
-<map id="Spatial_Advection_1D::operator()" name="Spatial_Advection_1D::operator()">
-<area shape="rect" id="node2" href="$db/d09/group__st2d.html#ga2c7588ee92b69be2057da23bcf9ce339" title="SHarmonic1D::Dx" alt="" coords="219,5,347,31"/>
-<area shape="rect" id="node4" href="$db/d09/group__st2d.html#ga16f2ba81a31207df1bf15946cf099afe" title="DistFunc1D::l0" alt="" coords="228,55,337,80"/>
-<area shape="rect" id="node5" href="$db/d09/group__st2d.html#gaf366e27a515e67e2c96ad85a2c73aaa6" title="DistFunc1D::m0" alt="" coords="224,104,341,129"/>
-<area shape="rect" id="node6" href="$db/d09/group__st2d.html#gaa38928a907df32a89e1fd1a6ef242432" title="DistFunc1D::mass" alt="" coords="218,153,348,179"/>
-<area shape="rect" id="node7" href="$db/d09/group__st2d.html#ga64939111a35bff37b8c4e4a266b96827" title="SHarmonic1D::mpaxis" alt="" coords="206,203,360,228"/>
-<area shape="rect" id="node3" href="$dd/d03/class_array2_d.html#a81cc1d607c5bdea03691dffa626cf182" title="Array2D::Dd2" alt="" coords="408,5,510,31"/>
-</map>

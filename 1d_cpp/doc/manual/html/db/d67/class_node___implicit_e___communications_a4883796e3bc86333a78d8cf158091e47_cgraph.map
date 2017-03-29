@@ -1,5 +1,0 @@
-<map id="Node_ImplicitE_Communications::Send_left_X" name="Node_ImplicitE_Communications::Send_left_X">
-<area shape="rect" id="node2" href="$db/d09/group__st2d.html#ga0af17cfa15b120c92e840bc6c4d2b5ec" title="EMF1D::dim" alt="" coords="276,5,371,31"/>
-<area shape="rect" id="node3" href="$db/d09/group__st2d.html#gae086e9cef14d1424700680a2f3ec7de9" title="State1D::EMF" alt="" coords="271,55,376,80"/>
-<area shape="rect" id="node4" href="$db/d09/group__st2d.html#gacb4879b52e4206e7edb65d08f801014d" title="State1D::FLD" alt="" coords="273,104,375,129"/>
-</map>

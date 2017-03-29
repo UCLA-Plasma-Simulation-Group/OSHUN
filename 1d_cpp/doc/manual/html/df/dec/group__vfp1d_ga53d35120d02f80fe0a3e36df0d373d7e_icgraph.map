@@ -1,6 +1,0 @@
-<map id="self_f00_implicit_step::update_D_and_delta" name="self_f00_implicit_step::update_D_and_delta">
-<area shape="rect" id="node2" href="$df/dec/group__vfp1d.html#ga2735a8cfca1d31639ecd0625b4872226" title="self_f00_implicit_step\l::getleftside" alt="" coords="206,5,355,44"/>
-<area shape="rect" id="node5" href="$df/dec/group__vfp1d.html#gae1981f7d44ce6a5b554889349f090fd6" title="self_f00_implicit_step\l::takestep" alt="" coords="206,68,355,107"/>
-<area shape="rect" id="node3" href="$df/dec/group__vfp1d.html#ga85dbd48049a4e37eedca4acd2821899f" title="self_f00_implicit_collisions\l::loop" alt="" coords="403,5,580,44"/>
-<area shape="rect" id="node4" href="$df/dec/group__vfp1d.html#ga31e6973b7f7f4f7eabaedc09a21ab045" title="self_collisions::advancef00" alt="" coords="628,12,808,37"/>
-</map>

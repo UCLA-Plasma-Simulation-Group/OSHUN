@@ -22,6 +22,8 @@ Please note: The build may need to be configured for compilers and HDF5 librarie
 
 The build process creates an executable ```oshun-1d.e``` in the bin directory. Example inputdecks are available in the input directory.  The executable and inputdeck files can be copied and moved to any desired location. Output will be placed in the current directory.
 
+There is a HTML manual in ```1d_cpp/manual.html```. There are also loaders and plotters to perform Braginskii-style transport tests using inputdecks provided in ```1d_cpp/inputdecks-for-example-1```
+
 # Installation for 1D Python code
 
 The 1D Python version of OSHUN uses the Cmake build system. Make sure this is installed on your system. After cloning the repository, use a terminal (i.e. command line) and navigate to the OSHUN repository. Then go into the 1d_python subdirectory. From there:
