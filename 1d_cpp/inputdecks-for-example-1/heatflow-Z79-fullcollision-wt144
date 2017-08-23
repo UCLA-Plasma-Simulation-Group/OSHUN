@@ -12,7 +12,7 @@ numsp = 1
 
 l0 = 4
 m0 = 4
-nump = 96
+nump = 64
 pmax = 0.2
 mass = 1.0
 charge = -1.0
@@ -24,43 +24,50 @@ charge = -1.0
 Nx = 64
 
 xmin = 0.0
-xmax = 6000.0
+xmax = 10000.0
 
 //-----------------------------------------------------------------------
 // Loop control
 //-----------------------------------------------------------------------
 
-clf_dp = 1.0;
-n_outsteps = 100;
-n_distoutsteps = 10;
-t_stop = 8000.0
+clf_dp = 1.0
+n_outsteps = 400
+n_distoutsteps = 1
+n_bigdistoutsteps = 1
+t_stop = 10000.0
 
 //-----------------------------------------------------------------------
 // Various switches
 //-----------------------------------------------------------------------
+/// Apply the distribution function filter
+filter_distribution = false
+filter_dp = 0.001
+filter_pmax = 0.005
+
+lnLambda = -1
 
 /   ---   /   ---   /   ---   /   ---   /   ---   /   ---   /   ---   /
 /// Fokker-Planck
 collisions_switch = true
-f00_collisions = explicit
-flm_collisions = true
+f00_collisions = implicit
+flm_collisions = on
 
-//  Explicit f00 collisions options
+//  Explicit f00 collisions options - doesnt do anything if implicit
 small_dt                            = 0.01
 smaller_dt                          = 0.0000125
-NB_algorithms                       = 4
+f00_exp_parabolic_approximation	    = 4
 
-//  Implicit f00
-Rosenbluth_D_tolerance              = 1e-18
-Rosenbluth_D_maximum_iterations     = 100
+//  Implicit f00 -  doesnt do anything if explicit
+Rosenbluth_D_tolerance              = 1e-8
+Rosenbluth_D_maximum_iterations     = 40
 
-//  Implicit flm
+//  Implicit flm - doesnt do anything if explicit
 assume_tridiagonal_flm_collisions   = false
 
 /   ---   /   ---   /   ---   /   ---   /   ---   /   ---   /   ---   /
 
 /// Vlasov
-implicit_B_push                     = false
+CrankNicholson_vxB_push              = false
 
 /   ---   /   ---   /   ---   /   ---   /   ---   /   ---   /   ---   /
 
@@ -75,23 +82,21 @@ implicit_E                          = true
 // Initialize f00 using density and temperature
 //-----------------------------------------------------------------------
 
-density_np                  = 1.0e21
+density_np                  = 1e21
 super_gaussian_distribution = 2.0
 pth_ref                     = 0.025							    // Reference thermal velocity
 hydrocharge = 79.0
 
 
-n(x) = cst{1.0}  
-T(x) = fnc{0.000625*(1+0.01*sin(pi*x/3000))}
+n(x) = cst{1.0} 
+T(x) = fnc{0.04*0.04*(1.0+0.01*sin(2*pi*x/10000))}
 
 //-----------------------------------------------------------------------
 // Option to apply f10(x) = C(x) * (v^3 df00/dv) . Provide C(x)
 //-----------------------------------------------------------------------
 
 init_f1                     = false
-multiplier-f10(x) = fnc{1e-6*sin(pi*x)}
-
-f_pedestal = cst{0.0}
+multiplier-f10(x) = fnc{1e-4*sin(2*pi*x/1.6)}
 
 //-----------------------------------------------------------------------
 // Boundary type (default periodic)
@@ -104,13 +109,17 @@ bndX = 0
 //      External Fields
 //-----------------------------------------------------------------------
 
-ext_fields = true
+// ******** ------ ******** ------ ******** ------ ******** ------ //
+// The following knobs allow the user to FIX the fields at a certain value
+// ******** ------ ******** ------ ******** ------ ******** ------ //
+
+ext_fields = false
 
 Ex(x) = fnc{0.0}
 Ex(t) = cst{0.0}
 
 Ey(x) = cst{0.0}
-Ey(t) = cst{0.0}
+Ey(t) = fnc{0.0}
 
 Ez(x) = cst{0.0}
 Ez(t) = cst{0.0}
@@ -119,27 +128,29 @@ Bx(x) = cst{0.0}
 Bx(t) = cst{0.0}
 
 By(x) = cst{0.0}
-By(t) = cst{0.0}
+By(t) = cst{0.0} 
 
-Bz(x) = cst{0.1}
-Bz(t) = cst{1.0}
+Bz(x) = cst{0.001} 
+Bz(t) = cst{0.0}
+
 
 // ******** ------ ******** ------ ******** ------ ******** ------ //
 // The following knobs allow the user to ADD to the fields e.g. a driver.
 // ******** ------ ******** ------ ******** ------ ******** ------ //
 
-traveling_wave = false
-num_waves = 0
-Ex(x,t) = cst{0.0}
-Ey(x,t) = cst{0.0}
-Ez(x,t) = cst{0.0}
-Bx(x,t) = cst{0.0}
-By(x,t) = cst{0.0}
-Bz(x,t) = cst{0.0}
+traveling_wave = true
+num_waves = 1
+dEx(x,t) = cst{0.0} 
+dEy(x,t) = cst{0.0}  
+dEz(x,t) = cst{0.0}
+dBx(x,t) = cst{0.0}
+dBy(x,t) = cst{0.0}
+dBz(x,t) = cst{0.01}
 
-rise_flat_fall_center = 18 60 18 50
+// Time envelope info
+rise_flat_fall_center = 4.0 10.0 4.0 10.0
 
-envelope(t) = fnc{exp(-0.01*(t-10)^2)}
+f_pedestal = cst{0.0}
 
 //-----------------------------------------------------------------------
 //      Hydrodynamic parameters
@@ -152,8 +163,8 @@ MX_cooling = false
 
 /   ---   /   ---   /   ---   /   ---   /   ---   /   ---   /   ---   /
 
-Z(x) = cst{1.0} fnc{(0.81-0.4*(tanh(0.005*(x+1500))-tanh(0.005*(x-1500))))}
-ni(x) = fnc{1.0/60.0*(9.1-4.5*(tanh(0.005*(x+1500))-tanh(0.005*(x-1500))))}
+Z(x) = cst{1.0} 
+ni(x) = cst{1.0}
 Ti(x) = cst{0.0001}
 Ux(x) = cst{0.0}
 
@@ -204,20 +215,26 @@ o_Qx   = true
 o_Qy   = false
 o_Qz   = false
 
-o_vNx   = false
+o_vNx   = true
 o_vNy   = false
 o_vNz   = false
 
 /   ---   /   ---   /   ---   /   ---   /   ---   /   ---   /   ---   /
+/   ---   /   ---   /   ---   /   ---   /   ---   /   ---   /   ---   /
+nump1 = 81
+nump2 = 81
+nump3 = 81
 
 // Distribution Function
 o_p1x1 = true
+o_p2x1 = false
+o_p2p1x1 = false
 
 o_f0x1 = true
 o_f10x1 = true
-o_f11x1 = false
-o_f20x1 = true
-o_fl0x1 = true
+o_f20x1 = false
+o_f11x1 = true
+o_fl0x1 = false
 
 /   ---   /   ---   /   ---   /   ---   /   ---   /   ---   /   ---   /
 
@@ -235,3 +252,15 @@ o_Ti = false
 if_restart = false
 restart_time = 1000
 n_restarts = 1000
+
+//-----------------------------------------------------------------------
+// Test Particle Tracker
+//-----------------------------------------------------------------------
+track_particles = false
+number_of_particles = 0
+particles_position = 0.
+particles_px =  0.
+particles_py = 0	
+particles_pz = 0.
+particle_charge = -1.0
+particle_mass = 1.0
