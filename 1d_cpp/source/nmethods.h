@@ -26,6 +26,9 @@
 bool Gauss_Seidel(Array2D<double>& A,
                   valarray<complex<double> >& b,
                   valarray<complex<double> >& xk);
+bool Gauss_Seidel(Array2D<double>& A,
+                  valarray<double >& b,
+                  valarray<double >& xk);
 //-------------------------------------------------------------------
 
 //-------------------------------------------------------------------

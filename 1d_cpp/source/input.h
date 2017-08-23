@@ -45,11 +45,16 @@ namespace Input{
         bool implicit_B;
         bool collisions;
         int f00_implicitorexplicit;
-        bool flm_collisions;
+        int flm_collisions;
+        bool filterdistribution;
+        double filter_dp, filter_pmax;
 
         int BoundaryCells;
+        int numPMLCells;
+        double xminPML, xmaxPML;
+        int PML_core;
         int bndX;
-        size_t n_outsteps, n_distoutsteps;
+        size_t n_outsteps, n_distoutsteps, n_bigdistoutsteps;
         double t_stop;
         int restart_time;  int n_restarts;
 
@@ -61,14 +66,14 @@ namespace Input{
         bool o_Vsq, o_Qx, o_Qy, o_Qz;
         bool o_vNx, o_vNy, o_vNz;
         bool o_Jx, o_Jy, o_Jz;
-        bool o_Pressure, o_Temperature, o_ND, o_Nu, o_p1x1, o_f0x1, o_f10x1, o_f11x1,
+        bool o_Pressure, o_Temperature, o_ND, o_Nu, o_p1x1, o_p2x1, o_f0x1, o_f10x1, o_f11x1,
                 o_f20x1, o_fl0x1;
         bool o_Ux, o_Uy, o_Uz, o_Z, o_ni, o_Ti;
         bool only_output;
         size_t numpx, nump1, nump2, nump3;
 
 //          Electron-ion collisions
-        double lnLambda, density_np;
+        double lnLambda_ei, lnLambda_ee, density_np;
 
 //          Electron-electron collisions
         size_t RB_D_itmax;
@@ -81,6 +86,13 @@ namespace Input{
 //          Hydro parameters
         bool hydromotion;
         double hydromass, hydrocharge;
+
+
+        // Particles
+        bool particlepusher;
+        size_t numparticles;
+        double particlecharge, particlemass;
+        std::vector<double> par_xpos, par_px, par_py, par_pz;
 
         int polarization_direction;
 
@@ -171,6 +183,8 @@ namespace Input{
         std::vector<double> xmaxGlobal;
         std::vector<double> xminLocal;
         std::vector<double> xmaxLocal;
+        std::vector<double> xminLocalnobnd;
+        std::vector<double> xmaxLocalnobnd;
         std::vector<double> globdx;
 
     };

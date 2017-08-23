@@ -101,7 +101,7 @@
 //      Abstract class for explicit methods
 //--------------------------------------------------------------
         public:
-            virtual void advance(Algorithms::RK3<State1D>* rk, State1D& Y, collisions& coll, VlasovFunctor1D_implicitE_p2* rkF)=0;//, double time, double dt) = 0; // "covariant" return
+            virtual void advance(Algorithms::RK4<State1D>* rk, State1D& Y, collisions& coll, VlasovFunctor1D_implicitE_p2* rkF)=0;//, double time, double dt) = 0; // "covariant" return
             // virtual bool implicitE()  const = 0;
             virtual ~Efield_Method() = 0;
         };
@@ -120,7 +120,7 @@
 //             Explicit_E_Field(State1D& Yin, int tout_start);
 
 // //          Main function
-//             void advance(Algorithms::RK3<State1D>* rk, Euler_Backward* eb, RKFunctor1D* rkF);    
+//             void advance(Algorithms::RK4<State1D>* rk, Euler_Backward* eb, RKFunctor1D* rkF);    
          
 // //          Is the electric field implicit?
 //             bool implicitE() const;
@@ -151,7 +151,7 @@
             Implicit_E_Field(EMF1D& emf, const double& deltat, const double& deltax);
 
 //          Main function
-            void advance(Algorithms::RK3<State1D>* rk, State1D& Y, collisions& coll, VlasovFunctor1D_implicitE_p2* rkF);//, double time, double dt);
+            void advance(Algorithms::RK4<State1D>* rk, State1D& Y, collisions& coll, VlasovFunctor1D_implicitE_p2* rkF);//, double time, double dt);
          
 //          Is the electric field implicit?
             // bool implicitE() const;

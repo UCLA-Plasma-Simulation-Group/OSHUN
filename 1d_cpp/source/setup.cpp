@@ -1,10 +1,10 @@
 /*!\brief  Initialization routines - Definitions
-* \author PICKSC
- * \date   August 9, 2016
+* \author  PICKSC
+ * \date   March, 2017
  * \file   setup.cpp
  *
  * In here are the initialization routines for the State object.
- * 
+ *
  */
 
 //  Standard libraries
@@ -29,8 +29,6 @@
 #include "state.h"
 #include "formulary.h"
 #include "setup.h"
-//  	#include "parallel.h"
-
 
 //**************************************************************
 //**************************************************************
@@ -50,7 +48,7 @@
 //--------------------------------------------------------------
 void Setup_Y::applyexternalfields(Grid_Info &grid, State1D& Y, double time)
 {
-    
+
     valarray<double> Ex_profile( grid.axis.Nx(0));
     valarray<double> Ey_profile( grid.axis.Nx(0));
     valarray<double> Ez_profile( grid.axis.Nx(0));
@@ -87,12 +85,12 @@ void Setup_Y::applyexternalfields(Grid_Info &grid, State1D& Y, double time)
         if (bx_time_coeff > 1e-20) Y.EMF().Bx()(ix) = Bx_profile[ix]*bx_time_coeff;
         if (by_time_coeff > 1e-20) Y.EMF().By()(ix) = By_profile[ix]*by_time_coeff;
         if (bz_time_coeff > 1e-20) Y.EMF().Bz()(ix) = Bz_profile[ix]*bz_time_coeff;
-    
+
     }
 }
 //---------------------------------------------------------------------------
 //---------------------------------------------------------------------------
-void Setup_Y::applytravelingwave(Grid_Info &grid, State1D& Y, double time)
+void Setup_Y::applytravelingwave(Grid_Info &grid, State1D& Y, double time, double stepsize)
 {
 
     for (size_t n(0); n < Input::List().num_waves; ++n)
@@ -105,8 +103,7 @@ void Setup_Y::applytravelingwave(Grid_Info &grid, State1D& Y, double time)
         valarray<double> By_profile( grid.axis.Nx(0));
         valarray<double> Bz_profile( grid.axis.Nx(0));
 
-
-        /// Parse the strings   
+        /// Parse the strings
         parsetwovariableprofile(grid.axis.x(0), time, Input::List().ex_wave_profile_str[n], Ex_profile);
         parsetwovariableprofile(grid.axis.x(0), time, Input::List().ey_wave_profile_str[n], Ey_profile);
         parsetwovariableprofile(grid.axis.x(0), time, Input::List().ez_wave_profile_str[n], Ez_profile);
@@ -114,29 +111,26 @@ void Setup_Y::applytravelingwave(Grid_Info &grid, State1D& Y, double time)
         parsetwovariableprofile(grid.axis.x(0), time, Input::List().by_wave_profile_str[n], By_profile);
         parsetwovariableprofile(grid.axis.x(0), time, Input::List().bz_wave_profile_str[n], Bz_profile);
 
-        double time_coeff(-1.0); 
 
-        // parseprofile(time, Input::List().wave_time_envelope_str[n], time_coeff);
+        double time_coeff(-1.0);
 
-        double pulse_start(Input::List().trav_wave_center[n] - 
-                        Input::List().trav_wave_flat[n]*0.5 - 
+        double pulse_start(Input::List().trav_wave_center[n] -
+                        Input::List().trav_wave_flat[n]*0.5 -
                         Input::List().trav_wave_rise[n] );
 
         double pulse_end(Input::List().trav_wave_center[n] +
-                        Input::List().trav_wave_flat[n]*0.5 + 
+                        Input::List().trav_wave_flat[n]*0.5 +
                         Input::List().trav_wave_fall[n] );
 
         double normalized_time(0.0);
-
-        // std::cout << "\n pulse_start, end = " << pulse_start << "," << pulse_end;
-
-
+        
         if (time >= pulse_start && time <= pulse_end)
         {
+        
             if (time < Input::List().trav_wave_center[n] - 0.5*Input::List().trav_wave_flat[n])
-            {                   
-                normalized_time = (time - pulse_start)/ Input::List().trav_wave_rise[n];  
-                
+            {
+                normalized_time = (time - pulse_start)/ Input::List().trav_wave_rise[n];
+
                 time_coeff  = 6.0 * pow(normalized_time,5.0);
                 time_coeff -= 15.0 * pow(normalized_time,4.0);
                 time_coeff += 10.0 * pow(normalized_time,3.0);
@@ -147,28 +141,25 @@ void Setup_Y::applytravelingwave(Grid_Info &grid, State1D& Y, double time)
                 time_coeff = 1.0;
             }
             else if (time > Input::List().trav_wave_center[n] + 0.5*Input::List().trav_wave_flat[n])
-            {                    
+            {
                 normalized_time = (time - (Input::List().trav_wave_center[n] + 0.5*Input::List().trav_wave_flat[n]))
-                / Input::List().trav_wave_fall[n];  
+                / Input::List().trav_wave_fall[n];
 
-                time_coeff  = 15.0 * pow(normalized_time,4.0);                
+                time_coeff  = 15.0 * pow(normalized_time,4.0);
                 time_coeff -= 6.0 * pow(normalized_time,5.0);
                 time_coeff -= 10.0 * pow(normalized_time,3.0);
                 time_coeff += 1.0;
             }
-        }
 
-        if (time_coeff > 0.0)
-        {
             for (size_t ix(0);ix<Y.SH(0,0,0).numx();++ix)
             {
-                Y.EMF().Ex()(ix) += Ex_profile[ix]*time_coeff;
-                Y.EMF().Ey()(ix) += Ey_profile[ix]*time_coeff;
-                Y.EMF().Ez()(ix) += Ez_profile[ix]*time_coeff;
-                Y.EMF().Bx()(ix) += Bx_profile[ix]*time_coeff;
-                Y.EMF().By()(ix) += By_profile[ix]*time_coeff;
-                Y.EMF().Bz()(ix) += Bz_profile[ix]*time_coeff;
-            }    
+                Y.EMF().Ex()(ix) += Ex_profile[ix]*time_coeff*stepsize;
+                Y.EMF().Ey()(ix) += Ey_profile[ix]*time_coeff*stepsize;
+                Y.EMF().Ez()(ix) += Ez_profile[ix]*time_coeff*stepsize;
+                Y.EMF().Bx()(ix) += Bx_profile[ix]*time_coeff*stepsize;
+                Y.EMF().By()(ix) += By_profile[ix]*time_coeff*stepsize;
+                Y.EMF().Bz()(ix) += Bz_profile[ix]*time_coeff*stepsize;
+            }
         }
     }
 }
@@ -202,7 +193,7 @@ void Setup_Y::initialize(State1D &Y, Grid_Info &grid){
 
         parseprofile(grid.axis.x(0), Input::List().dens_profile_str[s], dens_profile);
         parseprofile(grid.axis.x(0), Input::List().temp_profile_str[s], temp_profile);
-        
+
         parseprofile(grid.axis.x(0), Input::List().f10x_profile_str[s], f10x_profile);
         // parseprofile(grid.axis.x(0), Input::List().f20x_profile_str[s], f20x_profile);
         parseprofile(grid.axis.x(0), Input::List().f_pedestal[s], pedestal_profile);
@@ -252,7 +243,9 @@ void Setup_Y::initialize(State1D &Y, Grid_Info &grid){
 }
 //--------------------------------------------------------------
 //**************************************************************
-
+/**
+ * @brief      Initializes super-Maxwellian according to density and temperature and m (super-maxwellian-ness, m=2 for Maxwellian)
+ */
 
 //-----------------------------------------------------------------------------
 void Setup_Y:: init_f0(size_t s, SHarmonic1D& h, const valarray<double>& p, const valarray<double>& x,
@@ -266,37 +259,32 @@ void Setup_Y:: init_f0(size_t s, SHarmonic1D& h, const valarray<double>& p, cons
     coeff = m/alpha/alpha/alpha/tgamma(3.0/m);
     coeff *= sqrt(M_PI)/4.0;
 
-//    std::cout << "\n alpha = " << alpha << ", coeff = "  << coeff << "\n";
     for (int j(0); j < h.numx(); ++j){
+
+        // std::cout << "\n";
 
         coefftemp = coeff*density[j]/pow(2.0*M_PI*temperature[j]*mass,1.5);
         for (int k(0); k < h.nump(); ++k){
+
             // New formulation for temperature distribution and super-Gaussians
             h(k,j) = coefftemp*exp(-1.0*pow((p[k])/alpha/sqrt(2.0*temperature[j]*mass),m));
             h(k,j)+= pedestal[j];
 
-            // h(k,j)= coefftemp*exp(-pow((p[k]-3.0)/alpha/sqrt(2.0*temperature[j]/mass),m));
-            // if (p[k] < 3.0) h(k,j) += 1e-2;
-//            if (j==3) std :: cout << "p = " << p[k] << ", h = " << h(k,j).real() << "\n";
-
+            // std::cout << "f0[" << p[k] << "] = " << exp(-1.0*pow((p[k])/alpha/sqrt(2.0*temperature[j]*mass),m)) << "\n";
         }
-
-        // h(0,j) = 1.425577e2;
-        // h(1,j) = 1.497164e1;
-        // h(2,j) = 1.527841e-1;
-        // h(3,j) = 1.515014e-4;
-        // h(4,j) = 1.459772e-8;
-        // h(5,j) = 1.366732e-13;
-        // h(6,j) = 1.243401e-19;
-        // h(7,j) = 1.099181e-26;
-
-
+    
 
     }
 
 }
 //----------------------------------------------------------------------------------------------------------------------
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------
+/**
+ * @brief      To initialize f1 by using the steady state linearized vlasov equation. This menas using
+ *              collision term, v grad f, and E df0/dv term in the VFP equation. This gives f1 = -v^3 * ( v df0/dx - E(x) df/dv)
+ *              Assuming no df0/dx, it gives the result below.
+ */
+//----------------------------------------------------------------------------------------------------------------------------
 void Setup_Y:: init_f1(size_t s, SHarmonic1D& h, const valarray<double>& p, const valarray<double>& x,
                        valarray<double>& density, valarray<double>& temperature, valarray<double>& f10x, const SHarmonic1D& f0, const double mass){
 //----------------------------------------------------------------------------------------------------------------------
@@ -309,20 +297,18 @@ void Setup_Y:: init_f1(size_t s, SHarmonic1D& h, const valarray<double>& p, cons
     double idp = -0.5/(p[1]-p[0]);
 
     alpha = sqrt(3.0*tgamma(3.0/m)/2.0/tgamma(5.0/m));
-    coeff = m/4.0*sqrt(M_PI)*alpha/alpha/alpha/tgamma(3.0/m);
+    coeff = m/alpha/alpha/alpha/tgamma(3.0/m);
+    coeff *= sqrt(M_PI)/4.0;
+
 
     for (int j(0); j < h.numx(); ++j){
 
         coefftemp = coeff*density[j]/pow(2.0*M_PI*temperature[j]*mass,1.5)*f10x[j];
         for (int k(0); k < h.nump(); ++k){
+
+
             // New formulation for temperature distribution and super-Gaussians
-//            h(k,j)  = coefftemp*exp(-pow((p[k])/alpha/sqrt(2.0*temperature[j]*mass),m))*pow(p[k],3.0)*(p[k]/mass/temperature[j]);
             h(k,j) = idp*df0(k,j)*pow(p[k],3.0)*f10x[j];
-
-            // h(k,j)= coefftemp*exp(-pow((p[k]-3.0)/alpha/sqrt(2.0*temperature[j]/mass),m));
-            // if (p[k] < 3.0) h(k,j) += 1e-2;
-//            if (j==3) std :: cout << "p = " << p[k] << ", h = " << h(k,j) << "\n";
-
         }
 
     }
@@ -335,33 +321,22 @@ void Setup_Y:: init_f2(size_t s, SHarmonic1D& h, const valarray<double>& p, cons
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
     double alpha, coeff, coefftemp;
-    //Matrix2D<double> coeff(pt);
-    double m = 2.0;
+    double m = Input::List().super_gaussian_m;
 
     alpha = sqrt(3.0*tgamma(3.0/m)/2.0/tgamma(5.0/m));
-    // coeff = m/4.0/M_PI/alpha/alpha/alpha/tgamma(3.0/m);
-    coeff = 1.0;
+    coeff = m/alpha/alpha/alpha/tgamma(3.0/m);
+    coeff *= sqrt(M_PI)/4.0;
+
 
     for (int j(0); j < h.numx(); ++j){
-        // std::cout << "temp = " << temperature[j] << "\n";
-        // coefftemp = coeff*density(s,j)/pow(temperature(s,j),1.5);
+
         coefftemp = coeff*density[j]/pow(2.0*M_PI*temperature[j]/mass,1.5);
         for (int k(0); k < h.nump(); ++k){
             // New formulation for temperature distribution and super-Gaussians
-
-
-            // h(k,j)= coefftemp*exp(-pow(p[k]/alpha/sqrt(temperature(s,j)),m));
             h(k,j)= 2.0*coefftemp*exp(-pow((p[k]-3.0)/alpha/sqrt(2.0*temperature[j]/mass),m));
-            // if (j==3) std :: cout << "p = " << p[k] << ", h = " << h(k,j) << "\n";
-            // h(i,j,k) *= coeff(j,k);
-            // std::cout << h(k,j) << "\n";
+
         }
 
-
-        // Old formulation for momentum distribution
-        // alpha(j,k) = 1.0/(2.0*pt(j,k)*pt(j,k));
-        // coeff(j,k) = 1.0/(sqrt(2.0*M_PI)*2.0*M_PI*pt(j,k)*pt(j,k)*pt(j,k));
-        // std::cout << "pt=" << pt(j,k) << "\n";
     }
 
 }
@@ -375,8 +350,6 @@ void Setup_Y:: init_f2(size_t s, SHarmonic1D& h, const valarray<double>& p, cons
 void Setup_Y::checkparse(parser_t& parser, std::string& expression_str, expression_t& expression){
 //----------------------------------------------------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------------
-
-
     if (!parser.compile(expression_str,expression))
     {
         printf("Error: %s\tExpression: %s\n",
@@ -397,11 +370,10 @@ void Setup_Y::checkparse(parser_t& parser, std::string& expression_str, expressi
         exit(1);
     }
 
-
 }
-//----------------------------------------------------------------------------------------------------------------------------    
+//----------------------------------------------------------------------------------------------------------------------------
 /**
- * @brief      { function_description }
+ * @brief      parses function over x (or a grid) and returns a grid.
  *
  * @param      str_profile  The string profile
  * @param      profile      The profile
@@ -441,13 +413,8 @@ void Setup_Y::parseprofile( const valarray<double>& grid, std::string& str_profi
 
         for (size_t i(0); i < profile.size(); ++i) {
             xstr = grid[i];
-            // std::cout<< "i= " << i << ",xstr = " << xstr << "\n";
-
-            // result =
-            // Temperature_map(s,i) = expression_Temperature.value();
             profile[i] = expression.value();
-            // std::cout  << i << " , " << grid[i] << " , " << profile[i] << "\n";
-            // printf("Result: %10.5f\n",expression.value());
+
         }
     }
 
@@ -510,12 +477,9 @@ void Setup_Y::parseprofile( const valarray<double>& grid, std::string& str_profi
         }
     }
 }
-//----------------------------------------------------------------------------------------------------------------------------    
+//----------------------------------------------------------------------------------------------------------------------------
 /**
- * @brief      { function_description }
- *
- * @param      str_profile  The string profile
- * @param      profile      The profile
+ * @brief      parses function over t (or single variable) and returns a value
  */
 //----------------------------------------------------------------------------------------------------------------------------
 void Setup_Y::parseprofile(const double& input, std::string& str_profile, double& output){
@@ -554,7 +518,7 @@ void Setup_Y::parseprofile(const double& input, std::string& str_profile, double
         xstr = input;
         // std::cout<< "i= " << i << ",xstr = " << xstr << "\n";
 
-        // result = 
+        // result =
         // Temperature_map(s,i) = expression_Temperature.value();
         output = expression.value();
         // std::cout  << " \n 10: " << input << " , " << output << "\n";
@@ -613,21 +577,19 @@ void Setup_Y::parseprofile(const double& input, std::string& str_profile, double
     //             if (grid[i] < loc[0])               xx += loc[loc.size()-1] - loc[0];
     //             if (grid[i] > loc[loc.size()-1])  xx += loc[0]-loc[loc.size()-1] ;
 
-    //             while ((xx > loc[t]) && (t < loc.size()-1)) ++t; 
-    //             tmp_x = val[t-1] + (val[t]-val[t-1])/(loc[t]-loc[t-1]) 
+    //             while ((xx > loc[t]) && (t < loc.size()-1)) ++t;
+    //             tmp_x = val[t-1] + (val[t]-val[t-1])/(loc[t]-loc[t-1])
     //                                 * (xx - loc[t-1]);
     //             // std::cout << i << "     " << x[i] << "      " << tmp_x << std::endl;
-    // //             for (size_t j(0); j < Temp.dim2(); ++j)  Temp(i,j) *= tmp_x; 
-    //             profile[i] = tmp_x; 
+    // //             for (size_t j(0); j < Temp.dim2(); ++j)  Temp(i,j) *= tmp_x;
+    //             profile[i] = tmp_x;
     //         }
-    //     } 
+    //     }
 }
-//----------------------------------------------------------------------------------------------------------------------------    
+//----------------------------------------------------------------------------------------------------------------------------
 /**
- * @brief      { function_description }
+ * @brief      parses a grid and a variable function (x and t) and returns a grid that's modulated in time
  *
- * @param      str_profile  The string profile
- * @param      profile      The profile
  */
 //----------------------------------------------------------------------------------------------------------------------------
 void Setup_Y::parsetwovariableprofile(const valarray<double>& grid, const double& input, std::string& str_profile, valarray<double>& output){
@@ -666,11 +628,11 @@ void Setup_Y::parsetwovariableprofile(const valarray<double>& grid, const double
 
         for (size_t i(0); i < output.size(); ++i) {
             xstr = grid[i];
-            
-            output[i] = expression.value();            
+
+            output[i] = expression.value();
         }
-        
-        
+
+
 
     }
 

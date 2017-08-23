@@ -2,15 +2,15 @@
  * \author PICKSC
  * \date   September 1, 2016
  * \file   main.cpp
- * 
+ *
  * This file includes
  * - the main loop.
  * - the definition for the clock class
  * - the definition of periodic boundaries
  *
- */  
+ */
 
-// Standard libraries 
+// Standard libraries
 #include <mpi.h>
 #include <iostream>
 #include <vector>
@@ -22,7 +22,7 @@
 #include <stdio.h>
 #include <float.h>
 #include <stdarg.h>
- 
+
 
 #include <map>
 #include <string>
@@ -34,7 +34,7 @@
 #include <ctime>
 
 
-// My libraries 
+// My libraries
 #include "lib-array.h"
 #include "lib-algorithms.h"
 #include "H5Cpp.h"
@@ -51,7 +51,7 @@
 #include "functors.h"
 #include "parallel.h"
 #include "implicitE.h"
-
+#include "particletracker.h"
 #include "export.h"
 
 
@@ -72,26 +72,26 @@
         double dt_out(Input::List().t_stop / Input::List().n_outsteps);
         double CLF(Input::List().clf_dp);
         size_t n_outsteps(Input::List().n_outsteps);
-        double numh  = size_t(static_cast<int>(dt_out/CLF))+1; 
+        double numh  = size_t(static_cast<int>(dt_out/CLF))+1;
         double h     = dt_out/static_cast<double>(numh);
 
 
-        std::cout << "\n\n"; 
-        std::cout<< "------- ---------------- */*/*/*/*/* ---------------- -------\n";                          
+        std::cout << "\n\n";
+        std::cout<< "------- ---------------- */*/*/*/*/* ---------------- -------\n";
         std::cout<< "------- ,-----.  ,---.  ,--.  ,--.,--. ,--.,--.  ,--. -------\n";
         std::cout<< "-------'  .-.  ''   .-' |  '--'  ||  | |  ||  ,'.|  | -------\n";
         std::cout<< "-------|  | |  |`.  `-. |  .--.  ||  | |  ||  |' '  | -------\n";
         std::cout<< "-------'  '-'  '.-'    ||  |  |  |'  '-'  '|  | `   | -------\n";
         std::cout<< "------- `-----' `-----' `--'  `--' `-----' `--'  `--' -------\n";
-        std::cout<< "------- ---------------- */*/*/*/*/* ---------------- -------\n";                          
+        std::cout<< "------- ---------------- */*/*/*/*/* ---------------- -------\n";
 
-        
+
 
         std::cout << "\n\n";
         std::cout << "---------------- OSHUN Beta - 1D 3P ---------------- \n";
         std::cout << "    Particle-in-Cell and Kinetic Simulation Center   \n";
         std::cout << "------------------- UCLA - 2017 -------------------- \n";
-        
+
         std::cout << "----------------- Reference Units ------------------ \n";
         std::cout << "normalizing density                   = " << formulas.n << " / cc \n";
         std::cout << "plasma frequency                      = " << formulas.wp << " Hz \n";
@@ -119,7 +119,7 @@
         std::cout << "Time step     (normalizing time)      = " << h << " plasma periods \n";
         std::cout << "\n";
         std::cout << "\n";
-        
+
 
 
         return 1.0/formulas.wp*1e15;
@@ -131,7 +131,13 @@ int main(int argc, char** argv) {
     MPI_Init(&argc,&argv);
 
 ///  Initiate the Parallel Environment and decompose the Computational Domain
+    std::cout << "\nInitializing parallel environment ...";
     Parallel_Environment_1D PE;
+    std::cout << "     done \n\n";
+    
+    if (PE.RANK() == 0) {
+        Export_Files::Folders();
+    }
 
     time_t tstart, tend;
     tstart = time(0);
@@ -139,13 +145,15 @@ int main(int argc, char** argv) {
 
 ///  Set up the grid
 ///	Moves all of the relevant data from the input deck into a single container
+    std::cout << "\nInitializing grid ...";
     Grid_Info grid(Input::List().ls, Input::List().ms,
     				Input::List().mass, Input::List().qs,
 					Input::List().xminLocal, Input::List().xmaxLocal, Input::List().NxLocal,
 					Input::List().xminGlobal, Input::List().xmaxGlobal, Input::List().NxGlobal,
                     Input::List().pmax, Input::List().ps, Input::List().Npx, Input::List().Npy, Input::List().Npz);
-
-
+    std::cout << "     done \n";
+    
+    std::cout << "\n\n PML Grid:  xmin = " << Input::List().xminPML << ", xmax = " << Input::List().xmaxPML << "\n";
 ///  Clock
     int tout_start;
     if (Input::List().isthisarestart) tout_start = Input::List().restart_time;
@@ -158,33 +166,66 @@ int main(int argc, char** argv) {
     double h     = dt_out/static_cast<double>(numh);
 
 ///  INITIALIZATION
-	if (PE.RANK() == 0) {
-		Export_Files::Folders();
-	}
-
+	
+    
+    std::cout << "Initializing restart environment ...";
     Export_Files::Restart_Facility Re(PE.RANK());
+    std::cout << "     done \n";
 
-    State1D Y( grid.axis.Nx(0), Input::List().ls, Input::List().ms, grid.Np, Input::List().pmax, grid.charge, grid.mass, Input::List().hydromass, Input::List().hydrocharge);
-    Y = 0.0;
+    std::cout << "Initializing state variable ...";
+    State1D Y( grid.axis.Nx(0), Input::List().ls, Input::List().ms, grid.Np, Input::List().pmax, grid.charge, grid.mass, 
+        Input::List().hydromass, Input::List().hydrocharge, 
+        Input::List().filter_dp, Input::List().filter_pmax, 
+        Input::List().numparticles, Input::List().particlemass, Input::List().particlecharge);
+    std::cout << "     done \n";
+
+
+    // Y = 0.0;
+
+    std::cout << "Initializing plasma profile ...";
     Setup_Y::initialize(Y, grid);
+    std::cout << "     done \n";
 
-
+    std::cout << "Initializing collision module ...";
     collisions collide(Y,h);
+    std::cout << "     done \n";    
+
 //    InverseBremsstrahlung IB(Y.DF(0).pmax(),Y.SH(0,0,0).nump(),Y.SH(0,0,0).numx(),tout_start,grid.axis.x(0));
+//    
+    std::cout << "Initializing hydro module ...";
     Hydro_Functor         HydroFunc(grid.axis.xmin(0), grid.axis.xmax(0), grid.axis.Nx(0));
+    std::cout << "     done \n";
+    
+    std::cout << "Initializing particle tracker ...";
+    Particle_Pusher       Particle_Push(Input::List().par_xpos, Input::List().par_px, Input::List().par_py,  Input::List().par_pz,
+        Input::List().xminLocalnobnd[0], Input::List().xmaxLocalnobnd[0], Input::List().NxLocalnobnd[0], Y.particles());
+    std::cout << "     done \n";
+    
 
-    Algorithms::RK3<State1D> RK(Y);
+    std::cout << "Initializing time integrator ...";
+    Algorithms::RK4<State1D> RK(Y);
+    std::cout << "     done \n";
 
-    // Algorithms::LEAPs<State1D> LEAP(Y);
+    // Algorithms::LEAPs<State1D> LEAPs(Y);
     // Algorithms::PEFRL<State1D> MAGIC(Y);
 
-
-   if (Input::List().isthisarestart) Re.Read(PE.RANK(),tout_start,Y);
-
+    if (Input::List().isthisarestart){
+        std::cout << "Reading restart files ...";
+        Re.Read(PE.RANK(),tout_start,Y);
+        std::cout << "     done \n";
+    }
+    
+    std::cout << "Initializing output module ...";
     Output_Data::Output_Preprocessor_1D  output( grid, Input::List().oTags);
+    std::cout << "     done \n";
+    
+    std::cout << "Output #0 ...";    
     output( Y, grid, tout_start, PE );
-    output.distdump(Y, grid, tout_start, PE );
+    std::cout << "     done \n";
 
+    std::cout << "Distribution function output #0 ...";    
+    output.distdump(Y, grid, tout_start, PE );
+    std::cout << "     done \n";
 
     double plasmaperiod;
     if (!(PE.RANK())){
@@ -194,7 +235,7 @@ int main(int argc, char** argv) {
 // --------------------------------------------------------------------------------------------------------------------------------
 // --------------------------------------------------------------------------------------------------------------------------------
 // --------------------------------------------------------------------------------------------------------------------------------
-//  ITERATION LOOP 
+//  ITERATION LOOP
 // --------------------------------------------------------------------------------------------------------------------------------
 // --------------------------------------------------------------------------------------------------------------------------------
     if (Input::List().implicit_B) {
@@ -251,7 +292,7 @@ int main(int argc, char** argv) {
                     // --------------------------------------------------------------------------------------------------------------------------------
                     if (Input::List().ext_fields) Setup_Y::applyexternalfields(grid, Y, W.time());
 
-                    Y = RK(Y, W.h(),&impE_p1_Functor);                                                              /// Vlasov - Updates the distribution function: Spatial Advection and B Field "action".
+                    Y = RK(Y, W.h(), &impE_p1_Functor);                                                              /// Vlasov - Updates the distribution function: Spatial Advection and B Field "action".
                     PE.Neighbor_ImplicitE_Communications(Y);                                                        /// Boundaries
                     eim.advance(&RK, Y, collide,&impE_p2_Functor);                                                  /// Finds new electric field
                     Y = RK(Y, W.h(),&impE_p2_Functor);
@@ -264,7 +305,7 @@ int main(int argc, char** argv) {
                     }
 
                     collide.advance(Y,W);                                                                             /// Fokker-Planck
-                                                                                                                      
+
                     if (Input::List().hydromotion)
                         Y = RK(Y, W.h(), &HydroFunc);                                                               /// Hydro Motion
                                                                                                     /// Error Checking
@@ -282,6 +323,9 @@ int main(int argc, char** argv) {
 
                 if (!(t_out%Input::List().n_distoutsteps))
                     output.distdump(Y, grid, t_out, PE);
+
+                if (!(t_out%Input::List().n_bigdistoutsteps))
+                    output.bigdistdump(Y, grid, t_out, PE);
             }
         } else {
             // --------------------------------------------------------------------------------------------------------------------------------
@@ -310,6 +354,7 @@ int main(int argc, char** argv) {
                     // --------------------------------------------------------------------------------------------------------------------------------
 
                     if (Input::List().ext_fields) Setup_Y::applyexternalfields(grid, Y, W.time());
+                    if (Input::List().trav_wave) Setup_Y::applytravelingwave(grid, Y, W.time(), W.h());
 
                     Y = RK(Y, W.h(), &rkF);                                                                         ///  Vlasov          //
 
@@ -334,7 +379,8 @@ int main(int argc, char** argv) {
 
                 if (!(t_out%Input::List().n_distoutsteps))
                     output.distdump(Y, grid, t_out, PE);
-
+                if (!(t_out%Input::List().n_bigdistoutsteps))
+                    output.bigdistdump(Y, grid, t_out, PE);
 
             }
         }
@@ -379,6 +425,7 @@ int main(int argc, char** argv) {
                     //                                   the guts
                     // --------------------------------------------------------------------------------------------------------------------------------
                     if (Input::List().ext_fields) Setup_Y::applyexternalfields(grid, Y, W.time());
+                    if (Input::List().trav_wave) Setup_Y::applytravelingwave(grid, Y, W.time(), W.h());
 
                     Y = RK(Y, W.h(),
                            &impE_p1_Functor);                                                             /// Vlasov - Updates the distribution function: Spatial Advection and B Field "action".
@@ -408,6 +455,8 @@ int main(int argc, char** argv) {
 
                 if (!(t_out%Input::List().n_distoutsteps))
                     output.distdump(Y, grid, t_out, PE);
+                if (!(t_out%Input::List().n_bigdistoutsteps))
+                    output.bigdistdump(Y, grid, t_out, PE);
             }
         } else {
             // --------------------------------------------------------------------------------------------------------------------------------
@@ -415,6 +464,7 @@ int main(int argc, char** argv) {
             // --------------------------------------------------------------------------------------------------------------------------------
             // EXPLICIT E-FIELD
             // --------------------------------------------------------------------------------------------------------------------------------
+            // std::cout << "\n 10 \n";
             VlasovFunctor1D_explicitE rkF(Input::List().ls, Input::List().ms, Input::List().pmax, Input::List().ps,
                                           grid.axis.xmin(0), grid.axis.xmax(0), grid.axis.Nx(0));
 
@@ -423,27 +473,29 @@ int main(int argc, char** argv) {
 
             // VlasovFunctor1D_momentumpush PA(Input::List().ls, Input::List().ms, Input::List().pmax, Input::List().ps,
             //                               grid.axis.xmin(0), grid.axis.xmax(0), grid.axis.Nx(0));
+
+            // VlasovFunctor1D_fieldupdate FU(Input::List().ls, Input::List().ms, Input::List().pmax, Input::List().ps,
+                                          // grid.axis.xmin(0), grid.axis.xmax(0), grid.axis.Nx(0));            
             // --------------------------------------------------------------------------------------------------------------------------------
             for (size_t t_out(tout_start + 1); t_out < n_outsteps + 1; ++t_out) {
                 for (Clock W(t_out - 1, dt_out, CLF); W.tick() < W.numh(); ++W) {
-            
+
                     // --------------------------------------------------------------------------------------------------------------------------------
                     // if (!(PE.RANK())) {
 
                     //     printf("\r Time = %4.4f tau_p = %4.4f fs", W.time(), W.time() * plasmaperiod);
-                    
+                    //     fflush(stdout);
 
                     // }
                     // --------------------------------------------------------------------------------------------------------------------------------
                     //                                   the guts
                     // --------------------------------------------------------------------------------------------------------------------------------
-                
+
                     if (Input::List().ext_fields) Setup_Y::applyexternalfields(grid, Y, W.time());
-                    // if (Input::List().ext_fields) Setup_Y::applyexternalfields(grid, Y, t);
-                    if (Input::List().trav_wave) Setup_Y::applytravelingwave(grid, Y, W.time());
+                    if (Input::List().trav_wave) Setup_Y::applytravelingwave(grid, Y, W.time(), W.h());
 
                     Y = RK(Y, W.h(), &rkF);                                                 ///  Vlasov          //
-                    // Y = LEAP(Y, W.h(), &SA, &PA);                                                 ///  Vlasov          //
+                    // Y = LEAPs(Y, W.h(), &SA, &PA, &FU);                                                 ///  Vlasov          //
                     // Y = MAGIC(Y, W.h(), &SA, &PA);                                                 ///  Vlasov          //
                     if (Input::List().collisions)
                         collide.advance(Y,W);                                               ///  Fokker-Planck   //
@@ -451,9 +503,12 @@ int main(int argc, char** argv) {
                     if (Input::List().hydromotion)
                         Y = RK(Y, W.h(), &HydroFunc);                                      ///  Hydro           //
 
+                    if (Input::List().particlepusher)
+                        Particle_Push.push(Y,W.h());
+
                     PE.Neighbor_Communications(Y);                                         ///  Boundaries      //
+                    
                 }
-                
 
                 if (!(PE.RANK())) cout << " \n Output #" << t_out << "\n";
 
@@ -462,13 +517,15 @@ int main(int argc, char** argv) {
 
                 if (!(t_out%Input::List().n_distoutsteps))
                     output.distdump(Y, grid, t_out, PE);
+                if (!(t_out%Input::List().n_bigdistoutsteps))
+                    output.bigdistdump(Y, grid, t_out, PE);
 
                 if (!(t_out%Input::List().n_restarts))
                     Re.Write(PE.RANK(), t_out, Y);
             }
         }
     }
-    tend = time(0); 
+    tend = time(0);
     if (!(PE.RANK())){
         cout << "Simulation took "<< difftime(tend, tstart) <<" second(s)."<< endl;
     }
@@ -476,4 +533,4 @@ int main(int argc, char** argv) {
 	return 0;
 }
 //**************************************************************
-//--------------------------------------------------------------------------- 
+//---------------------------------------------------------------------------

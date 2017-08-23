@@ -49,13 +49,16 @@ VlasovFunctor1D_explicitE::VlasovFunctor1D_explicitE(vector<size_t> Nl,vector<si
 
         EF.push_back( Electric_Field_1D(Nl[s], Nm[s], 0.0, pmax[s], Np[s], xmin, xmax, Nx) );
 
-        JX.push_back( Current_1D(0.0, pmax[s], Np[s], Nx) );
+        JX.push_back( Current_1D(0.0, pmax[s], Np[s], xmin, xmax, Nx) );
+
+        GA.push_back( Gauss_1D(xmin,xmax,Nx));
 
         BF.push_back( Magnetic_Field_1D(Nl[s], Nm[s], 0.0, pmax[s], Np[s], xmin, xmax, Nx) );
 
         AM.push_back( Ampere_1D(xmin, xmax, Nx) );
 
         FA.push_back( Faraday_1D(xmin, xmax, Nx) );
+
 
     }
 }
@@ -89,7 +92,8 @@ void VlasovFunctor1D_explicitE::operator()(const State1D& Yin, State1D& Yslope){
         }
         else if (Yin.DF(s).m0() == 0) {
 
-
+            // GA[s].es1d(Yin.DF(s),Yslope.EMF().Ex());
+            
             if (debug) 
             {
                 std::cout << "\n\n f at start:";
@@ -113,6 +117,8 @@ void VlasovFunctor1D_explicitE::operator()(const State1D& Yin, State1D& Yslope){
                 }
             }
             JX[s].es1d(Yin.DF(s),Yslope.EMF().Ex());
+
+
 
             if (debug) 
             {
@@ -143,15 +149,35 @@ void VlasovFunctor1D_explicitE::operator()(const State1D& Yin, State1D& Yslope){
 
             JX[s](Yin.DF(s),Yslope.EMF().Ex(),Yslope.EMF().Ey(),Yslope.EMF().Ez());
 
-            AM[s](Yin.EMF(),Yslope.EMF());
+            if (!Input::List().PML_core)
+            {
+                AM[s](Yin.EMF(),Yslope.EMF());
 
-            FA[s](Yin.EMF(),Yslope.EMF());
+                FA[s](Yin.EMF(),Yslope.EMF());
+            }
+            else
+            {
+                // std::cout << "\n\n PML PML PML \n\n";
+                // SA[s].PML(Yin.DF(s),Yslope.DF(s));
+
+                // EF[s].PML(Yin.DF(s),Yin.EMF().Ex(),Yin.EMF().Ey(),Yin.EMF().Ez(),Yslope.DF(s));
+
+                // BF[s].PML(Yin.DF(s),Yin.EMF().Bx(),Yin.EMF().By(),Yin.EMF().Bz(),Yslope.DF(s));
+
+                // JX[s].PML(Yin.DF(s),Yslope.EMF().Ex(),Yslope.EMF().Ey(),Yslope.EMF().Ez());
+                
+                AM[s].PML(Yin.EMF(),Yslope.EMF());
+            
+                FA[s].PML(Yin.EMF(),Yslope.EMF());
+            }
 
         }
 
-        // Yslope.DF(s) = Yslope.DF(s).Filterp();
+        if (Input::List().filterdistribution){ 
+            // std::cout << "\n Filtering... \n";
+            Yslope.DF(s) = Yslope.DF(s).Filterp();
+        }
 
-        // exit(1);
     }
 
 }
@@ -170,6 +196,8 @@ VlasovFunctor1D_spatialpush::VlasovFunctor1D_spatialpush(vector<size_t> Nl,vecto
     for (size_t s(0); s < Nl.size(); ++s){
 
         SA.push_back( Spatial_Advection_1D(Nl[s], Nm[s], 0.0, pmax[s], Np[s], xmin, xmax, Nx) );
+
+
 
     }
 }
@@ -193,7 +221,6 @@ void VlasovFunctor1D_spatialpush::operator()(const State1D& Yin, State1D& Yslope
         else if (Yin.DF(s).m0() == 0) {
 
             SA[s].es1d(Yin.DF(s),Yslope.DF(s));
-
         }
 
         else {
@@ -202,7 +229,7 @@ void VlasovFunctor1D_spatialpush::operator()(const State1D& Yin, State1D& Yslope
 
         }
 
-        Yslope.DF(s) = Yslope.DF(s).Filterp();
+        if (Input::List().filterdistribution)  Yslope.DF(s) = Yslope.DF(s).Filterp();
     }
 
 }
@@ -218,13 +245,13 @@ VlasovFunctor1D_momentumpush::VlasovFunctor1D_momentumpush(vector<size_t> Nl,vec
 
         EF.push_back( Electric_Field_1D(Nl[s], Nm[s], 0.0, pmax[s], Np[s], xmin, xmax, Nx) );
 
-        JX.push_back( Current_1D(0.0, pmax[s], Np[s], Nx) );
+        // JX.push_back( Current_1D(0.0, pmax[s], Np[s], Nx) );
 
         BF.push_back( Magnetic_Field_1D(Nl[s], Nm[s], 0.0, pmax[s], Np[s], xmin, xmax, Nx) );
 
-        AM.push_back( Ampere_1D(xmin, xmax, Nx) );
+        // AM.push_back( Ampere_1D(xmin, xmax, Nx) );
 
-        FA.push_back( Faraday_1D(xmin, xmax, Nx) );
+        // FA.push_back( Faraday_1D(xmin, xmax, Nx) );
 
     }
 }
@@ -246,6 +273,76 @@ void VlasovFunctor1D_momentumpush::operator()(const State1D& Yin, State1D& Yslop
 
             BF[s].f1only(Yin.DF(s),Yin.EMF().Bx(),Yin.EMF().By(),Yin.EMF().Bz(),Yslope.DF(s));
 
+            // JX[s](Yin.DF(s),Yslope.EMF().Ex(),Yslope.EMF().Ey(),Yslope.EMF().Ez());
+
+            // AM[s](Yin.EMF(),Yslope.EMF());
+
+            // FA[s](Yin.EMF(),Yslope.EMF());
+
+
+
+        }
+        else if (Yin.DF(s).m0() == 0) {
+
+            EF[s].es1d(Yin.DF(s),Yin.EMF().Ex(),Yin.EMF().Ey(),Yin.EMF().Ez(),Yslope.DF(s));
+
+            // JX[s].es1d(Yin.DF(s),Yslope.EMF().Ex()); 
+
+        }
+
+        else {
+
+            EF[s](Yin.DF(s),Yin.EMF().Ex(),Yin.EMF().Ey(),Yin.EMF().Ez(),Yslope.DF(s));
+
+            BF[s](Yin.DF(s),Yin.EMF().Bx(),Yin.EMF().By(),Yin.EMF().Bz(),Yslope.DF(s));
+
+            // JX[s](Yin.DF(s),Yslope.EMF().Ex(),Yslope.EMF().Ey(),Yslope.EMF().Ez());
+
+            // AM[s](Yin.EMF(),Yslope.EMF());
+
+            // FA[s](Yin.EMF(),Yslope.EMF());
+
+        }
+
+        if (Input::List().filterdistribution)  Yslope.DF(s) = Yslope.DF(s).Filterp();
+    }
+
+}
+
+void VlasovFunctor1D_momentumpush::operator()(const State1D& Yin, State1D& Yslope, size_t direction){}
+//--------------------------------------------------------------
+//  Constructor
+VlasovFunctor1D_fieldupdate::VlasovFunctor1D_fieldupdate(vector<size_t> Nl,vector<size_t> Nm,vector<double> pmax, vector<size_t> Np,
+                                       double xmin, double xmax, size_t Nx) {
+//--------------------------------------------------------------
+
+    for (size_t s(0); s < Nl.size(); ++s){
+
+        JX.push_back( Current_1D(0.0, pmax[s], Np[s], xmin, xmax, Nx) );
+
+        GA.push_back( Gauss_1D(xmin,xmax,Nx));
+
+        AM.push_back( Ampere_1D(xmin, xmax, Nx) );
+
+        FA.push_back( Faraday_1D(xmin, xmax, Nx) );
+
+    }
+}
+//--------------------------------------------------------------
+
+
+//--------------------------------------------------------------
+//  Collect all of the terms
+void VlasovFunctor1D_fieldupdate::operator()(const State1D& Yin, State1D& Yslope){
+//--------------------------------------------------------------
+
+    // Yslope = Yin;
+    Yslope = 0.0;
+
+    for (size_t s(0); s < Yin.Species(); ++s) {
+
+        if (Yin.DF(s).l0() == 1) {
+
             JX[s](Yin.DF(s),Yslope.EMF().Ex(),Yslope.EMF().Ey(),Yslope.EMF().Ez());
 
             AM[s](Yin.EMF(),Yslope.EMF());
@@ -257,17 +354,13 @@ void VlasovFunctor1D_momentumpush::operator()(const State1D& Yin, State1D& Yslop
         }
         else if (Yin.DF(s).m0() == 0) {
 
-            EF[s].es1d(Yin.DF(s),Yin.EMF().Ex(),Yin.EMF().Ey(),Yin.EMF().Ez(),Yslope.DF(s));
+            // GA[s].es1d(Yin.DF(s),Yslope.EMF().Ex());
 
             JX[s].es1d(Yin.DF(s),Yslope.EMF().Ex()); 
 
         }
 
         else {
-
-            EF[s](Yin.DF(s),Yin.EMF().Ex(),Yin.EMF().Ey(),Yin.EMF().Ez(),Yslope.DF(s));
-
-            BF[s](Yin.DF(s),Yin.EMF().Bx(),Yin.EMF().By(),Yin.EMF().Bz(),Yslope.DF(s));
 
             JX[s](Yin.DF(s),Yslope.EMF().Ex(),Yslope.EMF().Ey(),Yslope.EMF().Ez());
 
@@ -277,12 +370,12 @@ void VlasovFunctor1D_momentumpush::operator()(const State1D& Yin, State1D& Yslop
 
         }
 
-        Yslope.DF(s) = Yslope.DF(s).Filterp();
+        if (Input::List().filterdistribution)  Yslope.DF(s) = Yslope.DF(s).Filterp();
     }
 
 }
 
-void VlasovFunctor1D_momentumpush::operator()(const State1D& Yin, State1D& Yslope, size_t direction){}
+void VlasovFunctor1D_fieldupdate::operator()(const State1D& Yin, State1D& Yslope, size_t direction){}
 //--------------------------------------------------------------
 //  Constructor
 VlasovFunctor1D_explicitE_implicitB::VlasovFunctor1D_explicitE_implicitB(vector<size_t> Nl,vector<size_t> Nm,vector<double> pmax, vector<size_t> Np,
@@ -295,7 +388,7 @@ VlasovFunctor1D_explicitE_implicitB::VlasovFunctor1D_explicitE_implicitB(vector<
 
         EF.push_back( Electric_Field_1D(Nl[s], Nm[s], 0.0, pmax[s], Np[s], xmin, xmax, Nx) );
 
-        JX.push_back( Current_1D(0.0, pmax[s], Np[s], Nx) );
+        JX.push_back( Current_1D(0.0, pmax[s], Np[s], xmin, xmax, Nx) );
 
         AM.push_back( Ampere_1D(xmin, xmax, Nx) );
 
@@ -330,7 +423,7 @@ void VlasovFunctor1D_explicitE_implicitB::operator()(const State1D& Yin, State1D
 
         FA[s](Yin.EMF(),Yslope.EMF());
 
-        Yslope.DF(s) = Yslope.DF(s).Filterp();
+        if (Input::List().filterdistribution)  Yslope.DF(s) = Yslope.DF(s).Filterp();
     }
 
 }
@@ -380,7 +473,7 @@ void VlasovFunctor1D_implicitE_p1::operator()(const State1D& Yin, State1D& Yslop
             // HA[s](Yin.DF(s),Yin.HYDRO(),Yslope.DF(s));
         }
 
-        Yslope.DF(s) = Yslope.DF(s).Filterp();
+        if (Input::List().filterdistribution)  Yslope.DF(s) = Yslope.DF(s).Filterp();
 
 
     }
@@ -419,7 +512,7 @@ void VlasovFunctor1D_implicitE_implicitB_p1::operator()(const State1D& Yin, Stat
             // HA[s](Yin.DF(s),Yin.HYDRO(),Yslope.DF(s));
         }
 
-        Yslope.DF(s) = Yslope.DF(s).Filterp();
+        if (Input::List().filterdistribution) Yslope.DF(s) = Yslope.DF(s).Filterp();
 
     }
 
@@ -451,7 +544,7 @@ void VlasovFunctor1D_implicitE_p2::operator()(const State1D& Yin, State1D& Yslop
         if (Yin.DF(s).l0() == 1) EF[s].f1only(Yin.DF(s),Yin.EMF().Ex(),Yin.EMF().Ey(),Yin.EMF().Ez(),Yslope.DF(s));
         else                     EF[s](Yin.DF(s),Yin.EMF().Ex(),Yin.EMF().Ey(),Yin.EMF().Ez(),Yslope.DF(s));
 
-        Yslope.DF(s) = Yslope.DF(s).Filterp();
+        if (Input::List().filterdistribution) Yslope.DF(s) = Yslope.DF(s).Filterp();
 
     }
 
@@ -468,7 +561,7 @@ void VlasovFunctor1D_implicitE_p2::operator()(const State1D& Yin, State1D& Yslop
         for (size_t s(0); s < Yin.Species(); ++s) {
             if (Yin.DF(s).l0() == 1) EF[s].Implicit_Ex_f1only(Yin.DF(s),Yin.EMF().Ex(),Yslope.DF(s));
             else                     EF[s].Implicit_Ex(Yin.DF(s),Yin.EMF().Ex(),Yslope.DF(s));
-            Yslope.DF(s) = Yslope.DF(s).Filterp();
+            if (Input::List().filterdistribution) Yslope.DF(s) = Yslope.DF(s).Filterp();
         }
     }
     else if (direction == 2)
@@ -476,7 +569,7 @@ void VlasovFunctor1D_implicitE_p2::operator()(const State1D& Yin, State1D& Yslop
         for (size_t s(0); s < Yin.Species(); ++s) {
             if (Yin.DF(s).l0() == 1) EF[s].Implicit_Ey_f1only(Yin.DF(s),Yin.EMF().Ey(),Yslope.DF(s));
             else                     EF[s].Implicit_Ey(Yin.DF(s),Yin.EMF().Ey(),Yslope.DF(s));
-            Yslope.DF(s) = Yslope.DF(s).Filterp();
+            if (Input::List().filterdistribution) Yslope.DF(s) = Yslope.DF(s).Filterp();
         }
     }
     else
@@ -485,7 +578,7 @@ void VlasovFunctor1D_implicitE_p2::operator()(const State1D& Yin, State1D& Yslop
         for (size_t s(0); s < Yin.Species(); ++s) {
             if (Yin.DF(s).l0() == 1) EF[s].Implicit_Ez_f1only(Yin.DF(s),Yin.EMF().Ez(),Yslope.DF(s));
             else                     EF[s].Implicit_Ez(Yin.DF(s),Yin.EMF().Ez(),Yslope.DF(s));
-            Yslope.DF(s) = Yslope.DF(s).Filterp();
+            if (Input::List().filterdistribution) Yslope.DF(s) = Yslope.DF(s).Filterp();
         }
     }
 

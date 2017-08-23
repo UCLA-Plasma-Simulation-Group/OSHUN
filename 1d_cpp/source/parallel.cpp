@@ -1,41 +1,15 @@
-///////////////////////////////////////////////////////////
-//   Contributing authors :	Michail Tzoufras, Benjamin Winjum
-//
-//	Last Modified:	September 1, 2016
-///////////////////////////////////////////////////////////
+/*!\brief  Parallelization routines - Definitions
+* \author  PICKSC
+ * \date   March, 2017
+ * \file   parallel.cpp
+ *
+ * In here are the structures that enable parallelization
+ * 
+ * Periodic and reflecting have been implemented.
+ * 
+ * 
+ */
 
-//   
-//   Contains the declerations for the communications
-//   between nodes, boundaries and the parallel output
-///////////////////////////////////////////////////////////
-//
-//   This file contains three modules:
-//
-//   1. class Node_Communications: 
-//        Allows the nodes to exchange information in order
-//        to update their guard cells. For boundary nodes 
-//        it provides the appropriate boundary conditions.
-//
-//   2. class Parallel_Output: 
-//        Collects the output information from all of the
-//        nodes and combines them to the final file ready
-//        to be exported. For the moments of the distribution
-//        function it also performs the integration over 
-//        momentum space and for detailed information on 
-//        phasespace it calls the appropriate functions from
-//        "Output" to convert the spherical harmonics to 
-//        cartesian geometry.
-// 
-//   3. class Parallel_Environment:
-//        - It decomposes the computational domain
-//        - It controls the node communications
-//        - It controls the parallel output
-//        - It controls the restart facility
-//
-///////////////////////////////////////////////////////////
-//
-///////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////
 
 //  Standard libraries
 #include <mpi.h>
@@ -57,7 +31,7 @@
 #include "lib-algorithms.h"
 #include <map>
 
-//  Declerations
+//  Declarations
 #include "input.h"
 #include "state.h"
 //     #include "decl-output.h"
@@ -368,6 +342,16 @@ Node_Communications:: Node_Communications() :
     }
 
     msg_sizeX *= Nbc;  //(IN().inp().y.dim()*Nbc);
+                       //
+    if (Input::List().particlepusher)
+    {
+        msg_sizeX += Input::List().numparticles; // Going Left or Right?
+        msg_sizeX += Input::List().numparticles; // Position
+        msg_sizeX += Input::List().numparticles; // X-momentum
+        msg_sizeX += Input::List().numparticles; // Y-momentum
+        msg_sizeX += Input::List().numparticles; // Z-momentum
+    }
+    
     msg_bufX = new complex<double>[msg_sizeX];
 
 }
@@ -457,7 +441,35 @@ void Node_Communications::Send_right_X(State1D& Y, int dest) {
         }
         bufind += step_f;
     }
+
+    if (Input::List().particlepusher)
+    {
+        for (int ip(0); ip < Y.particles().numpar(); ++ip)
+        {          
+            // if (Y.particles().x(ip) > Input::List().xmaxGlobal[0]){
+            //     std::cout << " global max = " << Input::List().xmaxGlobal[0] << "\n";
+            //     Y.particles().x(ip) -= Input::List().xmaxGlobal[0]-Input::List().xminGlobal[0];
+            // }
+            // if (Y.particles().goingright(ip) == 1)
+            // {
+                msg_bufX[bufind]   = Y.particles().goingright(ip);
+                msg_bufX[bufind+1] = Y.particles().x(ip);
+                msg_bufX[bufind+2] = Y.particles().px(ip);
+                msg_bufX[bufind+3] = Y.particles().py(ip);
+                msg_bufX[bufind+4] = Y.particles().pz(ip);    
+
+                // Y.particles().goingright(ip) = 0;
+            // }
+            
+
+            bufind += 4;
+        }
+    }
+
+        
     MPI_Send(msg_bufX, msg_sizeX, MPI_DOUBLE_COMPLEX, dest, 0, MPI_COMM_WORLD);
+
+
 }
 //--------------------------------------------------------------
 
@@ -471,6 +483,7 @@ void Node_Communications::Recv_from_left_X(State1D& Y, int origin) {
     // static size_t step_h(Y.SH(s,0,0).nump()*Nbc);
     static size_t step_f(Nbc);
     size_t bufind(0);
+    
     MPI_Status status;
 
     // Receive Data
@@ -535,6 +548,52 @@ void Node_Communications::Recv_from_left_X(State1D& Y, int origin) {
         }
         bufind += step_f;
     }
+
+
+    if (Input::List().particlepusher)
+    {   
+        
+        // if (Input::List().xminLocalnobnd[0] == 0.0)
+        // {
+        //     std::cout << "\n is here = " << Y.particles().ishere(2) << "\n";
+        // }
+
+        for (int ip(0); ip < Y.particles().numpar(); ++ip){
+            
+
+
+            // See if particle is now in local box, but wasn't before. 
+            // Only overwrite if so.
+            // If not, step over buffer and go to next particle.
+            
+            // if (((msg_bufX[bufind]).real() < Input::List().xmaxLocalnobnd[0] && (msg_bufX[bufind]).real() >= Input::List().xminLocalnobnd[0])
+            //     // && (Y.particles().x(ip) >= Input::List().xmaxLocal || Y.particles().x(ip) < Input::List().xminLocal[0]))
+            //     && !(Y.particles().ishere(ip)) && (Y.particles().goingleft(ip)))
+            //     
+            if (int (msg_bufX[bufind].real()) == 1)
+            {
+                
+                // if (ip == 2){
+                // std::cout << "\n\n\n origin = " << origin << "\n";
+                // std::cout << "in cell = " << Input::List().xminLocalnobnd[0] << "\n" ;
+                // std::cout << "is it here? "<< Y.particles().ishere(ip) << "\n\n";  
+
+                if (msg_bufX[bufind+1].real() >= Input::List().xmaxGlobal[0]){
+                    Y.particles().x(ip) = (msg_bufX[bufind+1]).real() - Input::List().xmaxGlobal[0] + Input::List().xminGlobal[0];
+                }
+                else Y.particles().x(ip)  = (msg_bufX[bufind+1]).real();
+
+
+                Y.particles().px(ip) = (msg_bufX[bufind+2]).real();
+                Y.particles().py(ip) = (msg_bufX[bufind+3]).real();
+                Y.particles().pz(ip) = (msg_bufX[bufind+4]).real();
+                Y.particles().ishere(ip) = 1;
+            }
+            
+            bufind+=4;  // Go to next particle in buffer
+        }
+    }
+
 
 
 }
@@ -606,6 +665,28 @@ void Node_Communications::Send_left_X(State1D& Y, int dest) {
             msg_bufX[bufind + e] = Y.HYDRO().Z(Nbc+e);
         }
         bufind += step_f;
+    }
+
+    
+
+    if (Input::List().particlepusher)
+    {   
+
+        // Send all
+        // Receive routine is the discriminator
+        for (int ip(0); ip < Y.particles().numpar(); ++ip)
+        {          
+            // if (Y.particles().goingright(ip) == -1){
+            //     Y.particles().x(ip) += Input::List().xmaxGlobal[0]-Input::List().xminGlobal[0];
+
+            msg_bufX[bufind] = Y.particles().goingright(ip);
+            msg_bufX[bufind+1] = Y.particles().x(ip);
+            msg_bufX[bufind+2] = Y.particles().px(ip);
+            msg_bufX[bufind+3] = Y.particles().py(ip);
+            msg_bufX[bufind+4] = Y.particles().pz(ip);
+
+            bufind += 4;
+        }
     }
 
     MPI_Send(msg_bufX, msg_sizeX, MPI_DOUBLE_COMPLEX, dest, 1, MPI_COMM_WORLD);
@@ -685,6 +766,46 @@ void Node_Communications::Recv_from_right_X(State1D& Y, int origin) {
         bufind += step_f;
     }
 
+
+    
+    if (Input::List().particlepusher)
+    {   
+        for (int ip(0); ip < Y.particles().numpar(); ++ip){
+            
+
+            // See if particle is now in local box, but wasn't before. 
+            // Only overwrite if so.
+            // If not, step over buffer and go to next particle.
+            
+            // if (((msg_bufX[bufind]).real() < Input::List().xmaxLocalnobnd[0] && (msg_bufX[bufind]).real() >= Input::List().xminLocalnobnd[0])
+            //     // && (Y.particles().x(ip) >= Input::List().xmaxLocal || Y.particles().x(ip) < Input::List().xminLocal[0]))
+            //     && !(Y.particles().ishere(ip)))
+            // {
+
+                // if (ip == 2){
+                //     std::cout << "\n\n\n origin = " << origin << "\n";
+                //     std::cout << "in cell = " << Input::List().xminLocalnobnd[0] << "\n" ;
+                //     std::cout << "is it here? "<< Y.particles().ishere(ip) << "\n\n";  
+                // } 
+            if (msg_bufX[bufind].real() == -1)
+            {
+
+                if (msg_bufX[bufind+1].real() < Input::List().xminGlobal[0]){
+                    Y.particles().x(ip) = (msg_bufX[bufind+1]).real() + Input::List().xmaxGlobal[0] - Input::List().xminGlobal[0];
+                }
+                else Y.particles().x(ip)  = (msg_bufX[bufind+1]).real();
+
+                
+                Y.particles().px(ip) = (msg_bufX[bufind+2]).real();
+                Y.particles().py(ip) = (msg_bufX[bufind+3]).real();
+                Y.particles().pz(ip) = (msg_bufX[bufind+4]).real();
+                Y.particles().ishere(ip) = 1;
+            }
+            
+            bufind+=4;  // Go to next particle in buffer
+        }
+    }
+
 }
 //--------------------------------------------------------------
 
@@ -751,6 +872,18 @@ void Node_Communications::mirror_bound_Xleft(State1D& Y) {
         }
     }
 
+    if (Input::List().particlepusher)
+    {
+        for (int ip(0); ip < Y.particles().numpar(); ++ip){
+            if (Y.particles().x(ip) < Input::List().xminLocalnobnd[0])  
+            {
+                Y.particles().x(ip) = Input::List().xminLocalnobnd[0] + (Input::List().xminLocalnobnd[0] - Y.particles().x(ip));
+                Y.particles().px(ip) *= -1.0;
+                Y.particles().ishere(ip) = 1;
+            }
+        }
+    }
+
 
 }
 //--------------------------------------------------------------
@@ -810,6 +943,18 @@ void Node_Communications::mirror_bound_Xright(State1D& Y) {
         }
     }
 
+    if (Input::List().particlepusher)
+    {
+        for (int ip(0); ip < Y.particles().numpar(); ++ip){
+            if (Y.particles().x(ip) > Input::List().xmaxLocalnobnd[0])  
+            {
+                Y.particles().x(ip) = Input::List().xmaxLocalnobnd[0] - (Y.particles().x(ip) - Input::List().xmaxLocalnobnd[0]);
+                Y.particles().px(ip) *= -1.0;
+                Y.particles().ishere(ip) = 1;
+            }
+        }
+    }
+
 }
 //--------------------------------------------------------------
 
@@ -826,10 +971,12 @@ void Node_Communications::sameNode_bound_X(State1D& Y) {
     switch (BNDX()) {
         case 0:                   // periodic
             sameNode_periodic_X(Y);
-
             break;
         case 1:                   // mirror boundary
             sameNode_mirror_X(Y);
+            break;
+        case 2:                   // mirror boundary
+            sameNode_PML_X(Y);
             break;
         default:
             cout<<"Not a valid boundary condition." << endl;
@@ -895,14 +1042,6 @@ void Node_Communications::sameNode_periodic_X(State1D& Y) {
         // Y.FLD(i)(Y.EMF().Ex().numx()-1) = 0.0;
     }
 
-    // temp = Y.DF(0).getcurrent(0);
-    // for (size_t ix(0);ix<Y.SH(0,0,0).numx();++ix)
-    // {
-    //     std::cout<<"\n      new[" << ix  << "] = " << temp[ix] << "\n";
-
-    // }
-
-
     if (Input::List().hydromotion)
     {
         // Hydro Quantities:   x0 "Right-Bound ---> Left-Guard"
@@ -930,6 +1069,128 @@ void Node_Communications::sameNode_periodic_X(State1D& Y) {
 
         }
     }
+
+    if (Input::List().particlepusher)
+    {
+        for (int ip(0); ip < Y.particles().numpar(); ++ip)
+        {
+            if (Y.particles().x(ip) > Input::List().xmaxLocalnobnd[0])
+            {
+                Y.particles().x(ip) = Input::List().xminLocalnobnd[0] + (Y.particles().x(ip) - Input::List().xmaxLocalnobnd[0]); 
+                Y.particles().ishere(ip) = 1;  
+            }
+            else if (Y.particles().x(ip) < Input::List().xminLocalnobnd[0])
+            {
+                Y.particles().x(ip) = Input::List().xmaxLocalnobnd[0] - (Input::List().xminLocalnobnd[0] - Y.particles().x(ip));   
+                Y.particles().ishere(ip) = 1;
+            }
+        }
+    }
+
+}
+//--------------------------------------------------------------
+
+//--------------------------------------------------------------
+void Node_Communications::sameNode_PML_X(State1D& Y) {
+//--------------------------------------------------------------
+//  Periodic boundary in the x direction for 1 node
+//--------------------------------------------------------------
+
+    // // Harmonics:x0 "Right-Bound ---> Left-Guard"
+    // for(int s(0); s < Y.Species(); ++s) {
+    //     for(int i(0); i < Y.DF(s).dim(); ++i) {
+    //         for(int p(0); p < Y.SH(s,0,0).nump(); ++p) {
+    //             for(int c(0); c < Nbc; c++) {
+    //                 (Y.DF(s)(i))(p, c) = 0.0;
+    //                 // std::cout << "\n 1: DF(" << i << "," << p << "," << c << ") = " << (Y.DF(s)(i))(p, Y.EMF().Ex().numx()-2*Nbc+c) << "\n";
+    //             }
+    //         }
+    //     }
+    // }
+    // // Fields:   x0 "Right-Bound ---> Left-Guard"
+    // for(int i(0); i < Y.EMF().dim(); ++i) {
+    //     for(int c(0); c < Nbc; c++) {
+    //         Y.FLD(i)(c) = Y.FLD(i)(Y.EMF().Ex().numx()-2*Nbc+c);
+    //         // std::cout << "\n 2: FLD(" << i << "," << c << ") = " << Y.FLD(i)(Y.EMF().Ex().numx()-2*Nbc+c) << "\n";
+    //     }
+    // }
+
+
+
+    // // Harmonics:x0 "Left-Bound ---> Right-Guard"
+    // for(int s(0); s < Y.Species(); ++s) {
+    //     for(int i(0); i < Y.DF(s).dim(); ++i) {
+    //         for(int p(0); p < Y.SH(s,0,0).nump(); ++p) {
+    //             for(int c(0); c < Nbc; c++) {
+    //                 // std::cout << "\n 3: DF(" << i << "," << p << "," << Y.EMF().Ex().numx()-Nbc+c << ") = " << (Y.DF(s)(i))(p, Y.EMF().Ex().numx()-Nbc+c) << "\n";
+
+    //                 (Y.DF(s)(i))(p, Y.EMF().Ex().numx()-Nbc+c) = (Y.DF(s)(i))(p, Nbc+c);
+
+    //                 // std::cout << "\n 3n: DF(" << i << "," << p << "," << Y.EMF().Ex().numx()-Nbc+c << ") = " << (Y.DF(s)(i))(p, Y.EMF().Ex().numx()-Nbc+c-100.0) << "\n";
+    //                 // if (c==2)
+
+
+    //             }
+    //         }
+    //     }
+    // }
+
+    // // Fields:   x0 "Left-Bound ---> Right-Guard"
+    // for(int i(0); i < Y.EMF().dim(); ++i) {
+    //     for(int c(0); c < Nbc; c++) {
+    //         // if (i == 0)                 std::cout << "\n 4: FLD(" << i << "," << Y.EMF().Ex().numx()-Nbc+c << ") = " << Y.FLD(i)(Y.EMF().Ex().numx()-Nbc+c) << "\n";
+    //         Y.FLD(i)(Y.EMF().Ex().numx()-Nbc+c) = Y.FLD(i)(Nbc+c);
+    //         // if (i == 0)                 std::cout << "\n 4n: FLD(" << i << "," << Y.EMF().Ex().numx()-Nbc+c << ") = " << Y.FLD(i)(Y.EMF().Ex().numx()-Nbc+c) << "\n";
+
+
+    //     }
+    //     // Y.FLD(i)(Y.EMF().Ex().numx()-1) = 0.0;
+    // }
+
+    // if (Input::List().hydromotion)
+    // {
+    //     // Hydro Quantities:   x0 "Right-Bound ---> Left-Guard"
+    //     for(int c(0); c < Nbc; c++) {
+    //         Y.HYDRO().density(c) = Y.HYDRO().density(Y.EMF().Ex().numx()-2*Nbc+c);
+    //         Y.HYDRO().vx(c) = Y.HYDRO().vx(Y.EMF().Ex().numx()-2*Nbc+c);
+    //         Y.HYDRO().vy(c) = Y.HYDRO().vy(Y.EMF().Ex().numx()-2*Nbc+c);
+    //         Y.HYDRO().vz(c) = Y.HYDRO().vz(Y.EMF().Ex().numx()-2*Nbc+c);
+    //         Y.HYDRO().temperature(c) = Y.HYDRO().temperature(Y.EMF().Ex().numx()-2*Nbc+c);
+    //         Y.HYDRO().Z(c) = Y.HYDRO().Z(Y.EMF().Ex().numx()-2*Nbc+c);
+    //         // Y.HYDRO().kpressure(c) = Y.HYDRO().velocity(Y.EMF().Ex().numx()-2*Nbc+c);
+    //         // Y.HYDRO().mpressure(c) = Y.HYDRO().velocity(Y.EMF().Ex().numx()-2*Nbc+c);
+    //     }
+
+    //     // Hydro Quantities:   x0 "Left-Bound ---> Right-Guard"
+    //     for(int c(0); c < Nbc; c++) {
+    //         Y.HYDRO().density(Y.EMF().Ex().numx()-Nbc+c) =  Y.HYDRO().density(Nbc+c);
+    //         Y.HYDRO().vx(Y.EMF().Ex().numx()-Nbc+c) =  Y.HYDRO().vx(Nbc+c);
+    //         Y.HYDRO().vy(Y.EMF().Ex().numx()-Nbc+c) =  Y.HYDRO().vy(Nbc+c);
+    //         Y.HYDRO().vz(Y.EMF().Ex().numx()-Nbc+c) =  Y.HYDRO().vz(Nbc+c);
+    //         Y.HYDRO().temperature(Y.EMF().Ex().numx()-Nbc+c) =  Y.HYDRO().temperature(Nbc+c);
+    //         Y.HYDRO().Z(Y.EMF().Ex().numx()-Nbc+c) =  Y.HYDRO().Z(Nbc+c);
+    //         // Y.HYDRO().kpressure(Y.EMF().Ex().numx()-Nbc+c) =  Y.HYDRO().velocity(Nbc+c);
+    //         // Y.HYDRO().mpressure(Y.EMF().Ex().numx()-Nbc+c) =  Y.HYDRO().velocity(Nbc+c);
+
+    //     }
+    // }
+
+    // if (Input::List().particlepusher)
+    // {
+    //     for (int ip(0); ip < Y.particles().numpar(); ++ip)
+    //     {
+    //         if (Y.particles().x(ip) > Input::List().xmaxPML[0])
+    //         {
+    //             Y.particles().x(ip) = Input::List().xminLocalnobnd[0] + (Y.particles().x(ip) - Input::List().xmaxLocalnobnd[0]); 
+    //             Y.particles().ishere(ip) = 1;  
+    //         }
+    //         else if (Y.particles().x(ip) < Input::List().xminLocalnobnd[0])
+    //         {
+    //             Y.particles().x(ip) = Input::List().xmaxLocalnobnd[0] - (Input::List().xminLocalnobnd[0] - Y.particles().x(ip));   
+    //             Y.particles().ishere(ip) = 1;
+    //         }
+    //     }
+    // }
 
 }
 //--------------------------------------------------------------
@@ -1008,6 +1269,24 @@ void Node_Communications::sameNode_mirror_X(State1D& Y) {
         }
     }
 
+    if (Input::List().particlepusher)
+    {
+        for (int ip(0); ip < Y.particles().numpar(); ++ip)
+        {
+            if (Y.particles().x(ip) > Input::List().xmaxLocalnobnd[0])
+            {
+                Y.particles().x(ip) = Input::List().xmaxLocalnobnd[0] - (Y.particles().x(ip) - Input::List().xmaxLocalnobnd[0]);
+                Y.particles().px(ip) *= -1.0;
+            }
+            else if (Y.particles().x(ip) < Input::List().xminLocalnobnd[0])
+            {
+                Y.particles().x(ip) = Input::List().xminLocalnobnd[0] + (Input::List().xminLocalnobnd[0] - Y.particles().x(ip));
+                Y.particles().px(ip) *= -1.0;
+            }
+
+        }
+    }
+
 }
 //--------------------------------------------------------------
 
@@ -1042,7 +1321,38 @@ Parallel_Environment_1D:: Parallel_Environment_1D() :
                                      - Input::List().BoundaryCells * Input::List().globdx[i];
         Input::List().xmaxLocal[i] = Input::List().xminLocal[i]
                                      + (Input::List().NxLocal[i]) * Input::List().globdx[i];
+
+        Input::List().xminLocalnobnd[i] = Input::List().xminLocal[i] + Input::List().BoundaryCells * Input::List().globdx[i];
+        Input::List().xmaxLocalnobnd[i] = Input::List().xmaxLocal[i] - Input::List().BoundaryCells * Input::List().globdx[i];
+
     }
+
+    double  xval_lastcell = Input::List().xmaxLocal[0] - 0.5*Input::List().globdx[0];
+    double xval_firstcell = Input::List().xminLocal[0] + 0.5*Input::List().globdx[0];
+
+    if (Input::List().bndX == 2)
+    {
+        if (Nnodes == 1)
+            Input::List().PML_core = 4;             // Serial PML 
+        else
+        {
+            if (xval_firstcell < Input::List().xminPML && xval_lastcell < Input::List().xminPML)
+                Input::List().PML_core = 3;
+            else if (xval_firstcell > Input::List().xmaxPML && xval_lastcell > Input::List().xmaxPML)
+                Input::List().PML_core = 3;
+            else if (xval_firstcell < Input::List().xminPML && xval_lastcell > Input::List().xminPML)    
+                Input::List().PML_core = 1;
+            else if (xval_lastcell > Input::List().xmaxPML && xval_firstcell > Input::List().xminPML)    
+                Input::List().PML_core = 2;
+            else
+                Input::List().PML_core = 0;         // Not a PML core 
+        }
+    }
+    else    Input::List().PML_core = 0;             // Not a PML core 
+                                                    // 
+    // std::cout << "\n\n Rank = " << rank << ", PML_core bool = " << Input::List().PML_core << "\n";
+
+    // exit(1);
 
     // Restart files will be generated when output_step % restart_step == 0
 //          if ( ( (Input::List().n_outsteps + 1) >  Input::List().n_restarts ) &&
@@ -1160,6 +1470,7 @@ void Parallel_Environment_1D::Neighbor_Communications(State1D& Y) {
     if (NODES() > 1) {
         //even nodes
 //        if (moduloX==0){
+        // std::cout << "\n before boundary on " << Input::List().xminLocalnobnd[0] << "? " << Y.particles().x(2) << "\n\n";  
         if (BNDX() == 0) {
             if (((RANK() != 0) && (RANK() != NODES() - 1))) {
                 X_Data.Send_right_X(Y, RNx);                  //   (Send) 0 --> 1
@@ -1177,7 +1488,11 @@ void Parallel_Environment_1D::Neighbor_Communications(State1D& Y) {
                 X_Data.Recv_from_left_X(Y, LNx);          //          1 --> 0 (Receive)
                 X_Data.Send_left_X(Y, LNx);               //          1 <-- 0 (Send)
             }
-        } else if (BNDX() == 1) {
+
+            Y.particles().par_goingright_array() = 0.0;
+
+        } 
+        else if (BNDX() == 1) {
             if (((RANK() != 0) && (RANK() != NODES() - 1))) {
                 X_Data.Send_right_X(Y, RNx);                  //   (Send) 0 --> 1
                 X_Data.Recv_from_left_X(Y, LNx);          //          1 --> 0 (Receive)
@@ -1193,7 +1508,27 @@ void Parallel_Environment_1D::Neighbor_Communications(State1D& Y) {
                 X_Data.Send_left_X(Y, LNx);               //          1 <-- 0 (Send)
             }
 
-        } else {
+        }
+        else if (BNDX() == 2) {
+            if (((RANK() != 0) && (RANK() != NODES() - 1))) {
+                X_Data.Send_right_X(Y, RNx);                  //   (Send) 0 --> 1
+                X_Data.Recv_from_left_X(Y, LNx);          //          1 --> 0 (Receive)
+                X_Data.Send_left_X(Y, LNx);               //          1 <-- 0 (Send)
+                X_Data.Recv_from_right_X(Y, RNx);               // (Receive) 0 <-- 1
+            } else if (RANK() == 0) {                         /// Update node "0" in the x direction
+                X_Data.Recv_from_left_X(Y, NODES() - 1);          //          1 --> 0 (Receive)
+                X_Data.Send_left_X(Y, NODES() - 1);               //          1 <-- 0 (Send)
+                X_Data.Send_right_X(Y, RNx);                ///   (Send) 0 --> 1
+                X_Data.Recv_from_right_X(Y, RNx);           /// (Receive) 0 <-- 1
+            } else if (RANK() == NODES() - 1) {               ///        // Update node "NODES()" in the x direction
+                X_Data.Send_right_X(Y, 0);                  //   (Send) 0 --> 1
+                X_Data.Recv_from_right_X(Y, 0);           /// (Receive) 0 <-- 1
+                X_Data.Recv_from_left_X(Y, LNx);          //          1 --> 0 (Receive)
+                X_Data.Send_left_X(Y, LNx);               //          1 <-- 0 (Send)
+            }
+
+        }
+        else {
             cout << "Invalid Boundary." << endl;
         }
 

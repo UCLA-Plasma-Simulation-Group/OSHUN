@@ -9,14 +9,13 @@
 *sim_info.txt
 */png/*
 */build/*
-*.zip
 */.shared_libraries/*
 *.o
 *.e
 *OUTPUT*
 *DS_Store*
 *.obj
-/1d_cpp/doc/manual/*
+
 /oshun-development/
 /1d_cpp/bin/*
 /1d_cpp/tmp/*

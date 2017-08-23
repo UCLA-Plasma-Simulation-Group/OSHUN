@@ -19,12 +19,9 @@ H5LIB =  -lhdf5_cpp -lhdf5
 EXEC_DIR = ../bin
 TMP_DIR = ./tmp
 
-
-OBJECTS = input.o state.o formulary.o setup.o vlasov.o nmethods.o functors.o collisions.o fluid.o implicitE.o parallel.o export.o main.o
+OBJECTS = input.o state.o formulary.o setup.o vlasov.o nmethods.o functors.o collisions.o fluid.o particletracker.o implicitE.o parallel.o export.o main.o
 
 EXEC = oshun1d.e
-
-
 
 BUILDOBJECTS = ${addprefix ${TMP_DIR}/,${OBJECTS}}
 
@@ -45,4 +42,3 @@ debug :
 
 ./tmp/%.o: %.cpp
 	$(COMPILER) $(OPTFLAGS) -c -o $@ $<
-

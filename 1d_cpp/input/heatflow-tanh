@@ -12,8 +12,8 @@ numsp = 1
 
 l0 = 4
 m0 = 4
-nump = 64
-pmax = 0.2
+nump = 192
+pmax = 0.32
 mass = 1.0
 charge = -1.0
 
@@ -21,7 +21,7 @@ charge = -1.0
 // Spatial Grid
 //-----------------------------------------------------------------------
 
-Nx = 64
+Nx = 96
 
 xmin = 0.0
 xmax = 10000.0
@@ -31,10 +31,10 @@ xmax = 10000.0
 //-----------------------------------------------------------------------
 
 clf_dp = 1.0
-n_outsteps = 400
+n_outsteps = 200
 n_distoutsteps = 1
 n_bigdistoutsteps = 1
-t_stop = 400.0
+t_stop = 8000.0
 
 //-----------------------------------------------------------------------
 // Various switches
@@ -84,12 +84,12 @@ implicit_E                          = true
 
 density_np                  = 1e21
 super_gaussian_distribution = 2.0
-pth_ref                     = 0.025							    // Reference thermal velocity
-hydrocharge = 2.0
+pth_ref                     = 0.04							    // Reference thermal velocity
+hydrocharge = 60.0
 
 
 n(x) = cst{1.0} 
-T(x) = fnc{0.04*0.04*(1.0+0.01*sin(2*pi*x/10000))}
+T(x) = fnc{0.04*0.04*(1.0-0.01*(tanh(0.0025*(x-7500))-tanh(0.0025*(x-2500))))}
 
 //-----------------------------------------------------------------------
 // Option to apply f10(x) = C(x) * (v^3 df00/dv) . Provide C(x)

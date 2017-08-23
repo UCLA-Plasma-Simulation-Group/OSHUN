@@ -29,24 +29,81 @@
 #include "fluid.h"
 #include "vlasov.h"
 
-
-
 //**************************************************************
 //--------------------------------------------------------------
 //  Current
 
 Current_1D::Current_1D( double pmin, double pmax, size_t Np,
-                        size_t Nx )
-        : Jx(Nx), Jy(Nx), Jz(Nx), small(0.5*pmax/Np) {
-//          pr(Algorithms::MakeAxis(complex<double>(pmin),
-//                                  complex<double>(pmax),
-//                                  Np)),
-//          invg(pr) {
-    small *= small; small *= small; small *= 0.5*pmax/Np; 
-    small *= 0.2; small *= 1.0/(1.5*pmax/Np); 
-//    for (size_t i(0); i < pr.size(); ++i) {
-//        invg[i] = 1.0 / (sqrt(1.0+pr[i]*pr[i]));
-//    }
+                        double xmin, double xmax, size_t Nx )
+        : Jx(Nx), Jy(Nx), Jz(Nx), small(0.5*pmax/Np), sigma(Nx) {//, killedbyPML((1.0,0.0),Nx) {
+
+    // int PML_Nx(0);
+    
+
+    // if (Input::List().PML_core > 0)
+    // {   
+    //     for (size_t ix(0); ix < Nx; ++ix)
+    //     {
+    //         killedbyPML[ix] = 1.0;
+    //     }
+
+    //     if (Input::List().PML_core == 1)        // Left (PML + Box) Core
+    //     {
+    //         PML_Nx = Nx*((Input::List().xminPML - xmin)/(xmax-xmin));
+
+    //         for (size_t ix(0); ix < PML_Nx; ++ix)
+    //         {
+    //             killedbyPML[ix] = 0.0;    
+    //         }
+    //     }
+    //     else if (Input::List().PML_core == 2)   // Right (PML + Box) Core
+    //     {
+    //         PML_Nx = (Input::List().xmaxPML - xmin)/(xmax-xmin)*Nx; 
+
+    //         for (size_t ix(PML_Nx); ix < Nx; ++ix)
+    //         {
+    //             killedbyPML[ix] = 0.0;    
+    //         }
+    //     }
+    //     else if (Input::List().PML_core == 4)  // Serial
+    //     {
+    //         PML_Nx = Nx*((Input::List().xminPML - xmin)/(xmax-xmin));
+            
+
+    //         for (size_t ix(0); ix < PML_Nx; ++ix)
+    //         {
+    //             killedbyPML[ix] = 0.0;    
+    //         }
+
+    //         PML_Nx = (Input::List().xmaxPML - xmin)/(xmax-xmin)*Nx; 
+            
+    //         for (size_t ix(PML_Nx); ix < Nx; ++ix)
+    //         {
+    //             killedbyPML[ix] = 0.0;    
+    //         }
+
+    //     }
+    //     else if (Input::List().PML_core == 3) // Full PML Core
+    //         killedbyPML = 0.0;    
+    double idx = ((-1.0)/ (2.0*(xmax-xmin)/double(Nx))); // -1/(2dx)
+                                                                 // 
+    double xval;
+    double beta = 4.0;
+    double sigmam = 0.8*(beta+1.0);
+
+    for (size_t ix(0); ix < Nx; ++ix)
+    {
+        xval = xmin - 0.25/idx - 0.5*ix/idx;
+        if (xval < Input::List().xminPML)
+        {
+            sigma[ix] = sigmam*pow(((Input::List().xminPML-xval)/(Input::List().xminPML-xmin)),beta);
+        }
+        else if (xval > Input::List().xmaxPML)
+        {
+            sigma[ix] = sigmam*pow(((xval-Input::List().xmaxPML)/(xmax-Input::List().xmaxPML)),beta);
+        }
+    }
+
 };
 //--------------------------------------------------------------
 
@@ -68,6 +125,26 @@ void Current_1D::operator()(const DistFunc1D& Din, Field1D& Exh, Field1D& Eyh, F
 
 }
 
+void Current_1D::PML(const DistFunc1D& Din, Field1D& Exh, Field1D& Eyh, Field1D& Ezh) {
+
+    Array2D<double> temp(3,Din(0).numx());
+
+    temp = Din.getcurrent();
+
+    for (size_t i(0); i < Jx.numx(); ++i) {
+        Jx(i) = complex<double >(temp(0,i));
+        Jx(i) += sigma[i]*Exh(i);
+        Jy(i) = complex<double >(temp(1,i));
+        Jy(i) += sigma[i]*Eyh(i);
+        Jz(i) = complex<double >(temp(2,i));
+        Jz(i) += sigma[i]*Ezh(i);
+    }
+
+    Exh += Jx;
+    Eyh += Jy;
+    Ezh += Jz;
+}
+
 void Current_1D::es1d(const DistFunc1D& Din, Field1D& Exh) {
 
     valarray<double> temp(Din(0).numx());
@@ -75,7 +152,7 @@ void Current_1D::es1d(const DistFunc1D& Din, Field1D& Exh) {
     temp = Din.getcurrent(0);
 
     for (size_t i(0); i < Jx.numx(); ++i) {
-        Jx(i) = complex<double >(temp[i]);//+4.0/3.0*3.1415926*small*Din(1,0)(1,i);
+        Jx(i) = complex<double >(temp[i]);
     }
 
     Exh += Jx;
@@ -83,7 +160,77 @@ void Current_1D::es1d(const DistFunc1D& Din, Field1D& Exh) {
 }
 //--------------------------------------------------------------
 //**************************************************************
+//**************************************************************
+//--------------------------------------------------------------
+//  Current
 
+Gauss_1D::Gauss_1D( double xmin, double xmax, size_t Nx ): idx(Nx/(xmax-xmin)),phi(0.0,Nx),density(0.0,Nx),LHS(Nx,Nx) 
+{
+    itwodeltax = complex<double> (0.5*idx);
+
+    LHS(0,1) = idx*idx;
+    LHS(0,0) = -2.0*idx*idx;
+    // LHS(Din(0).numx()-1,0) = 1.0; //-2.0/idx/idx;;
+    // std::cout << "\n 11 \n";
+    for (size_t ix(1); ix < Nx-1; ++ix) {
+        LHS(ix,ix+1) = idx*idx;
+        LHS(ix,ix)   = -2.0*idx*idx;
+        LHS(ix,ix-1) = idx*idx;
+
+        // std::cout << density[ix] << "\n";
+    }
+
+    // std::cout << "\n 12 \n";
+    LHS(Nx-1,Nx-2) = idx*idx;;
+    LHS(Nx-1,Nx-1) = -2.0*idx*idx;
+
+    // for (int ix(0); ix < Nx; ++ix) {
+        // std::cout << "\n row = " << ix << ": ";
+        // for (int ix2 = 0; ix2 < Nx; ++ix2) {
+            // std::cout << LHS(ix,ix2) << " ";
+        // }
+        // std::cout << ", density[ " << ix << "] = " << density[ix];
+        
+    // }
+
+    // exit(1);
+
+};
+//--------------------------------------------------------------
+
+void Gauss_1D::operator()(const DistFunc1D& Din, Field1D& Exh, Field1D& Eyh, Field1D& Ezh) {
+
+    
+}
+
+void Gauss_1D::es1d(const DistFunc1D& Din, Field1D& Exh) {
+
+    phi = 0.0;
+    density = Din.q()*(Din.getdensity()-0.999996);
+    
+    // for (int ix(1); ix < Din(0).numx()-1; ++ix) {
+        // std::cout << "\n density[ " << ix << "] = " << density[ix];
+        // std::cout << phi[ix] << "\n";
+    // }
+    // exit(1);
+
+    Thomas_Tridiagonal(LHS,density,phi);
+    // Gauss_Seidel(LHS,density,phi);
+    
+    // std::cout << "\n  \n";
+
+    for (size_t ix(1); ix < Din(0).numx()-1; ++ix) {
+        // std::cout << phi[ix] << "\n";
+        Exh(ix) = complex<double> (phi[ix-1]-phi[ix+1]);
+        Exh(ix) *= itwodeltax;
+        // std::cout << Exh(ix).real() << "\n";
+    }
+
+    // exit(1);
+    // std::cout << "\n 14 \n";
+}
+//--------------------------------------------------------------
+//**************************************************************
 
 //**************************************************************
 //--------------------------------------------------------------
@@ -98,15 +245,16 @@ Electric_Field_1D::Electric_Field_1D(size_t Nl, size_t Nm,
           C1(Nl+1), C2(Nl+1,Nm+1), C3(Nl+1), C4(Nl+1,Nm+1),
           Hp0(Nl+1),
           H(Np,Nx), G(Np,Nx), TMP(Np,Nx),
-         // pr(Algorithms::MakeAxis(complex<double>(complex<double>(pmax/2.0/Np)),
-         //                         complex<double>(pmax),
-         //                         Np)),
-
           pr(Algorithms::MakeCAxis(complex<double>(0.0),
                                   complex<double>(pmax),
                                   Np)),
-          invpr(pr)
+          // pr(Algorithms::MakeAxis(complex<double>(pmax/(2.0*Np-1)),
+          //                        complex<double>(pmax),
+          //                        Np)),
+
+          invpr(pr), sigma(Nx)//, killedbyPML((1.0,0.0),Nx)
 {
+
 //      - - - - - - - - - - - - - - - - - - - - - - - - - - -
     complex<double> lc, mc;
 
@@ -115,7 +263,7 @@ Electric_Field_1D::Electric_Field_1D(size_t Nl, size_t Nm,
         invpr[i] = 1.0/pr[i];
     }
     double idp = (-1.0)/ (2.0*(pmax-pmin)/double(Np)); // -1/(2dp)
-    // double idp = (-1.0)/ (2.0*(pmax-pmax/2.0/double(Np))/double(Np-1));
+    // double idp = (-1.0)/ (2.0*(pmax-pmin)/double(Np-1)); // -1/(2dp)
 
 //       - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //       Calculate the A1 * l/(l+1) * 1/(2Dp), A2 * (-1)/(2Dp) parameters
@@ -179,6 +327,73 @@ Electric_Field_1D::Electric_Field_1D(size_t Nl, size_t Nm,
     B211 = complex<double>(2.0/3.0);
     A310 = complex<double>(2.0/5.0*idp);
     C311 = complex<double>(-0.5*idp/5.0);
+
+    // int PML_Nx(0);
+    
+
+    // if (Input::List().PML_core > 0)
+    // {   
+    //     for (size_t ix(0); ix < Nx; ++ix)
+    //     {
+    //         killedbyPML[ix] = 1.0;
+    //     }
+
+    //     if (Input::List().PML_core == 1)        // Left (PML + Box) Core
+    //     {
+    //         PML_Nx = Nx*((Input::List().xminPML - xmin)/(xmax-xmin));
+
+    //         for (size_t ix(0); ix < PML_Nx; ++ix)
+    //         {
+    //             killedbyPML[ix] = 0.0;    
+    //         }
+    //     }
+    //     else if (Input::List().PML_core == 2)   // Right (PML + Box) Core
+    //     {
+    //         PML_Nx = (Input::List().xmaxPML - xmin)/(xmax-xmin)*Nx; 
+
+    //         for (size_t ix(PML_Nx); ix < Nx; ++ix)
+    //         {
+    //             killedbyPML[ix] = 0.0;    
+    //         }
+    //     }
+    //     else if (Input::List().PML_core == 4)  // Serial
+    //     {
+    //         PML_Nx = Nx*((Input::List().xminPML - xmin)/(xmax-xmin));
+            
+
+    //         for (size_t ix(0); ix < PML_Nx; ++ix)
+    //         {
+    //             killedbyPML[ix] = 0.0;    
+    //         }
+
+    //         PML_Nx = (Input::List().xmaxPML - xmin)/(xmax-xmin)*Nx; 
+            
+    //         for (size_t ix(PML_Nx); ix < Nx; ++ix)
+    //         {
+    //             killedbyPML[ix] = 0.0;    
+    //         }
+
+    //     }
+    //     else if (Input::List().PML_core == 3) // Full PML Core
+    //         killedbyPML = 0.0;    
+    // }
+    double idx = ((-1.0)/ (2.0*(xmax-xmin)/double(Nx))); // -1/(2dx)
+    double xval;
+    double beta = 4.0;
+    double sigmam = 0.8*(beta+1.0);
+
+    for (size_t ix(0); ix < Nx; ++ix)
+    {
+        xval = xmin - 0.25/idx - 0.5*ix/idx;
+        if (xval < Input::List().xminPML)
+        {
+            sigma[ix] = sigmam*pow(((Input::List().xminPML-xval)/(Input::List().xminPML-xmin)),beta);
+        }
+        else if (xval > Input::List().xmaxPML)
+        {
+            sigma[ix] = sigmam*pow(((xval-Input::List().xmaxPML)/(xmax-Input::List().xmaxPML)),beta);
+        }
+    }
 
 }
 //--------------------------------------------------------------
@@ -376,7 +591,7 @@ void Electric_Field_1D::operator()(const DistFunc1D& Din,
 }
 //--------------------------------------------------------------
 //--------------------------------------------------------------
-void Electric_Field_1D::es1d(const DistFunc1D& Din,
+void Electric_Field_1D::PML(const DistFunc1D& Din,
                                    const Field1D& FEx, const Field1D& FEy, const Field1D& FEz,
                                    DistFunc1D& Dh) {
 //--------------------------------------------------------------
@@ -386,19 +601,23 @@ void Electric_Field_1D::es1d(const DistFunc1D& Din,
     complex<double> ii(0.0,1.0);
 
     valarray<complex<double> > Ex(FEx.array());
-    // valarray<complex<double> > Em(FEz.array());
-    // Em *= (-1.0)*ii;
-    // Em += FEy.array();
-    // valarray<complex<double> > Ep(FEz.array());
-    // Ep *= ii;
-    // Ep += FEy.array();
+    valarray<complex<double> > Em(FEz.array());
+    Em *= (-1.0)*ii;
+    Em += FEy.array();
+    valarray<complex<double> > Ep(FEz.array());
+    Ep *= ii;
+    Ep += FEy.array();
 
     Ex *= Din.q();
-    // Em *= Din.q();
-    // Ep *= Din.q();
+    Em *= Din.q();
+    Ep *= Din.q();
+
+    // Ex *= killedbyPML;
+    // Em *= killedbyPML;
+    // Ep *= killedbyPML;
 
     size_t l0(Din.l0());
-    // size_t m0(Din.m0());
+    size_t m0(Din.m0());
 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -406,6 +625,7 @@ void Electric_Field_1D::es1d(const DistFunc1D& Din,
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     MakeG00(Din(0,0));
     Ex *= A1(0,0); TMP = G; Dh(1,0) += G.mxaxis(Ex);
+    Em *= C1[0];            Dh(1,1) += TMP.mxaxis(Em);
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //      m = 0, l = 1
@@ -413,7 +633,7 @@ void Electric_Field_1D::es1d(const DistFunc1D& Din,
     MakeGH(Din(1,0),1);
     Ex *= A2(1,0) / A1(0,0);          Dh(0,0) += H.mxaxis(Ex);
     Ex *= A1(1,0) / A2(1,0); TMP = G; Dh(2,0) += G.mxaxis(Ex);
-
+    Em *= C1[1]   / C1[0]  ;          Dh(2,1) += TMP.mxaxis(Em);
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //      m = 0, 1 < l < l0
@@ -421,15 +641,194 @@ void Electric_Field_1D::es1d(const DistFunc1D& Din,
     for (size_t l(2); l < l0; ++l){
         MakeGH(Din(l,0),l);
         Ex *= A2(l,0) / A1(l-1,0); TMP = H;  Dh(l-1,0) += H.mxaxis(Ex);
-
+        Em *= C3[l]   / C1[l-1];             Dh(l-1,1) += TMP.mxaxis(Em);
         Ex *= A1(l,0) / A2(l,0);   TMP = G;  Dh(l+1,0) += G.mxaxis(Ex);
-
+        Em *= C1[l]   / C3[l];               Dh(l+1,1) += TMP.mxaxis(Em);
     }
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //      m = 0,  l = l0
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     MakeGH(Din(l0,0),l0);
     Ex *= A2(l0,0) / A1(l0-1,0); TMP = H;  Dh(l0-1,0) += H.mxaxis(Ex);
+    Em *= C3[l0]   / C1[l0-1];             Dh(l0-1,1) += TMP.mxaxis(Em);
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+//      m = 1, l = 1
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    MakeGH(Din(1,1),1);
+    Ep *= B2[1];              H = H.mxaxis(Ep);     Dh(0,0) += H.Re();
+    Ex *= A1(1,1) / A2(l0,0); TMP = G;              Dh(2,1) += G.mxaxis(Ex);
+    Em *= C1[1] / C3[l0];     G = TMP;              Dh(2,2) += TMP.mxaxis(Em);
+    Ep *= B1[1] / B2[1];      G = G.mxaxis(Ep);     Dh(2,0) += G.Re();
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+//      m = 1, l = 2
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    MakeGH(Din(2,1),2);
+    Ex *= A2(2,1) / A1(1,1); TMP = H;               Dh(1,1) += TMP.mxaxis(Ex);
+    Ep *= B2[2]   / B1[1];   H = H.mxaxis(Ep);      Dh(1,0) += H.Re();
+    Ex *= A1(2,1) / A2(2,1); TMP = G;               Dh(3,1) += G.mxaxis(Ex);
+    Em *= C1[2]   / C1[1];   G = TMP;               Dh(3,2) += TMP.mxaxis(Em);
+    Ep *= B1[2]   / B2[2];   G = G.mxaxis(Ep);      Dh(3,0) += G.Re();
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+//      m = 1, 1 < l < l0
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    for (size_t l(3); l < l0; ++l){
+        MakeGH(Din(l,1),l);
+        Ex *= A2(l,1) / A1(l-1,1); TMP = H;             Dh(l-1,1) += H.mxaxis(Ex);
+        Em *= C3[l]   / C1[l-1];   H = TMP;             Dh(l-1,2) += TMP.mxaxis(Em);
+        Ep *= B2[l]   / B1[l-1];   H = H.mxaxis(Ep);    Dh(l-1,0) += H.Re();
+        Ex *= A1(l,1) / A2(l,1);   TMP = G;             Dh(l+1,1) += G.mxaxis(Ex);
+        Em *= C1[l]   / C3[l];     G = TMP;             Dh(l+1,2) += TMP.mxaxis(Em);
+        Ep *= B1[l]   / B2[l];     G = G.mxaxis(Ep);    Dh(l+1,0) += G.Re();
+    }
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+//       m = 1,  l = l0
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    MakeGH(Din(l0,1),l0);
+    Ex *= A2(l0,1) / A1(l0-1,1); TMP = H;              Dh(l0-1,1) += H.mxaxis(Ex);
+    Em *= C3[l0]   / C1[l0-1];   H = TMP;              Dh(l0-1,2) += TMP.mxaxis(Em);
+    Ep *= B2[l0]   / B1[l0-1];   H = H.mxaxis(Ep);     Dh(l0-1,0) += H.Re();
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    C4(l0,1) = B2[l0];
+    for (size_t m(2); m < m0; ++m){
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+//          m > 1 , l = m
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        MakeGH(Din(m,m),m);
+        Ep *= C4(m,m) / C4(l0,m-1);              Dh(m-1,m-1) += H.mxaxis(Ep);
+        Ex *= A1(m,m) / A2(l0,m-1); TMP = G;     Dh(m+1,m  ) += G.mxaxis(Ex);
+        Em *= C1[m]   / C3[l0];     G = TMP;     Dh(m+1,m+1) += TMP.mxaxis(Em);
+        Ep *= C2(m,m) / C4(m,m);                 Dh(m+1,m-1) += G.mxaxis(Ep);
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+//          m > 1 , l = m+1
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        MakeGH(Din(m+1,m),m+1);
+        Ex *= A2(m+1,m) / A1(m,m);   TMP = H;     Dh(m  ,m  ) += TMP.mxaxis(Ex);
+        Ep *= C4(m+1,m) / C2(m,m);                Dh(m  ,m-1) += H.mxaxis(Ep);
+        if ( m+1 < l0) { //always true except when m = m0-1 = l0-1
+            Ex *= A1(m+1,m) / A2(m+1,m); TMP = G;     Dh(m+2,m  ) += G.mxaxis(Ex);
+            Em *= C1[m+1]   / C1[m];     G = TMP;     Dh(m+2,m+1) += TMP.mxaxis(Em);
+            Ep *= C2(m+1,m) / C4(m+1,m);              Dh(m+2,m-1) += G.mxaxis(Ep);
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+//              m > 1, 1 < l < l0
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+            for (size_t l(m+2); l < l0; ++l){
+                MakeGH(Din(l,m),l);
+                Ex *= A2(l,m) / A1(l-1,m); TMP = H;   Dh(l-1,m  ) += H.mxaxis(Ex);
+                Em *= C3[l]   / C1[l-1];   H = TMP;   Dh(l-1,m+1) += TMP.mxaxis(Em);
+                Ep *= C4(l,m) / C2(l-1,m);            Dh(l-1,m-1) += H.mxaxis(Ep);
+                Ex *= A1(l,m) / A2(l,m);   TMP = G;   Dh(l+1,m  ) += G.mxaxis(Ex);
+                Em *= C1[l]   / C3[l];     G = TMP;   Dh(l+1,m+1) += TMP.mxaxis(Em);
+                Ep *= C2(l,m) / C4(l,m);              Dh(l+1,m-1) += G.mxaxis(Ep);
+            }
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+//               m > 1,  l = l0
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+            MakeGH(Din(l0,m),l0);
+            Ex *= A2(l0,m) / A1(l0-1,m); TMP = H;    Dh(l0-1,m  ) += H.mxaxis(Ex);
+            Em *= C3[l0]   / C1[l0-1];   H = TMP;    Dh(l0-1,m+1) += TMP.mxaxis(Em);
+            Ep *= C4(l0,m) / C2(l0-1,m);             Dh(l0-1,m-1) += H.mxaxis(Ep);
+        }
+    }
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    MakeGH(Din(m0,m0),m0);
+    Ep *= C4(m0,m0) / C4(l0,m0-1);              Dh(m0-1,m0-1) += H.mxaxis(Ep);
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+//       m = m0, l0 > l > m0
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    if ( m0 < l0) {
+        Ex *= A1(m0,m0) / A2(l0,m0-1); TMP = G;  Dh(m0+1,m0  ) += TMP.mxaxis(Ex);
+        Ep *= C2(m0,m0) / C4(m0,m0);             Dh(m0+1,m0-1) += G.mxaxis(Ep);
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+//          m = m0 , l = m0+1
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        MakeGH(Din(m0+1,m0),m0+1);
+        Ex *= A2(m0+1,m0) / A1(m0,m0); TMP = H;        Dh(m0,m0  )  += TMP.mxaxis(Ex);
+        Ep *= C4(m0+1,m0) / C2(m0,m0);                 Dh(m0,m0-1)  += H.mxaxis(Ep);
+        if ( m0+1 < l0) {
+            Ex *= A1(m0+1,m0) / A2(m0+1,m0); TMP = G;  Dh(m0+2,m0  )+= TMP.mxaxis(Ex);
+            Ep *= C2(m0+1,m0) / C4(m0+1,m0);           Dh(m0+2,m0-1)+= G.mxaxis(Ep);
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+//              m = m0, m0+2 < l < l0
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+            for (size_t l(m0+2); l < l0; ++l){
+                MakeGH(Din(l,m0),l);
+                Ex *= A2(l,m0) / A1(l-1,m0); TMP = H;  Dh(l-1,m0)   += TMP.mxaxis(Ex);
+                Ep *= C4(l,m0) / C2(l-1,m0);           Dh(l-1,m0-1) += H.mxaxis(Ep);
+                Ex *= A1(l,m0) / A2(l,  m0); TMP = G;  Dh(l+1,m0  ) += TMP.mxaxis(Ex);
+                Ep *= C2(l,m0) / C4(l,  m0);           Dh(l+1,m0-1) += G.mxaxis(Ep);
+            }
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+//               m > 1,  l = l0
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+            MakeGH(Din(l0,m0),l0);
+            Ex *= A2(l0,m0) / A1(l0-1,m0); TMP = H;    Dh(l0-1,m0)   += TMP.mxaxis(Ex);
+            Ep *= C4(l0,m0) / C2(l0-1,m0);             Dh(l0-1,m0-1) += H.mxaxis(Ep);
+        }
+    }
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    // Dh -= Din.mxaxis(sigma);
+}
+
+//--------------------------------------------------------------
+//
+void Electric_Field_1D::es1d(const DistFunc1D& Din,
+                                   const Field1D& FEx, const Field1D& FEy, const Field1D& FEz,
+                                   DistFunc1D& Dh) {
+//--------------------------------------------------------------
+//  This is the core calculation for the electric field
+//--------------------------------------------------------------
+
+    valarray<complex<double> > Ex(FEx.array());
+
+    Ex *= Din.q();
+    size_t l0(Din.l0());
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+//      m = 0, l = 0
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    MakeG00(Din(0,0));
+    Ex *= A1(0,0);  Dh(1,0) += G.mxaxis(Ex);
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+//      m = 0, l = 1
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    MakeGH(Din(1,0),1);
+    Ex *= A2(1,0) / A1(0,0);    Dh(0,0) += H.mxaxis(Ex);
+    Ex *= A1(1,0) / A2(1,0);    Dh(2,0) += G.mxaxis(Ex);
+
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+//      m = 0, 1 < l < l0
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    for (size_t l(2); l < l0; ++l){
+        MakeGH(Din(l,0),l);
+        Ex *= A2(l,0) / A1(l-1,0);  Dh(l-1,0) += H.mxaxis(Ex);
+
+        Ex *= A1(l,0) / A2(l,0);   Dh(l+1,0) += G.mxaxis(Ex);
+
+    }
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+//      m = 0,  l = l0
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    MakeGH(Din(l0,0),l0);
+    Ex *= A2(l0,0) / A1(l0-1,0);  Dh(l0-1,0) += H.mxaxis(Ex);
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -853,7 +1252,7 @@ Magnetic_Field_1D::Magnetic_Field_1D(size_t Nl, size_t Nm,
 //  Constructor
 //--------------------------------------------------------------
         : A1(Nm+1), B1(Nl+1), A2(Nl+1,Nm+1), A3(0.5),
-          FLM(Np,Nx)
+          FLM(Np,Nx), sigma(Nx)//, killedbyPML((1.0,0.0),Nx)
 {
 //      - - - - - - - - - - - - - - - - - - - - - - - - - - -
     complex<double> lc, mc;
@@ -890,6 +1289,72 @@ Magnetic_Field_1D::Magnetic_Field_1D(size_t Nl, size_t Nm,
     }
 //       - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+    // int PML_Nx(0);
+    
+
+    // if (Input::List().PML_core > 0)
+    // {   
+    //     for (size_t ix(0); ix < Nx; ++ix)
+    //     {
+    //         killedbyPML[ix] = 1.0;
+    //     }
+
+    //     if (Input::List().PML_core == 1)        // Left (PML + Box) Core
+    //     {
+    //         PML_Nx = Nx*((Input::List().xminPML - xmin)/(xmax-xmin));
+
+    //         for (size_t ix(0); ix < PML_Nx; ++ix)
+    //         {
+    //             killedbyPML[ix] = 0.0;    
+    //         }
+    //     }
+    //     else if (Input::List().PML_core == 2)   // Right (PML + Box) Core
+    //     {
+    //         PML_Nx = (Input::List().xmaxPML - xmin)/(xmax-xmin)*Nx; 
+
+    //         for (size_t ix(PML_Nx); ix < Nx; ++ix)
+    //         {
+    //             killedbyPML[ix] = 0.0;    
+    //         }
+    //     }
+    //     else if (Input::List().PML_core == 4)  // Serial
+    //     {
+    //         PML_Nx = Nx*((Input::List().xminPML - xmin)/(xmax-xmin));
+            
+
+    //         for (size_t ix(0); ix < PML_Nx; ++ix)
+    //         {
+    //             killedbyPML[ix] = 0.0;    
+    //         }
+
+    //         PML_Nx = (Input::List().xmaxPML - xmin)/(xmax-xmin)*Nx; 
+            
+    //         for (size_t ix(PML_Nx); ix < Nx; ++ix)
+    //         {
+    //             killedbyPML[ix] = 0.0;    
+    //         }
+
+    //     }
+    //     else if (Input::List().PML_core == 3) // Full PML Core
+    //         killedbyPML = 0.0;    
+    double idx = ((-1.0)/ (2.0*(xmax-xmin)/double(Nx))); // -1/(2dx)
+    double xval;
+    double beta = 4.0;
+    double sigmam = 0.8*(beta+1.0);
+
+    for (size_t ix(0); ix < Nx; ++ix)
+    {
+        xval = xmin - 0.25/idx - 0.5*ix/idx;
+        if (xval < Input::List().xminPML)
+        {
+            sigma[ix] = sigmam*pow(((Input::List().xminPML-xval)/(Input::List().xminPML-xmin)),beta);
+        }
+        else if (xval > Input::List().xmaxPML)
+        {
+            sigma[ix] = sigmam*pow(((xval-Input::List().xmaxPML)/(xmax-Input::List().xmaxPML)),beta);
+        }
+    }
+
 }
 //--------------------------------------------------------------
 
@@ -915,6 +1380,7 @@ void Magnetic_Field_1D::operator()(const DistFunc1D& Din,
     Bx *= Din.q();
     Bm *= Din.q();
     Bp *= Din.q();
+
 
     size_t l0(B1.size()-1);
     size_t m0(A1.size()-1);
@@ -969,6 +1435,91 @@ void Magnetic_Field_1D::operator()(const DistFunc1D& Din,
 
 }
 //--------------------------------------------------------------
+
+
+//--------------------------------------------------------------
+void Magnetic_Field_1D::PML(const DistFunc1D& Din,
+                                   const Field1D& FBx, const Field1D& FBy, const Field1D& FBz,
+                                   DistFunc1D& Dh) {
+//--------------------------------------------------------------
+//  This is the core calculation for the magnetic field
+//--------------------------------------------------------------
+
+    complex<double> ii(0.0,1.0);
+
+    valarray<complex<double> > Bx(FBx.array());
+    valarray<complex<double> > Bm(FBy.array());
+    Bm *= (-1.0)*ii;
+    Bm += FBz.array();
+    valarray<complex<double> > Bp(FBy.array());
+    Bp *= ii;
+    Bp += FBz.array();
+
+    Bx *= Din.q();
+    Bm *= Din.q();
+    Bp *= Din.q();
+
+    // Bx *= killedbyPML;
+    // Bp *= killedbyPML;
+    // Bm *= killedbyPML;
+
+
+    size_t l0(B1.size()-1);
+    size_t m0(A1.size()-1);
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - -
+//      m = 0, 1 < l < l0+1
+// - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    Bp *= A3;
+    for (size_t l(1); l < l0+1; ++l){
+        FLM = Din(l,0);      Dh(l,1) += FLM.mxaxis(Bp);
+    }
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - -
+//      m = 1, l = 1
+// - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    FLM = Din(1,1); Bx *= A1[1];                           Dh(1,1) += FLM.mxaxis(Bx);
+    FLM = Din(1,1); Bm *= B1[1]; FLM = FLM.mxaxis(Bm); Dh(1,0) += FLM.Re();
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - -
+//      m = 1, l > 1
+// - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    for (size_t l(2); l < l0+1; ++l){
+        FLM = Din(l,1);                                                Dh(l,2) += FLM.mxaxis(Bp);
+        FLM = Din(l,1);                                                Dh(l,1) += FLM.mxaxis(Bx);
+        FLM = Din(l,1); Bm *= B1[l]/B1[l-1]; FLM = FLM.mxaxis(Bm); Dh(l,0) += FLM.Re();
+    }
+    Bm *= 1.0/B1[l0];
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - -
+//      m > 1, l = m
+// - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    for (size_t m(2); m < m0; ++m){
+        FLM = Din(m,m); Bx *= A1[m]/A1[m-1];                   Dh(m,m  ) += FLM.mxaxis(Bx);
+        FLM = Din(m,m); Bm *= A2(m,m);                         Dh(m,m-1) += FLM.mxaxis(Bm);
+        for (size_t l(m+1); l < l0+1; ++l){
+            FLM = Din(l,m);                                    Dh(l,m+1) += FLM.mxaxis(Bp);
+            FLM = Din(l,m);                                    Dh(l,m  ) += FLM.mxaxis(Bx);
+            FLM = Din(l,m); Bm *= A2(l,m)/A2(l-1,m);           Dh(l,m-1) += FLM.mxaxis(Bm);
+        }
+        Bm *= 1.0/A2(l0,m);
+    }
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - -
+//      m = m0, l >= m0
+// - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    FLM = Din(m0,m0); Bx *= A1[m0]/A1[m0-1];                   Dh(m0,m0)   += FLM.mxaxis(Bx);
+    FLM = Din(m0,m0); Bm *= A2(m0,m0)/*/A2(l0,m0-1)*/;             Dh(m0,m0-1) += FLM.mxaxis(Bm);
+    for (size_t l(m0+1); l < l0+1; ++l){
+        FLM = Din(l,m0);                                     Dh(l,m0  )  += FLM.mxaxis(Bx);
+        FLM = Din(l,m0); Bm *= A2(l,m0)/A2(l-1,m0);          Dh(l,m0-1)  += FLM.mxaxis(Bm);
+    }
+
+    // Dh -= Din.mxaxis(sigma);
+
+}
+//--------------------------------------------------------------
+
 //--------------------------------------------------------------
 void Magnetic_Field_1D::implicit(DistFunc1D& Din,
                                  const Field1D& FBx, const Field1D& FBy, const Field1D& FBz,
@@ -1204,13 +1755,15 @@ Spatial_Advection_1D::Spatial_Advection_1D(size_t Nl, size_t Nm,
 //--------------------------------------------------------------
         : A1(Nl+1,Nm+1), A2(Nl+1,Nm+1),
           fd1(Np,Nx), fd2(Np,Nx),
-         // vr(Algorithms::MakeAxis(complex<double>(pmax/2.0/Np),
+         // vr(Algorithms::MakeAxis(complex<double>(pmax/(2.0*Np-1)),
          //                         complex<double>(pmax),
          //                         Np)) {
 
           vr(Algorithms::MakeCAxis(complex<double>(0.0),
                                   complex<double>(pmax),
-                                  Np)){
+                                  Np)), f00(Np,Nx), sigma(Nx)
+          //killedbyPML((1.0,0.0),Nx) 
+{
 //      - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
     complex<double> lc, mc;
@@ -1220,6 +1773,7 @@ Spatial_Advection_1D::Spatial_Advection_1D(size_t Nl, size_t Nm,
     }
 
     double idx = (-1.0) / (2.0*(xmax-xmin)/double(Nx)); // -1/(2dx)
+    
 
 
 //       - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1239,7 +1793,86 @@ Spatial_Advection_1D::Spatial_Advection_1D(size_t Nl, size_t Nm,
     A10 = complex<double>(idx/3.0);
     A20 = complex<double>(idx*2.0/5.0);
 
+    // int PML_Nx(0);    
 
+    // if (Input::List().PML_core > 0)
+    // {   
+    //     for (size_t ix(0); ix < Nx; ++ix)
+    //     {
+    //         killedbyPML[ix] = 1.0;
+    //     }
+
+    //     if (Input::List().PML_core == 1)        // Left (PML + Box) Core
+    //     {
+    //         PML_Nx = Nx*((Input::List().xminPML - xmin)/(xmax-xmin));
+
+    //         for (size_t ix(0); ix < PML_Nx; ++ix)
+    //         {
+    //             killedbyPML[ix] = 0.0;    
+    //         }
+    //     }
+    //     else if (Input::List().PML_core == 2)   // Right (PML + Box) Core
+    //     {
+    //         PML_Nx = (Input::List().xmaxPML - xmin)/(xmax-xmin)*Nx; 
+
+    //         for (size_t ix(PML_Nx); ix < Nx; ++ix)
+    //         {
+    //             killedbyPML[ix] = 0.0;    
+    //         }
+    //     }
+    //     else if (Input::List().PML_core == 4)  // Serial
+    //     {
+    //         PML_Nx = Nx*((Input::List().xminPML - xmin)/(xmax-xmin));
+            
+
+    //         for (size_t ix(0); ix < PML_Nx; ++ix)
+    //         {
+    //             killedbyPML[ix] = 0.0;    
+    //         }
+
+    //         PML_Nx = (Input::List().xmaxPML - xmin)/(xmax-xmin)*Nx; 
+            
+    //         for (size_t ix(PML_Nx); ix < Nx; ++ix)
+    //         {
+    //             killedbyPML[ix] = 0.0;    
+    //         }
+
+    //     }
+    //     else if (Input::List().PML_core == 3) // Full PML Core
+    //         killedbyPML = 0.0;    
+
+    double xval;
+    double beta = 4.0;
+    double sigmam = 0.8*(beta+1.0);
+
+    for (size_t ix(0); ix < Nx; ++ix)
+    {
+        xval = xmin - 0.25/idx - 0.5*ix/idx;
+        if (xval < Input::List().xminPML)
+        {
+            sigma[ix] = sigmam*pow(((Input::List().xminPML-xval)/(Input::List().xminPML-xmin)),beta);
+        }
+        else if (xval > Input::List().xmaxPML)
+        {
+            sigma[ix] = sigmam*pow(((xval-Input::List().xmaxPML)/(xmax-Input::List().xmaxPML)),beta);
+        }
+    }
+
+    double temperature, density, mass;
+    double coefftemp;
+
+    mass = 1.0;
+    temperature = 0.07*0.07;
+    density = 0.114;
+
+    for (int j(0); j < f00.numx(); ++j){
+
+        coefftemp = density/pow(2.0*M_PI*temperature,1.5);
+        for (int k(0); k < f00.nump(); ++k){
+            f00(k,j) = coefftemp*exp(-1.0*pow((vr[k])/sqrt(2.0*temperature*mass),2.));
+        }
+
+    }
 
 }
 //--------------------------------------------------------------
@@ -1273,6 +1906,27 @@ void Spatial_Advection_1D::operator()(const DistFunc1D& Din, DistFunc1D& Dh) {
     }
 
 
+}
+//--------------------------------------------------------------
+//   Advection in x
+void Spatial_Advection_1D::PML(const DistFunc1D& Din, DistFunc1D& Dh) {
+//--------------------------------------------------------------
+    
+    // valarray<complex<double> > vt(vr); vt *= 1.0/Din.mass();
+
+    size_t l0(Din.l0());
+    size_t m0(Din.m0());
+
+
+    fd1 = Din(0,0);
+    fd1 -= f00;
+    Dh(0,0) -= fd1.mxaxis(sigma);
+
+
+    for (int indx(1); indx<Dh.dim();++indx){
+        Dh(indx) -= Din(indx).mxaxis(sigma);
+    }
+    
 }
 //--------------------------------------------------------------
 //--------------------------------------------------------------
@@ -1331,10 +1985,27 @@ Faraday_1D::Faraday_1D( double xmin, double xmax, size_t Nx)
 //--------------------------------------------------------------
 // Constructor
 //--------------------------------------------------------------
-        : tmpE(Nx), numx(Nx) {
+        : tmpE(Nx), numx(Nx), sigma(0.0,Nx) {
 
     idx = complex<double>((-1.0)/ (2.0*(xmax-xmin)/double(Nx))); // -1/(2dx)
 
+    double xval;
+    
+    double beta = 4.0;
+    double sigmam = 0.8*(beta+1.0);
+
+    for (size_t ix(0); ix < Nx; ++ix)
+    {
+        xval = xmin - 0.25/idx.real() - 0.5*ix/idx.real();
+        if (xval < Input::List().xminPML)
+        {
+            sigma[ix] = sigmam*pow(((Input::List().xminPML-xval)/(Input::List().xminPML-xmin)),beta);
+        }
+        else if (xval > Input::List().xmaxPML)
+        {
+            sigma[ix] = sigmam*pow(((xval-Input::List().xmaxPML)/(xmax-Input::List().xmaxPML)),beta);
+        }
+    }
 }
 //--------------------------------------------------------------
 
@@ -1343,29 +2014,42 @@ void Faraday_1D::operator()(EMF1D& EMFin, EMF1D& EMFh) {
 //--------------------------------------------------------------
 //  This is the core calculation for Faraday's Law 
 //--------------------------------------------------------------
-
-//      dBx/dt += - dEz/dy  
-//         tmpE          = Fin.Ez(); 
-//         tmpE         *= (-1.0) * idy;
-//         Yh.EMF().Bx() += tmpE.Dy();
-
 //      dBy/dt +=   dEz/dx       
     tmpE                 = EMFin.Ez();
     tmpE                *= idx;
     EMFh.By()           += tmpE.Dx();
-    // EMFh.By()(numx-1)    = 0.0;
+    
+//      dBz/dt += - dEy/dx       
+    tmpE                 = EMFin.Ey();
+    tmpE                *= (-1.0) * idx;
+    EMFh.Bz()           += tmpE.Dx();
 
-//      dBz/dt +=   dEx/dy       
-//         tmpE          = Ein.Ex(); 
-//         tmpE         *= idy;
-//         Yh.EMF().Bz() += tmpE.Dy();    
+}
+//--------------------------------------------------------------
+//--------------------------------------------------------------
+void Faraday_1D::PML(EMF1D& EMFin, EMF1D& EMFh) {
+//--------------------------------------------------------------
+//  This is the core calculation for Faraday's Law 
+//--------------------------------------------------------------
+//      dBy/dt +=   dEz/dx       
+    tmpE                 = EMFin.Ez();
+    tmpE                *= idx;
+    EMFh.By()           += tmpE.Dx();
+    
+    tmpE                 = EMFin.By();
+    tmpE                *= sigma;
+    EMFh.By()           -= tmpE;
 
 //      dBz/dt += - dEy/dx       
     tmpE                 = EMFin.Ey();
     tmpE                *= (-1.0) * idx;
     EMFh.Bz()           += tmpE.Dx();
 
-    // EMFh.Bz()(numx-1)    = 0.0;
+    tmpE                 = EMFin.Bz();
+    tmpE                *= sigma;
+    EMFh.Bz()           -= tmpE;
+
+
 
 }
 //--------------------------------------------------------------
@@ -1380,9 +2064,27 @@ Ampere_1D::Ampere_1D( double xmin, double xmax, size_t Nx)
 //--------------------------------------------------------------
 // Constructor
 //--------------------------------------------------------------
-        : tmpB(Nx), numx(Nx) {
+        : tmpB(Nx), numx(Nx), sigma(0.0,Nx) {
 
     idx = complex<double>((-1.0)/ (2.0*(xmax-xmin)/double(Nx))); // -1/(2dx)
+
+    double xval;
+
+    double beta = 4.0;
+    double sigmam = 0.8*(beta+1.0);
+
+    for (size_t ix(0); ix < Nx; ++ix)
+    {
+        xval = xmin - 0.25/idx.real() - 0.5*ix/idx.real();
+        if (xval < Input::List().xminPML)
+        {
+            sigma[ix] = sigmam*pow(((Input::List().xminPML-xval)/(Input::List().xminPML-xmin)),beta);
+        }
+        else if (xval > Input::List().xmaxPML)
+        {
+            sigma[ix] = sigmam*pow(((xval-Input::List().xmaxPML)/(xmax-Input::List().xmaxPML)),beta);
+        }
+    }
 
 }
 //--------------------------------------------------------------
@@ -1393,29 +2095,42 @@ void Ampere_1D::operator()(EMF1D& EMFin, EMF1D& EMFh) {
 //  This is the core calculation for Ampere's Law 
 //--------------------------------------------------------------
 
-//      dEx/dt +=   dBz/dy       
-//         tmpB          = Fin.Bz(); 
-//         tmpB         *= idy;
-//         Fh.Ex() += tmpB.Dy();
+//      dEy/dt +=  - dBz/dx       
+    tmpB                 = EMFin.Bz();
+    tmpB                *= (-1.0) * idx;
+    EMFh.Ey()           += tmpB.Dx();
+
+//      dEz/dt += dBy/dx       
+    tmpB                 = EMFin.By();
+    tmpB                *=  idx;
+    EMFh.Ez()           += tmpB.Dx();    
+
+}
+//--------------------------------------------------------------
+//--------------------------------------------------------------
+void Ampere_1D::PML(EMF1D& EMFin, EMF1D& EMFh) {
+//--------------------------------------------------------------
+//  This is the core calculation for Ampere's Law 
+//--------------------------------------------------------------
 
 //      dEy/dt +=  - dBz/dx       
     tmpB                 = EMFin.Bz();
     tmpB                *= (-1.0) * idx;
     EMFh.Ey()           += tmpB.Dx();
 
-    //.Dx();
-    // EMFh.Ey()(numx-1)    = 0.0;
-
-//      dEz/dt +=  - dBx/dy       
-//         tmpB          = Fin.Bx(); 
-//         tmpB         *= (-1.0) * idy;
-//         Fh.Ez() += tmpB.Dy();    
+    tmpB                 = EMFin.Ey();
+    tmpB                *= sigma;
+    EMFh.Ey()           -= tmpB;
 
 //      dEz/dt += dBy/dx       
     tmpB                 = EMFin.By();
     tmpB                *=  idx;
     EMFh.Ez()           += tmpB.Dx();
-    // EMFh.Ez()(numx-1)    = 0.0;
+
+    tmpB                 = EMFin.Ez ();
+    tmpB                *= sigma;
+    EMFh.Ez()           -= tmpB;
+    
 
 }
 //--------------------------------------------------------------

@@ -77,7 +77,7 @@ public:
     complex<double> & operator()(size_t i) {return (*sh)(i);}             //1D-style
     complex<double>   operator()(size_t i) const {return (*sh)(i);}       //1D-style
 
-    vector<complex<double> > xVec(size_t j) const {return (*sh).d2c(j);}       //1D-style
+    vector<complex<double > > xVec(size_t j) const {return ((*sh).d2c(j));}       //1D-style
 
 //      Operators
     SHarmonic1D& operator=(const complex<double> & d);
@@ -380,6 +380,7 @@ private:
     vector<SHarmonic1D> *df;
     size_t lmax, mmax, sz;
     double pmx, charge, ma;
+    double flt_dp, flt_pma;
 
     Array2D<int> ind;
     valarray<int> filter_ceiling;
@@ -387,21 +388,24 @@ private:
 public:
 
 //      Constructors/Destructors
-    DistFunc1D(size_t l, size_t m, size_t np, double pma, size_t nx, double q, double _ma);
+    DistFunc1D(size_t l, size_t m, size_t np, double pma, size_t nx, double q, double _ma, double filter_dp, double filter_pmax);
     DistFunc1D(const DistFunc1D& other);
     ~DistFunc1D();
 
 //      Basic info
-    size_t dim()  const {return sz;}
-    size_t l0()   const {return lmax;  }
-    size_t m0()   const {return mmax;  }
-    double pmax() const {return pmx;   }
-    double q()    const {return charge;}
-    double mass() const {return ma;    }
+    size_t dim()                    const {return sz;}
+    size_t l0()                     const {return lmax;  }
+    size_t m0()                     const {return mmax;  }
+    double pmax()                   const {return pmx;   }
+    double q()                      const {return charge;}
+    double mass()                   const {return ma;    }
+    double filter_dp()              const {return flt_dp;}
+    double filter_pmax()            const {return flt_pma;}
 
     Array2D<int> indx() const {return ind;}
 
     valarray<double> getdensity();
+    valarray<double> getdensity() const;
     valarray<double> getcurrent(size_t dir);
     valarray<double> getcurrent(size_t dir) const;
     Array2D<double>  getcurrent() const;
@@ -568,6 +572,81 @@ public:
 
 };
 
+
+//-------------------------------------------------------------------
+/** \class  Particle1D
+ *  \brief  Particle tracker
+ *  
+ *   
+ *   
+*/
+class Particle1D {
+//-------------------------------------------------------------------
+private:
+    
+    valarray<double>  *par_posX, *par_momX, *par_momY, *par_momZ;
+    valarray<bool>    *par_ishere;
+    valarray<int>     *par_goingright;
+
+    double particlemass, particlecharge;
+
+public:
+//      Constructors/Destructors
+    Particle1D(size_t numparticles, double _mass, double _charge);
+    Particle1D(const Particle1D& other);
+    ~Particle1D();
+
+//      Access to the underlying matrix
+    // valarray<complex<double> >& array() const {return (*fi);}
+    size_t numpar() const {return (*par_posX).size();}
+    double mass() const {return particlemass;}
+    double charge() const {return particlecharge;}
+
+    // void Dx_vel(valarray<complex<double>>& vin);
+    double & x(size_t i){ return (*par_posX)[i];}             //1D-style
+    double   x(size_t i) const {return (*par_posX)[i];}
+
+    double & px(size_t i){ return (*par_momX)[i];}
+    double   px(size_t i) const {return (*par_momX)[i];}
+
+    double & py(size_t i){ return (*par_momY)[i];}
+    double   py(size_t i) const {return (*par_momY)[i];}
+
+    double & pz(size_t i){ return (*par_momZ)[i];}
+    double   pz(size_t i) const {return (*par_momZ)[i];}
+
+    bool   & ishere(size_t i){ return (*par_ishere)[i];}             //1D-style
+    bool     ishere(size_t i) const {return (*par_ishere)[i];}
+
+    int   & goingright(size_t i){ return (*par_goingright)[i];}             //1D-style
+    int     goingright(size_t i) const {return (*par_goingright)[i];}
+
+    valarray<double >& par_posX_array()       const {return (*par_posX);}
+    valarray<double >& par_momX_array()            const {return (*par_momX);}
+    valarray<double >& par_momY_array()            const {return (*par_momY);}
+    valarray<double >& par_momZ_array()            const {return (*par_momZ);}
+    valarray<bool >& par_ishere_array()   const {return (*par_ishere);}
+    valarray<int >& par_goingright_array()   const {return (*par_goingright);}
+
+//      Operators
+    Particle1D& operator=(const double & d);
+    Particle1D& operator=(const valarray<double >& other);
+    Particle1D& operator=(const Particle1D& other);
+
+    Particle1D& operator*=(const double & d);
+    Particle1D& operator*=(const valarray<double >& other);
+    Particle1D& operator*=(const Particle1D& other);
+
+    Particle1D& operator+=(const double & d);
+    Particle1D& operator+=(const valarray<double >& other);
+    Particle1D& operator+=(const Particle1D& other);
+
+    Particle1D& operator-=(const double & d);
+    Particle1D& operator-=(const valarray<double >& other);
+    Particle1D& operator-=(const Particle1D& other);
+
+};
+
 /** \addtogroup st1d
  *  @{
  */
@@ -579,16 +658,14 @@ private:
     vector<DistFunc1D> *sp;
     EMF1D *flds;
     Hydro1D *hydro;
-
-    // valarray<complex<double>>       *_hydrovelocity, *_hydrotemperature;
-    // valarray<complex<double>>       *_kineticspeciespressure, *_magneticpressure;
-
+    Particle1D *prtcls;
     size_t ns;
-
 
 public:
 //      Constructors/Destructors
-    State1D(size_t nx, vector<size_t> l0, vector<size_t> m0, vector<size_t> np, vector<double> pmax, vector<double> q, vector<double> ma, double hydromass, double hydrocharge);
+    State1D(size_t nx, vector<size_t> l0, vector<size_t> m0, vector<size_t> np, vector<double> pmax, vector<double> q, vector<double> ma, 
+        double hydromass, double hydrocharge, double filter_dp, double filter_pmax,
+        size_t numparticles, double particlemass, double particlecharge);
     State1D(const State1D& other);
     ~State1D();
 
@@ -606,15 +683,20 @@ public:
     SHarmonic1D& SH(size_t s, size_t lh, size_t mh)  const {return ((*sp)[s])(lh,mh);}
 //         SHarmonic1D* SHp(size_t s, size_t lh, size_t mh)       {return   (sp[s])(lh,mh); } // Pointer to spherical harmonic
 //         SHarmonic1D* SHp(size_t s, size_t lh, size_t mh) const {return   (sp[s])(lh,mh); }
-//          Fields
+
+    //      Fields
     EMF1D& EMF() const {return (*flds);}
     Field1D& FLD(size_t ip) const {return (*flds)(ip);}
-//          Hydro
+    
+    //      Hydro
     Hydro1D&  HYDRO()         {return (*hydro);}
     Hydro1D&  HYDRO() const   {return (*hydro);}
 
+    //      Particles
+    Particle1D&  particles()         {return (*prtcls);}
+    Particle1D&  particles() const   {return (*prtcls);}
 
-//      Copy assignment Operator
+    //      Copy assignment Operator
     State1D& operator=(const State1D& other);
     State1D& operator=(const complex<double> & d);
     State1D& operator*=(const State1D& other);

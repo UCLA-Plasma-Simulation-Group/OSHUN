@@ -48,6 +48,7 @@ namespace Export_Files{
         vector<string> space;
         vector<string> fld;
         vector<string> mom;
+        vector<string> part;
         vector<string> pvsx;
         vector<string> fvsx;
         vector<string> pvspvsx;
@@ -238,23 +239,23 @@ namespace Output_Data{
 //  this 2D space is calculated and then the Legendre polynomials
 //  for each cos8 are calculated. We end up with a 1D array for l
 //  containing 2D matrices of the polynomials for each cos8
-    class PLegendre1D {
-    public:
-//      Constructors/Destructors
-        PLegendre1D(size_t Nl, size_t Nm, size_t Np,  float pmin, float pmax,
-                               size_t Npx );
-        PLegendre1D(const PLegendre1D& other);
-        ~PLegendre1D();
+//     class PLegendre1D {
+//     public:
+// //      Constructors/Destructors
+//         PLegendre1D(size_t Nl, size_t Nm, size_t Np,  float pmin, float pmax,
+//                                size_t Npx );
+//         PLegendre1D(const PLegendre1D& other);
+//         ~PLegendre1D();
 
-//      Access
-        size_t dim()   const { return (*plegendre).size(); }
-        Array2D<float>& operator()(size_t i)       { return (*plegendre)[i]; }
-        Array2D<float>  operator()(size_t i) const { return (*plegendre)[i]; }   
+// //      Access
+//         size_t dim()   const { return (*plegendre).size(); }
+//         Array2D<float>& operator()(size_t i)       { return (*plegendre)[i]; }
+//         Array2D<float>  operator()(size_t i) const { return (*plegendre)[i]; }   
     
-private:
-        vector< Array2D<float> > *plegendre;
-        size_t lmax;
-    };
+// private:
+//         vector< Array2D<float> > *plegendre;
+//         size_t lmax;
+//     };
 //--------------------------------------------------------------
 
 //--------------------------------------------------------------
@@ -322,6 +323,43 @@ private:
 
 //--------------------------------------------------------------
 //  This class converts the state Y at a specific location
+//  "x0" and calculates the integral \int\int f*dpy*dpz
+//--------------------------------------------------------------
+    class p2x1_1D {
+//--------------------------------------------------------------
+    public:
+//      Constructor/Destructor
+        p2x1_1D(const Grid_Info& _G);
+        p2x1_1D(const p2x1_1D& other);
+
+        ~p2x1_1D();
+
+//      Methods
+        valarray<float> operator()(DistFunc1D& df, size_t x0, size_t s) ;
+
+//      Access
+        size_t Species()         const { return p2x1.size(); }
+//        size_t Nl(size_t s)      const  { return Pl[s].dim(); }
+//        size_t Npx(size_t s)     const  { return polarR[s].dim1(); }
+//        size_t Np(size_t s)      const  { return polarR[s].dim2(); }
+        float  Pmin(size_t s)    const  { return pmin[s]; }
+        float  Pmax(size_t s)    const  { return pmax[s]; }
+
+        PLegendre2D      PL(size_t s)     const { return Pl[s]; }
+        valarray<float>  p2_x1(size_t s)  const { return p2x1[s]; }
+//        Array2D<float>   PolarR(size_t s) const { return polarR[s]; }
+
+    private:
+        vector< PLegendre2D >    Pl;
+//        vector< Array2D<float> > polarR;
+
+        vector< valarray<float> > p2x1;
+        vector<float> pmin, pmax;
+    };
+//--------------------------------------------------------------
+
+//--------------------------------------------------------------
+//  This class converts the state Y at a specific location
 //  "x0" and calculates the integral \int\int f*dpy*dpz 
 //--------------------------------------------------------------
     class p2p1x1_1D {
@@ -350,7 +388,7 @@ private:
         PLegendre2D      PL(size_t s)     const { return Pl[s]; }
         Array2D<float>  p2p1_x1(size_t s)  const { return p2p1x1[s]; }
         Array2D<float>   prad(size_t s) const { return pr[s]; }
-        Array2D<size_t>  npcell(size_t s) const {return nextpcell[s];}
+        Array2D<int>  npcell(size_t s) const {return pcelltotheleft[s];}
         Array2D<float>  dcell(size_t s) const {return distancetothatcell[s];}
 
     private:
@@ -358,7 +396,7 @@ private:
         vector<size_t> numl, numm;
         vector< PLegendre2D >    Pl;
         vector< Array2D<float> > pr;
-        vector< Array2D<size_t> > nextpcell;
+        vector< Array2D<int> > pcelltotheleft;
         vector< Array2D<float> > distancetothatcell;
 
         vector< Array2D<float> > p2p1x1;
@@ -411,7 +449,7 @@ private:
                                const vector< string > _oTags, 
                                string homedir="")  
         : expo( _grid.axis, _oTags, homedir),
-          px_x( _grid ), //pxpy_x( _grid),
+          px_x( _grid ), py_x( _grid), pxpy_x( _grid),
           f_x( _grid),
           oTags(_oTags) { }
 
@@ -423,13 +461,16 @@ private:
                                         const Parallel_Environment_1D& PE);
         void distdump(const State1D& Y, const Grid_Info& grid, const size_t tout,
                         const Parallel_Environment_1D& PE);
+        void bigdistdump(const State1D& Y, const Grid_Info& grid, const size_t tout,
+                        const Parallel_Environment_1D& PE);
 
     private:
         size_t              Nbc;
         Export_Files::Xport expo;
         p1x1_1D             px_x;
+        p2x1_1D             py_x;
         fx1_1D             f_x;
-//        p2p1x1_1D           pxpy_x;
+        p2p1x1_1D           pxpy_x;
         vector< string >    oTags;
 
         void Ex(const State1D& Y, const Grid_Info& grid, const size_t tout,
@@ -446,8 +487,10 @@ private:
                                         const Parallel_Environment_1D& PE);
         void px(const State1D& Y, const Grid_Info& grid, const size_t tout,
                                         const Parallel_Environment_1D& PE);
-//        void pxpy(const State1D& Y, const Grid_Info& grid, const size_t tout,
-//                                        const Parallel_Environment_1D& PE);
+        void py(const State1D& Y, const Grid_Info& grid, const size_t tout,
+                const Parallel_Environment_1D& PE);
+        void pxpy(const State1D& Y, const Grid_Info& grid, const size_t tout,
+                                       const Parallel_Environment_1D& PE);
         void f0(const State1D& Y, const Grid_Info& grid, const size_t tout,
                                         const Parallel_Environment_1D& PE);
         void f10(const State1D& Y, const Grid_Info& grid, const size_t tout,
@@ -461,6 +504,14 @@ private:
         void n(const State1D& Y, const Grid_Info& grid, const size_t tout,
                                         const Parallel_Environment_1D& PE);
         void T(const State1D& Y, const Grid_Info& grid, const size_t tout,
+                                        const Parallel_Environment_1D& PE);
+        void particles_x(const State1D& Y, const Grid_Info& grid, const size_t tout,
+                                        const Parallel_Environment_1D& PE);
+        void particles_px(const State1D& Y, const Grid_Info& grid, const size_t tout,
+                                        const Parallel_Environment_1D& PE);
+        void particles_py(const State1D& Y, const Grid_Info& grid, const size_t tout,
+                                        const Parallel_Environment_1D& PE);
+        void particles_pz(const State1D& Y, const Grid_Info& grid, const size_t tout,
                                         const Parallel_Environment_1D& PE);
         void Jx(const State1D& Y, const Grid_Info& grid, const size_t tout,
                                         const Parallel_Environment_1D& PE);

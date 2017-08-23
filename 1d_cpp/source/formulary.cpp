@@ -1,6 +1,6 @@
 /*! \brief Plasma Formulary and Units - Definitions
 * \author PICKSC
- * \date   September 1, 2016
+ * \date   April, 2017
  * \file   formulary.cpp
  * 
  * Definitions for data structures that are related to
@@ -226,6 +226,7 @@ Formulary::Formulary() : n(Input::List().density_np),
 double Formulary::LOGee(double ne, double Te) {   
 //   ne =  density/np, Te = energy/mc^2
 //   Note: we assume nonrelativistic distribution functions
+    if (Input::List().lnLambda_ee > 0) return Input::List().lnLambda_ee;  // fixed logLambda
     if (ne < nmin) return 2.0; 
 
     // Te /= (3.0*ne);
@@ -249,6 +250,8 @@ double Formulary::LOGee(double ne, string un, double Te, string uT) {
 double Formulary::LOGei(double ne, double Te, double Z) {   
 //   ne =  density/np, Te = energy/mc^2
 //   Note: we assume nonrelativistic distribution functions
+    if (Input::List().lnLambda_ei > 0) return Input::List().lnLambda_ei;  // fixed logLambda
+//   
     if (ne < nmin) return 2.0; 
 
     Te *= Units("Energy","eV").d; // Temperature in eV

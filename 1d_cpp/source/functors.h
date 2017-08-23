@@ -1,6 +1,6 @@
 /*!\brief  Functors for various time-integration methodds - Declarations
  * \author PICKSC
- * \file   vlasov.h
+ * \file   functors.h
  *
  * Includes functors for fully explicit, implicit B, implicit E
  *
@@ -8,7 +8,6 @@
 #ifndef OSHUN1D_FUNCTORS_H
 #define OSHUN1D_FUNCTORS_H
 
-#endif //OSHUN1D_FUNCTORS_H
 
 
 //--------------------------------------------------------------
@@ -35,9 +34,11 @@ private:
     vector<Spatial_Advection_1D> SA;
     vector<Electric_Field_1D>    EF;
     vector<Current_1D>           JX;
+    vector<Gauss_1D>           GA;
     vector<Ampere_1D>    		 AM;
     vector<Magnetic_Field_1D>    BF;
     vector<Faraday_1D>    		 FA;
+
 //            vector<Hydro_Advection_1D>   HA;
 
 };
@@ -64,6 +65,34 @@ private:
 //--------------------------------------------------------------
 //--------------------------------------------------------------
 //  Functor to be used in the Runge-Kutta methods
+class VlasovFunctor1D_fieldupdate : public Algorithms::AbstFunctor<State1D> {
+//--------------------------------------------------------------
+public:
+//          Constructor
+    VlasovFunctor1D_fieldupdate(vector<size_t> Nl, vector<size_t> Nm,
+                              vector<double> pmax, vector<size_t> Np,
+                              double xmin, double xmax, size_t Nx);
+    ~VlasovFunctor1D_fieldupdate(){ };
+
+//          Collect all the operators and apply on Yin
+    void operator()(const State1D& Yin, State1D& Yslope);
+    void operator()(const State1D& Yin, State1D& Yslope, size_t dir);
+
+private:
+
+    
+    vector<Current_1D>           JX;
+    vector<Gauss_1D>             GA;
+    vector<Ampere_1D>    		 AM;
+    vector<Faraday_1D>    		 FA;
+
+//            vector<Hydro_Advection_1D>   HA;
+
+};
+//--------------------------------------------------------------
+//--------------------------------------------------------------
+//--------------------------------------------------------------
+//  Functor to be used in the Runge-Kutta methods
 class VlasovFunctor1D_momentumpush : public Algorithms::AbstFunctor<State1D> {
 //--------------------------------------------------------------
 public:
@@ -80,15 +109,14 @@ public:
 private:
 
     vector<Electric_Field_1D>    EF;
-    vector<Current_1D>           JX;
-    vector<Ampere_1D>    		 AM;
+    // vector<Current_1D>           JX;
+    // vector<Ampere_1D>            AM;
     vector<Magnetic_Field_1D>    BF;
-    vector<Faraday_1D>    		 FA;
+    // vector<Faraday_1D>           FA;
 //            vector<Hydro_Advection_1D>   HA;
 
 };
 //--------------------------------------------------------------
-
 
 
 //--------------------------------------------------------------
@@ -202,6 +230,7 @@ private:
 };
 //--------------------------------------------------------------
 
+#endif //OSHUN1D_FUNCTORS_H
 
 
 /** @} */

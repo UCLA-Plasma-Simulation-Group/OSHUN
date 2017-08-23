@@ -2,7 +2,7 @@
  * \author PICKSC
  * \date   March 2017
  * \file   input.cpp
- * 
+ *
  * Contains:
  * 1) input reader
  * 2) default values for input variables.
@@ -16,7 +16,7 @@
 #include <cstdlib>
 #include <cfloat>
 #include <fstream>
-#include <string>
+#include <cstring>
 
 #include <math.h>
 #include <map>
@@ -26,17 +26,18 @@
 
 //**************************************************************
 //--------------------------------------------------------------
-Input::Input_List::Input_List(): 
+Input::Input_List::Input_List():
     isthisarestart(0),
     NnodesX(4),
     numsp(1),
     l0(6),
-    m0(4), 
-    nump(96), 
+    m0(4),
+    nump(96),
     Nx(32),
-    xmin(-1000.0), 
+    xmin(-1000.0),
     xmax(1000.0),
     clf_dp(1.0),
+    filterdistribution(1),
     if_tridiagonal(1),
     implicit_E(1),
     implicit_B(0),
@@ -44,9 +45,12 @@ Input::Input_List::Input_List():
     f00_implicitorexplicit(2),
     flm_collisions(0),
     BoundaryCells(3),
+    numPMLCells(24),
+    PML_core(0),
     bndX(0),
-    n_outsteps(1000), 
+    n_outsteps(1000),
     n_distoutsteps(100),
+    n_bigdistoutsteps(100),
     t_stop(8000),
     restart_time(10000.0),
     n_restarts(100),
@@ -59,13 +63,13 @@ Input::Input_List::Input_List():
     o_Vsq(0), o_Qx(0), o_Qy(0), o_Qz(0),
     o_vNx(0), o_vNy(0), o_vNz(0),
     o_Jx(0), o_Jy(0), o_Jz(0),
-    o_Pressure(0), o_Temperature(0), o_ND(0), o_Nu(0), o_p1x1(0), o_f0x1(0), o_f10x1(0), o_f11x1(0), o_f20x1(0), o_fl0x1(0),
+    o_Pressure(0), o_Temperature(0), o_ND(0), o_Nu(0), o_p1x1(0), o_p2x1(0), o_f0x1(0), o_f10x1(0), o_f11x1(0), o_f20x1(0), o_fl0x1(0),
     o_Ux(0), o_Uy(0), o_Uz(0), o_Z(0), o_ni(0), o_Ti(0),
-    
+
     numpx(96), nump1(96), nump2(96), nump3(96),
 
 //          Electron-ion collisions
-    density_np(1.0e21),
+    density_np(1.0e21), lnLambda_ei(-1), lnLambda_ee(-1),
 
 //          Electron-electron collisions
     RB_D_itmax(100),
@@ -84,7 +88,13 @@ Input::Input_List::Input_List():
     super_gaussian_m(2.0),
 
     pth_ref(0.025),
-        
+
+    // Particles
+    particlepusher(0),
+    numparticles(0),
+    particlecharge(-1.0),
+    particlemass(1.0),
+
 
     hydro_dens_profile_str("cst{0.0}"),
     hydro_temp_profile_str("cst{0.0}"),
@@ -193,7 +203,7 @@ Input::Input_List::Input_List():
                 deckfile >> deckequalssign;
                 if(deckequalssign != "=") {
                     std::cout << "Error reading " << deckstring << std::endl;
-                    exit(1); 
+                    exit(1);
                 }
                 deckfile >> restart_time;
             }
@@ -334,6 +344,32 @@ Input::Input_List::Input_List():
                 }
                 deckfile >> clf_dp;
             }
+            if (deckstring == "filter_distribution") {
+                deckfile >> deckequalssign;
+                if(deckequalssign != "=") {
+                    std::cout << "Error reading " << deckstring << std::endl;
+                    exit(1);
+                }
+                deckfile >> deckstringbool;
+                filterdistribution = (deckstringbool[0] == 't' || deckstringbool[0] == 'T');
+            }
+            if (deckstring == "filter_dp") {
+                deckfile >> deckequalssign;
+                if(deckequalssign != "=") {
+                    std::cout << "Error reading " << deckstring << std::endl;
+                    exit(1);
+                }
+                deckfile >> filter_dp;
+            }
+            if (deckstring == "filter_pmax") {
+                deckfile >> deckequalssign;
+                if(deckequalssign != "=") {
+                    std::cout << "Error reading " << deckstring << std::endl;
+                    exit(1);
+                }
+                deckfile >> filter_pmax;
+            }
+
             if (deckstring == "hydro") {
                 deckfile >> deckequalssign;
                 if(deckequalssign != "=") {
@@ -360,6 +396,88 @@ Input::Input_List::Input_List():
                     exit(1);
                 }
                 deckfile >> hydrocharge;
+            }
+
+            if (deckstring == "track_particles") {
+                deckfile >> deckequalssign;
+                if(deckequalssign != "=") {
+                    std::cout << "Error reading " << deckstring << std::endl;
+                    exit(1);
+                }
+                deckfile >> deckstringbool;
+                particlepusher = (deckstringbool[0] == 't' || deckstringbool[0] == 'T');
+            }
+            if (deckstring == "number_of_particles") {
+                deckfile >> deckequalssign;
+                if(deckequalssign != "=") {
+                    std::cout << "Error reading " << deckstring << std::endl;
+                    exit(1);
+                }
+                deckfile >> numparticles;
+            }
+            if (deckstring == "particles_position") {
+                deckfile >> deckequalssign;
+                if(deckequalssign != "=") {
+                    std::cout << "Error reading " << deckstring << std::endl;
+                    exit(1);
+                }
+                for (size_t ip(0);ip<numparticles;++ip)
+                {
+                    deckfile >> deckreal;
+                    par_xpos.push_back(deckreal);
+                }
+            }
+            if (deckstring == "particles_px") {
+                deckfile >> deckequalssign;
+                if(deckequalssign != "=") {
+                    std::cout << "Error reading " << deckstring << std::endl;
+                    exit(1);
+                }
+                for (size_t ip(0);ip<numparticles;++ip)
+                {
+                    deckfile >> deckreal;
+                    par_px.push_back(deckreal);
+                }
+            }
+            if (deckstring == "particles_py") {
+                deckfile >> deckequalssign;
+                if(deckequalssign != "=") {
+                    std::cout << "Error reading " << deckstring << std::endl;
+                    exit(1);
+                }
+                for (size_t ip(0);ip<numparticles;++ip)
+                {
+                    deckfile >> deckreal;
+                    par_py.push_back(deckreal);
+                }
+            }
+            if (deckstring == "particles_pz") {
+                deckfile >> deckequalssign;
+                if(deckequalssign != "=") {
+                    std::cout << "Error reading " << deckstring << std::endl;
+                    exit(1);
+                }
+                for (size_t ip(0);ip<numparticles;++ip)
+                {
+                    deckfile >> deckreal;
+                    par_pz.push_back(deckreal);
+                }
+            } 
+            if (deckstring == "particle_charge") {
+                deckfile >> deckequalssign;
+                if(deckequalssign != "=") {
+                    std::cout << "Error reading " << deckstring << std::endl;
+                    exit(1);
+                }
+                deckfile >> particlecharge;
+            }
+            if (deckstring == "particle_mass") {
+                deckfile >> deckequalssign;
+                if(deckequalssign != "=") {
+                    std::cout << "Error reading " << deckstring << std::endl;
+                    exit(1);
+                }
+                deckfile >> particlemass;
             }
             if (deckstring == "ext_fields") {
                 deckfile >> deckequalssign;
@@ -420,7 +538,7 @@ Input::Input_List::Input_List():
                 }
                 deckfile >> RB_D_itmax;
             }
-            if (deckstring == "NB_algorithms") {
+            if (deckstring == "f00_exp_parabolic_approximation") {
                 deckfile >> deckequalssign;
                 if(deckequalssign != "=") {
                     std::cout << "Error reading " << deckstring << std::endl;
@@ -446,7 +564,7 @@ Input::Input_List::Input_List():
                 deckfile >> deckstringbool;
                 implicit_E = (deckstringbool[0] == 't' || deckstringbool[0] == 'T');
             }
-            if (deckstring == "implicit_B_push") {
+            if (deckstring == "CrankNicholson_vxB_push") {
                 deckfile >> deckequalssign;
                 if(deckequalssign != "=") {
                     std::cout << "Error reading " << deckstring << std::endl;
@@ -477,9 +595,7 @@ Input::Input_List::Input_List():
                 else if (deckstringbool[0] == 'e' || deckstringbool[0] == 'E'){
                     f00_implicitorexplicit = 1;
                 }
-                if (deckstringbool[0] == 'f' || deckstringbool[0] == 'F'){
-                    f00_implicitorexplicit = 0;
-                }
+                else if (deckstringbool == "off") f00_implicitorexplicit = 0;
             }
             if (deckstring == "flm_collisions") {
                 deckfile >> deckequalssign;
@@ -488,7 +604,14 @@ Input::Input_List::Input_List():
                     exit(1);
                 }
                 deckfile >> deckstringbool;
-                flm_collisions = (deckstringbool[0] == 't' || deckstringbool[0] == 'T');
+
+                if (deckstringbool == "off") flm_collisions = 0;
+                else if (deckstringbool == "ee") flm_collisions = 1;
+                else if (deckstringbool == "ei") flm_collisions = 2;
+                else if (deckstringbool == "ee_exp") flm_collisions = 3;
+                else flm_collisions = 4;
+
+                // flm_collisions = (deckstringbool[0] == 't' || deckstringbool[0] == 'T');
             }
             if (deckstring == "MX_cooling") {
                 deckfile >> deckequalssign;
@@ -530,6 +653,18 @@ Input::Input_List::Input_List():
                     exit(1);
                 }
                 deckfile >> n_distoutsteps;
+                // if (fmod(t_stop,n_distoutsteps) != 0){
+                //     std::cout << "\n Need n_distoutsteps to be a n integer divisor of t_stop i.e. remainder (t_stop / n_distoutsteps) = 0 \n";
+                //     exit(1);
+                // }
+            }
+            if (deckstring == "n_bigdistoutsteps") {
+                deckfile >> deckequalssign;
+                if(deckequalssign != "=") {
+                    std::cout << "Error reading " << deckstring << std::endl;
+                    exit(1);
+                }
+                deckfile >> n_bigdistoutsteps;
                 // if (fmod(t_stop,n_distoutsteps) != 0){
                 //     std::cout << "\n Need n_distoutsteps to be a n integer divisor of t_stop i.e. remainder (t_stop / n_distoutsteps) = 0 \n";
                 //     exit(1);
@@ -922,6 +1057,15 @@ Input::Input_List::Input_List():
                 deckfile >> deckstringbool;
                 o_p1x1 = (deckstringbool[0] == 't' || deckstringbool[0] == 'T');
             }
+            if (deckstring == "o_p2x1") {
+                deckfile >> deckequalssign;
+                if(deckequalssign != "=") {
+                    std::cout << "Error reading " << deckstring << std::endl;
+                    exit(1);
+                }
+                deckfile >> deckstringbool;
+                o_p2x1 = (deckstringbool[0] == 't' || deckstringbool[0] == 'T');
+            }
             if (deckstring == "o_f0x1") {
                 deckfile >> deckequalssign;
                 if(deckequalssign != "=") {
@@ -1045,8 +1189,11 @@ Input::Input_List::Input_List():
                     std::cout << "Error reading " << deckstring << std::endl;
                     exit(1);
                 }
-                deckfile >> nump1;
-                // Npx.push_back(nump1);
+                for (size_t s(0);s<numsp;++s)
+                {
+                    deckfile >> tempint;
+                    // Npx.push_back(tempint);
+                }
 
             }
             if (deckstring == "nump2") {
@@ -1055,9 +1202,13 @@ Input::Input_List::Input_List():
                     std::cout << "Error reading " << deckstring << std::endl;
                     exit(1);
                 }
-                deckfile >> nump2;
-                // Npx.push_back(nump2);
-                // Npx.push_back(2*ps[0]);
+                
+                for (size_t s(0);s<numsp;++s)
+                {
+                    deckfile >> tempint;
+                    // Npy.push_back(tempint);
+                }
+                
             }
             if (deckstring == "nump3") {
                 deckfile >> deckequalssign;
@@ -1065,7 +1216,11 @@ Input::Input_List::Input_List():
                     std::cout << "Error reading " << deckstring << std::endl;
                     exit(1);
                 }
-                deckfile >> nump3;
+                for (size_t s(0);s<numsp;++s)
+                {
+                    deckfile >> tempint;
+                    // Npz.push_back(tempint);
+                }
             }
             if (deckstring == "numpx") {
                 deckfile >> deckequalssign;
@@ -1084,13 +1239,21 @@ Input::Input_List::Input_List():
                 deckfile >> deckstringbool;
                 only_output = (deckstringbool[0] == 't' || deckstringbool[0] == 'T');
             }
-            if (deckstring == "lnLambda") {
+            if (deckstring == "lnLambda_ei") {
                 deckfile >> deckequalssign;
                 if(deckequalssign != "=") {
                     std::cout << "Error reading " << deckstring << std::endl;
                     exit(1);
                 }
-                deckfile >> lnLambda;
+                deckfile >> lnLambda_ei;
+            }
+            if (deckstring == "lnLambda_ee") {
+                deckfile >> deckequalssign;
+                if(deckequalssign != "=") {
+                    std::cout << "Error reading " << deckstring << std::endl;
+                    exit(1);
+                }
+                deckfile >> lnLambda_ee;
             }
             // if (deckstring == "Zeta") {
             //     deckfile >> deckequalssign;
@@ -1150,6 +1313,7 @@ Input::Input_List::Input_List():
                 }
                 deckfile >> deckstringbool;
                 IB_heating = (deckstringbool[0] == 't' || deckstringbool[0] == 'T');
+                
             }
             if (deckstring == "I_0") {
                 deckfile >> deckequalssign;
@@ -1397,7 +1561,7 @@ Input::Input_List::Input_List():
                 deckfile >> deckstring;
                 bz_time_profile_str = deckstring;
             }
-            if (deckstring == "Ex(x,t)") {
+            if (deckstring == "dEx(x,t)") {
                 deckfile >> deckequalssign;
                 if(deckequalssign != "=") {
                     std::cout << "Error reading " << deckstring << std::endl;
@@ -1409,7 +1573,7 @@ Input::Input_List::Input_List():
                     ex_wave_profile_str.push_back(deckstring);
                 }
             }
-            if (deckstring == "Ey(x,t)") {
+            if (deckstring == "dEy(x,t)") {
                 deckfile >> deckequalssign;
                 if(deckequalssign != "=") {
                     std::cout << "Error reading " << deckstring << std::endl;
@@ -1421,7 +1585,7 @@ Input::Input_List::Input_List():
                     ey_wave_profile_str.push_back(deckstring);
                 }
             }
-            if (deckstring == "Ez(x,t)") {
+            if (deckstring == "dEz(x,t)") {
                 deckfile >> deckequalssign;
                 if(deckequalssign != "=") {
                     std::cout << "Error reading " << deckstring << std::endl;
@@ -1433,19 +1597,19 @@ Input::Input_List::Input_List():
                     ez_wave_profile_str.push_back(deckstring);
                 }
             }
-            if (deckstring == "Bx(x,t)") {
+            if (deckstring == "dBx(x,t)") {
                 deckfile >> deckequalssign;
                 if(deckequalssign != "=") {
                     std::cout << "Error reading " << deckstring << std::endl;
                     exit(1);
                 }
                 for (size_t n(0);n<num_waves;++n)
-                {    
+                {
                     deckfile >> deckstring;
                     bx_wave_profile_str.push_back(deckstring);
                 }
             }
-            if (deckstring == "By(x,t)") {
+            if (deckstring == "dBy(x,t)") {
                 deckfile >> deckequalssign;
                 if(deckequalssign != "=") {
                     std::cout << "Error reading " << deckstring << std::endl;
@@ -1457,7 +1621,7 @@ Input::Input_List::Input_List():
                     by_wave_profile_str.push_back(deckstring);
                 }
             }
-            if (deckstring == "Bz(x,t)") {
+            if (deckstring == "dBz(x,t)") {
                 deckfile >> deckequalssign;
                 if(deckequalssign != "=") {
                     std::cout << "Error reading " << deckstring << std::endl;
@@ -1469,18 +1633,18 @@ Input::Input_List::Input_List():
                     bz_wave_profile_str.push_back(deckstring);
                 }
             }
-            if (deckstring == "envelope(t)") {
-                deckfile >> deckequalssign;
-                if(deckequalssign != "=") {
-                    std::cout << "Error reading " << deckstring << std::endl;
-                    exit(1);
-                }
-                for (size_t n(0);n<num_waves;++n)
-                {
-                    deckfile >> deckstring;
-                    wave_time_envelope_str.push_back(deckstring);
-                }
-            }
+            // if (deckstring == "envelope(t)") {
+            //     deckfile >> deckequalssign;
+            //     if(deckequalssign != "=") {
+            //         std::cout << "Error reading " << deckstring << std::endl;
+            //         exit(1);
+            //     }
+            //     for (size_t n(0);n<num_waves;++n)
+            //     {
+            //         deckfile >> deckstring;
+            //         wave_time_envelope_str.push_back(deckstring);
+            //     }
+            // }
 
             if (deckstring == "rise_flat_fall_center") {
                 deckfile >> deckequalssign;
@@ -1492,17 +1656,17 @@ Input::Input_List::Input_List():
                 {
                     deckfile >> deckreal;
                     trav_wave_rise.push_back(deckreal);
-                    
+
 
                     deckfile >> deckreal;
                     trav_wave_flat.push_back(deckreal);
-                    
+
 
                     deckfile >> deckreal;
                     trav_wave_fall.push_back(deckreal);
-                    
+
                     deckfile >> deckreal;
-                    trav_wave_center.push_back(deckreal);                    
+                    trav_wave_center.push_back(deckreal);
                 }
             }
 
@@ -1524,6 +1688,7 @@ Input::Input_List::Input_List():
         oTags.push_back("Time");
         oTags.push_back("Space");
         oTags.push_back("px-x");
+        oTags.push_back("py-x");
         // oTags.push_back("px-x_1");
         oTags.push_back("f0-x");
         oTags.push_back("f10-x");
@@ -1555,6 +1720,10 @@ Input::Input_List::Input_List():
         oTags.push_back("Z");
         oTags.push_back("ni");
         oTags.push_back("Ti");
+        oTags.push_back("prtx");
+        oTags.push_back("prtpx");
+        oTags.push_back("prtpy");
+        oTags.push_back("prtpz");
 
 
 
@@ -1567,9 +1736,15 @@ Input::Input_List::Input_List():
             NxLocal.push_back(NxLocalnobnd[i] + 2 * BoundaryCells);
             xminLocal.push_back(0.0);
             xmaxLocal.push_back(0.0);
+            xminLocalnobnd.push_back(0.0);
+            xmaxLocalnobnd.push_back(0.0);
             globdx.push_back((xmaxGlobal[i]-xminGlobal[i])/(double (NxGlobal[i]) ));
         }
-    } 
+
+        xminPML = xminGlobal[0] + numPMLCells*globdx[0];
+
+        xmaxPML = xmaxGlobal[0] - numPMLCells*globdx[0];
+    }
     else {
         std::cout << "Unable to open inputdeck" << std::endl;
         exit(1);
@@ -1590,4 +1765,3 @@ Input::Input_List& Input::List(){
 //--------------------------------------------------------------
 
 //**************************************************************
-

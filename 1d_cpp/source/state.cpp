@@ -148,7 +148,7 @@ SHarmonic1D& SHarmonic1D::Dp(){
         *sh = (*sh).Dd1();
         for (size_t i(0); i < plast.size(); ++i) {
           // TODO                The Dp at the zeroth cell is taken care off
-          // (*sh)(0,i) = 0.0;     //separately, both for the E-field and the collisions.
+          (*sh)(0,i) = 0.0;     //separately, both for the E-field and the collisions.
             (*sh)(nump()-1,i) = 2.0*plast[i];
         }
 
@@ -746,8 +746,10 @@ EMF2D& EMF2D::operator-=(const EMF2D& other){
 //  Constructors and Destructor
 //--------------------------------------------------------------
 //  Constructor
-DistFunc1D:: DistFunc1D(size_t l, size_t m, size_t np, double pma, size_t nx, double q=1, double _ma=1)
-        : lmax(l), mmax(m), pmx(pma), charge(q), ma(_ma), ind(l+1,m+1) {
+DistFunc1D:: DistFunc1D(size_t l, size_t m, size_t np, double pma, size_t nx, 
+    double q, double _ma, double filter_dp, double filter_pmax)
+        : lmax(l), mmax(m), pmx(pma), charge(q), ma(_ma), ind(l+1,m+1),
+        flt_dp(filter_dp), flt_pma(filter_pmax) {
 
 //      Initialize the array of the harmonics
     if (lmax < 1) {
@@ -767,8 +769,10 @@ DistFunc1D:: DistFunc1D(size_t l, size_t m, size_t np, double pma, size_t nx, do
         for(int il(0); il < lmax+1 ; ++il){
             ind(il,0) = il;
 
-            // filter_ceiling[il] = floor(il/ceil(lmax/np));
-            filter_ceiling[il] = ((il < np)?il:np);
+            filter_ceiling[il] = (flt_pma/(pma/np) < il*floor(flt_dp/(pma/np)))?
+                                    flt_pma/(pma/np) : il*floor(flt_dp/(pma/np));
+            std::cout << "filter_ceiling[" << il << "] = " << filter_ceiling[il] << "\n";
+            // filter_ceiling[il] = ((il < np)?il:np);
         }
 
     }
@@ -778,20 +782,22 @@ DistFunc1D:: DistFunc1D(size_t l, size_t m, size_t np, double pma, size_t nx, do
             for(int im=0; im < ((mmax < il)? mmax:il)+1; ++im){
                 ind(il,im) = ((il < mmax+1)?((il*(il+1))/2+im):
                               (il*(mmax+1)-(mmax*(mmax+1))/2 + im));
-                filter_ceiling[ind(il,im)] = ((il < np)?il:np);
+                // filter_ceiling[ind(il,im)] = ((il < np)?il:np);
+                filter_ceiling[ind(il,im)] = (flt_pma/(pma/np) < il*floor(flt_dp/(pma/np)))?
+                                    flt_pma/(pma/np) : il*floor(flt_dp/(pma/np));
             }
         }
     }
-    // exit(1);
-
 }
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
 //  Copy constructor
 DistFunc1D:: DistFunc1D(const DistFunc1D& other)
         : lmax(other.l0()), mmax(other.m0()), pmx(other.pmax()),
-          charge(other.q()), ma(other.mass()), ind(other.l0()+1,other.m0()+1),
-          filter_ceiling(((mmax+1)*(2*lmax-mmax+2))/2)  {
+          charge(other.q()), ma(other.mass()), 
+          flt_dp(other.filter_dp()), flt_pma(other.filter_pmax()),
+          ind(other.l0()+1,other.m0()+1),
+          filter_ceiling(0.0,((mmax+1)*(2*lmax-mmax+2))/2)  {
 
 //      Generate container for the harmonics
     sz = ((mmax+1)*(2*lmax-mmax+2))/2;
@@ -802,23 +808,29 @@ DistFunc1D:: DistFunc1D(const DistFunc1D& other)
         (*df).push_back(other(i));
     }
 
-//      Define the index for the triangular array 
+     // Define the index for the triangular array 
     ind = -1;
     if (mmax == 0)
     {
         for(int il(0); il < lmax+1 ; ++il){
             ind(il,0) = il;
-            filter_ceiling[il] = (il < other(0).nump())?il:other(0).nump();
+            // filter_ceiling[il] = (il < other(0).nump())?il:other(0).nump();
+            filter_ceiling[il] = (flt_pma/(other.filter_pmax()/other(0).nump()) < il*floor(other.filter_dp()/(other.filter_pmax()/other(0).nump())))?
+                                    flt_pma/(other.filter_pmax()/other(0).nump()) : il*floor(other.filter_dp()/(other.filter_pmax()/other(0).nump()));
+
         }
 
     }
     else
     {
-        for(int il=0; il < lmax+1 ; ++il){
-            for(int im=0; im < ((mmax < il)? mmax:il)+1; ++im){
+        for(int il(0); il < lmax+1 ; ++il){
+            for(int im(0); im < ((mmax < il)? mmax:il)+1; ++im){
                 ind(il,im) = ((il < mmax+1)?((il*(il+1))/2+im):
                               (il*(mmax+1)-(mmax*(mmax+1))/2 + im));
-                filter_ceiling[ind(il,im)] = (il*im < other(0).nump())?il*im:other(0).nump();
+                
+                // filter_ceiling[ind(il,im)] = (il < other(0).nump())?il:other(0).nump();
+                filter_ceiling[ind(il,im)] = (flt_pma/(other.filter_pmax()/other(0).nump()) < il*floor(other.filter_dp()/(other.filter_pmax()/other(0).nump())))?
+                                    flt_pma/(other.filter_pmax()/other(0).nump()) : il*floor(other.filter_dp()/(other.filter_pmax()/other(0).nump()));
             }
         }
     }
@@ -932,9 +944,9 @@ DistFunc1D& DistFunc1D::operator-=(const DistFunc1D& other){
 }
 
 DistFunc1D& DistFunc1D::Filterp(){
-    for(size_t i(0); i < dim() ; ++i) {
-        (*df)[i].Filterp(i);
-        // (*df)[i].Filterp(filter_ceiling[i]);
+    for(size_t i(1); i < dim() ; ++i) {
+        // (*df)[i].Filterp(i);
+        (*df)[i].Filterp(filter_ceiling[i]);
     }
     return *this;
 }
@@ -945,9 +957,9 @@ DistFunc1D& DistFunc1D::Filterp(){
 valarray<double> DistFunc1D::getdensity(){
 
     valarray<double> out((*df)[0].numx());
-//    valarray<complex<double> > vr(Algorithms::MakeAxis(
-//            static_cast<complex<double> > (pmax()/(2.0*((*df)[0].nump())-1.0)),static_cast<complex<double> >(pmax()),(*df)[0].nump()
-//    ));
+   // valarray<complex<double> > vr(Algorithms::MakeAxis(
+   //         static_cast<complex<double> > (pmax()/(2.0*((*df)[0].nump())-1)),static_cast<complex<double> >(pmax()),(*df)[0].nump()
+   // ));
 
     valarray<complex<double> > vr(Algorithms::MakeCAxis(
             static_cast<complex<double> > (0.0),static_cast<complex<double> >(pmax()),(*df)[0].nump()
@@ -959,7 +971,25 @@ valarray<double> DistFunc1D::getdensity(){
 
     return out;
 }
+//--------------------------------------------------------------------------------------------------------------------------
+valarray<double> DistFunc1D::getdensity() const {
 
+    valarray<double> out((*df)[0].numx());
+   // valarray<complex<double> > vr(Algorithms::MakeAxis(
+   //         static_cast<complex<double> > (pmax()/(2.0*((*df)[0].nump())-1)),static_cast<complex<double> >(pmax()),(*df)[0].nump()
+   // ));
+
+    valarray<complex<double> > vr(Algorithms::MakeCAxis(
+            static_cast<complex<double> > (0.0),static_cast<complex<double> >(pmax()),(*df)[0].nump()
+    ));
+
+    for (size_t i(0); i<(*df)[0].numx();++i){
+        out[i] = (4.0*M_PI*Algorithms::moment((*df)[0].xVec(i),vr,2.0)).real();
+        // std::cout << "\n density[" << i << "] = " << out[i];
+    }
+
+    return out;
+}
 //--------------------------------------------------------------------------------------------------------------------------
 //--------------------------------------------------------------------------------------------------------------------------
 valarray<double> DistFunc1D::getcurrent(size_t dir){
@@ -967,7 +997,7 @@ valarray<double> DistFunc1D::getcurrent(size_t dir){
     valarray<double> out((*df)[0].numx());
 
    // valarray<complex<double> > vr(Algorithms::MakeAxis(
-   //         static_cast<complex<double> > (pmax()/(2.0*((*df)[0].nump()))),static_cast<complex<double> >(pmax()),(*df)[0].nump()
+   //         static_cast<complex<double> > (pmax()/(2.0*((*df)[0].nump())-1)),static_cast<complex<double> >(pmax()),(*df)[0].nump()
    // ));
 
     valarray<complex<double> > vr(Algorithms::MakeCAxis(
@@ -979,6 +1009,7 @@ valarray<double> DistFunc1D::getcurrent(size_t dir){
     {
         for (size_t i(0); i<(*df)[0].numx();++i){
             out[i] = (4.0/3.0*M_PI*charge/ma)*(Algorithms::relativistic_invg_moment((*df)[1].xVec(i),vr,3.0)).real();
+            // out[i] = (4.0/3.0*M_PI*charge/ma)*(Algorithms::moment((*df)[1].xVec(i),vr,3.0)).real();
         }
     }
     else if (dir == 1)
@@ -1009,7 +1040,7 @@ valarray<double> DistFunc1D::getcurrent(size_t dir) const{
     // complex<double> ii(0.0,-1.0);
     valarray<double> out((*df)[0].numx());
    // valarray<complex<double> > vr(Algorithms::MakeAxis(
-   //         static_cast<complex<double> > (pmax()/(2.0*((*df)[0].nump()))),static_cast<complex<double> >(pmax()),(*df)[0].nump()
+   //         static_cast<complex<double> > (pmax()/(2.0*((*df)[0].nump())-1)),static_cast<complex<double> >(pmax()),(*df)[0].nump()
    // ));
 
     valarray<complex<double> > vr(Algorithms::MakeCAxis(
@@ -1021,6 +1052,7 @@ valarray<double> DistFunc1D::getcurrent(size_t dir) const{
     {
         for (size_t i(0); i<(*df)[0].numx();++i){
             out[i] = (4.0/3.0*M_PI*charge/ma)*(Algorithms::relativistic_invg_moment((*df)[1].xVec(i),vr,3.0)).real();
+            // out[i] = (4.0/3.0*M_PI*charge/ma)*(Algorithms::moment((*df)[1].xVec(i),vr,3.0)).real();
         }
     }
     else if (dir == 1)
@@ -1050,9 +1082,9 @@ valarray<double> DistFunc1D::getcurrent(size_t dir) const{
 Array2D<double> DistFunc1D::getcurrent() const{
     // complex<double> ii(0.0,-1.0);
     Array2D<double> out(3,(*df)[0].numx());
-//        valarray<complex<double> > vr(Algorithms::MakeAxis(
-//            static_cast<complex<double> > (pmax()/(2.0*((*df)[0].nump())-1.0)),static_cast<complex<double> >(pmax()),(*df)[0].nump()
-//            ));
+       // valarray<complex<double> > vr(Algorithms::MakeAxis(
+       //     static_cast<complex<double> > (pmax()/(2.0*((*df)[0].nump())-1)),static_cast<complex<double> >(pmax()),(*df)[0].nump()
+       //     ));
 
     valarray<complex<double> > vr(Algorithms::MakeCAxis(
             static_cast<complex<double> > (0.0),static_cast<complex<double> >(pmax()),(*df)[0].nump()
@@ -1081,9 +1113,9 @@ Array2D<double> DistFunc1D::getcurrent() const{
 valarray<double> DistFunc1D::getpressure(){
 
     valarray<double> out((*df)[0].numx());
-//    valarray<complex<double> > vr(Algorithms::MakeAxis(
-//            static_cast<complex<double> > (pmax()/(2.0*((*df)[0].nump())-1.0)),static_cast<complex<double> >(pmax()),(*df)[0].nump()
-//    ));
+   // valarray<complex<double> > vr(Algorithms::MakeAxis(
+   //         static_cast<complex<double> > (pmax()/(2.0*((*df)[0].nump())-1)),static_cast<complex<double> >(pmax()),(*df)[0].nump()
+   // ));
 
     valarray<complex<double> > vr(Algorithms::MakeCAxis(
             static_cast<complex<double> > (0.0),static_cast<complex<double> >(pmax()),(*df)[0].nump()
@@ -1329,7 +1361,7 @@ DistFunc2D& DistFunc2D::operator-=(const DistFunc2D& other){
 //--------------------------------------------------------------
 //**************************************************************    
 //**************************************************************
-//  Definition of the "Field1D" Class
+//  Definition of the "Hydro1D" Class
 //--------------------------------------------------------------
 //  Constructor and Destructor
 //--------------------------------------------------------------
@@ -1503,6 +1535,176 @@ Hydro1D& Hydro1D::operator-=(const Hydro1D& other){
     return *this;
 }
 
+
+//**************************************************************
+//  Particle tracker
+//--------------------------------------------------------------
+//  Constructor and Destructor
+//--------------------------------------------------------------
+//  Constructor
+Particle1D::Particle1D(size_t numparticles, double _mass, double _charge): particlemass(_mass), particlecharge(_charge) {
+    
+    par_posX   = new valarray<double>(numparticles);
+    par_momX   = new valarray<double>(numparticles);
+    par_momY   = new valarray<double>(numparticles);
+    par_momZ   = new valarray<double>(numparticles);
+    par_ishere = new valarray<bool>(numparticles);
+    par_goingright = new valarray<int>(numparticles);
+}
+
+Particle1D::Particle1D(const Particle1D& other){
+    par_posX   = new valarray<double>(other.numpar());
+    *par_posX   = other.par_posX_array();
+
+    par_momX   = new valarray<double>(other.numpar());
+    *par_momX   = other.par_momX_array();
+
+    par_momY   = new valarray<double>(other.numpar());
+    *par_momY   = other.par_momY_array();
+
+    par_momZ   = new valarray<double>(other.numpar());
+    *par_momZ   = other.par_momZ_array();
+
+    par_ishere = new valarray<bool>(other.numpar());
+    *par_ishere = other.par_ishere_array();
+
+    par_goingright = new valarray<int>(other.numpar());
+    *par_goingright = other.par_goingright_array();
+}
+
+Particle1D:: ~Particle1D(){
+    delete par_posX;
+    delete par_momX;
+    delete par_momY;
+    delete par_momZ;
+    delete par_ishere;
+    delete par_goingright;
+}
+
+//  Copy assignment operator
+Particle1D& Particle1D::operator=(const double & d){
+    // *par_posX = d;
+    // *par_momX = d;
+    // *par_momY = d;
+    // *par_momZ = d;
+    // *par_ishere = 0;
+    return *this;
+}
+Particle1D& Particle1D::operator=(const valarray<double >& other){
+
+    // *par_posX   = other;
+    // *par_momX   = other;
+    // *par_momY   = other;
+    // *par_momZ   = other;
+    // *par_ishere = 0;
+    return *this;
+}
+Particle1D& Particle1D::operator=(const Particle1D& other){
+
+    if (this != &other) {   //self-assignment
+        // *par_posX = other.par_posX_array();
+        // *par_momX = other.par_momX_array();
+        // *par_momY = other.par_momY_array();
+        // *par_momZ = other.par_momZ_array();
+        // *par_ishere = other.par_ishere_array();
+    }
+    return *this;
+}
+
+
+//--------------------------------------------------------------
+//  Copy assignment operator
+//--------------------------------------------------------------
+Particle1D& Particle1D::operator*=(const double & d){
+    // *par_posX *= d;
+    // *par_momX *= d;
+    // *par_momY *= d;
+    // *par_momZ *= d;
+    // *par_ishere *= d;
+    return *this;
+}
+Particle1D& Particle1D::operator*=(const valarray<double >& other){
+    // *par_posX   *= other;
+    // *par_momX   *= other;
+    // *par_momY   *= other;
+    // *par_momZ   *= other;
+    // *par_ishere *= other;
+    return *this;
+}
+Particle1D& Particle1D::operator*=(const Particle1D& other){
+
+    if (this != &other) {   //self-assignment
+        // *par_posX *= other.par_posX_array();
+        // *par_momX *= other.par_momX_array();
+        // *par_momY *= other.par_momY_array();
+        // *par_momZ *= other.par_momZ_array();
+        // *par_ishere *= other.par_ishere_array();
+    }
+    return *this;
+}
+
+//--------------------------------------------------------------
+//  Copy assignment operator
+//--------------------------------------------------------------
+Particle1D& Particle1D::operator+=(const double & d){
+    // *par_posX += d;
+    // *par_momX += d;
+    // *par_momY += d;
+    // *par_momZ += d;
+    // *par_ishere += d;
+    return *this;
+}
+Particle1D& Particle1D::operator+=(const valarray<double >& other){
+    // *par_posX   += other;
+    // *par_momX   += other;
+    // *par_momY   += other;
+    // *par_momZ   += other;
+    // *par_ishere += other;
+    return *this;
+}
+Particle1D& Particle1D::operator+=(const Particle1D& other){
+
+    if (this != &other) {   //self-assignment
+        // *par_posX += other.par_posX_array();
+        // *par_momX += other.par_momX_array();
+        // *par_momY += other.par_momY_array();
+        // *par_momZ += other.par_momZ_array();
+        // *par_ishere += other.par_ishere_array();
+    }
+    return *this;
+}
+
+//--------------------------------------------------------------
+//  Copy assignment operator
+//--------------------------------------------------------------
+Particle1D& Particle1D::operator-=(const double & d){
+    // *par_posX -= d;
+    // *par_momX -= d;
+    // *par_momY -= d;
+    // *par_momZ -= d;
+    // *par_ishere -= d;
+    return *this;
+}
+Particle1D& Particle1D::operator-=(const valarray<double >& other){
+    // *par_posX   -= other;
+    // *par_momX   -= other;
+    // *par_momY   -= other;
+    // *par_momZ   -= other;
+    // *par_ishere -= other;
+    return *this;
+}
+Particle1D& Particle1D::operator-=(const Particle1D& other){
+
+    if (this != &other) {   //self-assignment
+        // *par_posX -= other.par_posX_array();
+        // *par_momX -= other.par_momX_array();
+        // *par_momY -= other.par_momY_array();
+        // *par_momZ -= other.par_momZ_array();
+        // *par_ishere -= other.par_ishere_array();
+    }
+    return *this;
+}
+
 //**************************************************************
 //  State for 1D electrostatic code
 //--------------------------------------------------------------
@@ -1511,7 +1713,8 @@ Hydro1D& Hydro1D::operator-=(const Hydro1D& other){
 //  Constructor
 State1D:: State1D( size_t nx, vector<size_t> l0, vector<size_t> m0,
                    vector<size_t> np, vector<double> pmax, vector<double> q, vector<double> ma,
-                   double _hydromass, double _hydrocharge)
+                   double _hydromass, double _hydrocharge, double filter_dp, double filter_pmax,
+                   size_t numparticles, double particlemass, double particlecharge)
         : ns(l0.size()) {
     if (ns != np.size()) {
         cout << "ERROR:Overdetermined number of species\n";
@@ -1519,12 +1722,13 @@ State1D:: State1D( size_t nx, vector<size_t> l0, vector<size_t> m0,
     }
     sp = new vector<DistFunc1D>;
     for(size_t s(0); s < ns; ++s){
-        (*sp).push_back(DistFunc1D(l0[s],m0[s],np[s],pmax[s],nx,q[s],ma[s]));
+        (*sp).push_back(DistFunc1D(l0[s],m0[s],np[s],pmax[s],nx,q[s],ma[s],filter_dp,filter_pmax));
     }
     flds = new EMF1D(nx);
 
     hydro = new Hydro1D(nx,_hydromass,_hydrocharge);
 
+    prtcls = new Particle1D(numparticles,particlemass,particlecharge);
 }
 
 //  Copy constructor
@@ -1539,6 +1743,9 @@ State1D:: State1D(const State1D& other)
 
     hydro = new Hydro1D(other.FLD(0).numx(),other.HYDRO().mass(),other.HYDRO().charge());
     *hydro = other.HYDRO();
+
+    prtcls = new Particle1D(other.particles().numpar(), other.particles().mass(), other.particles().charge());
+    *prtcls = other.particles();
 }
 
 //  Destructor
@@ -1546,6 +1753,7 @@ State1D:: ~State1D(){
     delete sp;
     delete flds;
     delete hydro;
+    delete prtcls;
 }
 //--------------------------------------------------------------
 //  Operators
@@ -1559,6 +1767,7 @@ State1D& State1D::operator=(const State1D& other){
         }
         *flds = other.EMF();
         *hydro = other.HYDRO();
+        *prtcls = other.particles();
 
     }
     return *this;
@@ -1570,6 +1779,7 @@ State1D& State1D::operator=(const complex<double> & d){
     }
     *flds = d;
     *hydro = d.real();
+    // *prtcls = d.real();
     return *this;
 }
 //  *=
@@ -1579,6 +1789,8 @@ State1D& State1D::operator*=(const State1D& other){
     }
     *flds *= other.EMF();
     *hydro *= other.HYDRO();
+    // *prtcls *= other.particles();
+
     return *this;
 }
 //  *=
@@ -1588,6 +1800,7 @@ State1D& State1D::operator*=(const complex<double> & d){
     }
     (*flds) *= d;
     *hydro *= d.real();
+    // *prtcls *= d.real();
     return *this;
 }
 //  +=
@@ -1597,6 +1810,7 @@ State1D& State1D::operator+=(const State1D& other){
     }
     *flds += other.EMF();
     *hydro += other.HYDRO();
+    // *prtcls += other.particles();
     return *this;
 }
 //  +=
@@ -1606,6 +1820,7 @@ State1D& State1D::operator+=(const complex<double> & d){
     }
     (*flds) += d;
     *hydro  += d.real();
+    // *prtcls += d.real();
     return *this;
 }
 //  +=
@@ -1615,6 +1830,8 @@ State1D& State1D::operator-=(const State1D& other){
     }
     *flds -= other.EMF();
     *hydro -= other.HYDRO();
+    // *prtcls -= other.particles();
+
     return *this;
 }
 //  +=
@@ -1624,6 +1841,8 @@ State1D& State1D::operator-=(const complex<double> & d){
     }
     (*flds) -= d;
     *hydro  -= d.real();
+    // *prtcls -= d.real();
+
     return *this;
 }
 //   //  Debug

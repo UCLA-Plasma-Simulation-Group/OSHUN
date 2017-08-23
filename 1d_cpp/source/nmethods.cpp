@@ -114,6 +114,95 @@
         return true;
     }
 //-------------------------------------------------------------------
+//-------------------------------------------------------------------
+     bool Gauss_Seidel(Array2D<double>& A, 
+                       valarray<double >& b,
+                       valarray<double >& xk) {
+//-------------------------------------------------------------------
+        double     tol(1.0e-1);   //< Tolerance for absolute error
+        int        MAXiter(5);    //< Maximum iteration allowed
+
+
+//      The Matrices all have the right dimensions
+//      -------------------------------------------------------------
+        if ( ( A.dim1() != A.dim2()  ) || 
+             ( A.dim1() != b.size()  ) ||
+             ( A.dim1() != xk.size() )    )  {
+            cout << "Error: The Matrices don't have the right dimensions!" << endl;
+            exit(1);
+        }
+//      Check if the matrix A is diagonally dominant
+//      -------------------------------------------------------------
+        for (int i(0); i < A.dim1(); ++i){
+            double rowi(0.0);
+            for (int j(0); j < A.dim2(); ++j){
+                rowi += A(i,j);
+            }
+            if (!(rowi < 2.0*A(i,i))) return false;
+        }
+//      -------------------------------------------------------------
+
+
+//      Calculate and invert the diagonal elements once and for all
+//      -------------------------------------------------------------      
+        valarray<double> invDIAG(A.dim1());
+        for (int i(0); i < invDIAG.size(); ++i) invDIAG[i] = 1.0 / A(i,i);
+
+        valarray<double > xold(xk);
+        int iteration(0);         // used to count iterations
+        int conv(0);              // used to test convergence
+
+//      Start the iteration loop
+//      -------------------------------------------------------------      
+        while ( (iteration++ < MAXiter) && (conv < b.size()) ) {
+
+            xold = xk;
+            for (int i(0); i < A.dim1(); ++i){
+                double sigma(0.0);    // Temporary sum
+                for (int j(0); j < i; ++j){
+                    sigma += A(i,j)*xk[j];   
+                }
+                for (int j(i+1); j < A.dim2(); ++j){
+                    sigma += A(i,j)*xk[j];   
+                }
+                xk[i] = invDIAG[i] * (b[i] - sigma);
+            }
+
+            // Calculate Dx = x_old - x_new
+            xold -= xk;
+
+//          If the relative error < prescribed tolerance everywhere the method has converged
+//          |Dx(i)| < t*|x(i)| + eps 
+            conv = 0;
+            while ( ( conv < b.size() ) && 
+                    ( abs(xold[conv]) < (tol*abs(xk[conv] + 20.0*DBL_MIN)) ) ){ 
+                ++conv;
+            } 
+
+            //----> Output for testing
+            //--------------------------------
+            //cout << "iteration = " << iteration << "    ";
+            //for (int i(0); i < b.size(); ++i){
+            //    cout << xk[i] << "        ";
+            //}
+            //cout << "\n";
+            //--------------------------------
+
+        }
+
+        //----> Output for testing
+        //--------------------------------
+        // cout << "Iterations = " << iteration-1  <<"\n";
+        //for (int i(0); i < b.size(); ++i) {
+        //    cout << "Error |Dx| = " << abs(xold[i]) 
+        //         << ",    " 
+        //         << "Tolerance * |x| = " << tol*abs(xk[i]) <<"\n";
+        //}
+        //--------------------------------
+
+        return true;
+    }
+//-------------------------------------------------------------------
 //*******************************************************************
 
 //*******************************************************************
@@ -148,8 +237,8 @@
 
 //*******************************************************************
 //-------------------------------------------------------------------
-void TridiagonalSolve (const valarray<double>& a,
-                       const valarray<double>& b,
+void TridiagonalSolve ( valarray<double>& a,
+                        valarray<double>& b,
                        valarray<double>& c,
                        valarray<double>  d,
                        valarray<double>& x) {
@@ -173,6 +262,7 @@ void TridiagonalSolve (const valarray<double>& a,
         x[i]  = d[i];
         x[i] -= c[i] * x[i+1];               // x[i] = d[i] - c[i] * x[i + 1];
     }
+    
 }
 //-------------------------------------------------------------------
 
@@ -180,11 +270,11 @@ void TridiagonalSolve (const valarray<double>& a,
 
 //*******************************************************************
 //-------------------------------------------------------------------
-     void TridiagonalSolve (const valarray<complex<double>>& a, 
-                            const valarray<complex<double>>& b, 
-                                  valarray<complex<double>>& c,      
-                                  valarray<complex<double>>  d,
-                                  valarray<complex<double>>& x) {
+     void TridiagonalSolve (const valarray<complex<double> >& a, 
+                            const valarray<complex<double> >& b, 
+                                  valarray<complex<double> >& c,      
+                                  valarray<complex<double> >  d,
+                                  valarray<complex<double> >& x) {
 //-------------------------------------------------------------------
 //   Fills solution into x. Warning: will modify c and d! 
 //-------------------------------------------------------------------
@@ -236,12 +326,16 @@ bool Thomas_Tridiagonal(Array2D<double>& A,
 
     for (int i(0); i < A.dim1()-1; ++i){
         a[i+1] = A(i+1,i);
+        // std::cout << "\n a[" << i+1 << "] = " << a[i+1];
     }
     for (int i(0); i < A.dim1(); ++i){
         b[i] = A(i,i);
+        // std::cout << "\n b[" << i << "] = " << b[i];
     }
     for (int i(0); i < A.dim1()-1; ++i){
         c[i] = A(i,i+1);
+        // std::cout << "\n c[" << i << "] = " << c[i];
+        // std::cout << "\n d[" << i << "] = " << d[i];
     }
 
 //        valarray< double > dcopy(d);
@@ -291,7 +385,7 @@ bool Thomas_Tridiagonal(Array2D<double>& A,
 //-------------------------------------------------------------------
 //*******************************************************************
 //-------------------------------------------------------------------
-     bool Thomas_Tridiagonal(Array2D<complex<double>>& A, 
+     bool Thomas_Tridiagonal(Array2D<complex<double> >& A, 
                        valarray<complex<double> >& d,
                        valarray<complex<double> >& xk) {
 //-------------------------------------------------------------------
@@ -310,7 +404,7 @@ bool Thomas_Tridiagonal(Array2D<double>& A,
         }
 //      -------------------------------------------------------------
 
-        valarray<complex<double>> a(d.size()), b(d.size()), c(d.size());
+        valarray<complex<double> > a(d.size()), b(d.size()), c(d.size());
 
         for (int i(0); i < A.dim1()-1; ++i){
            a[i+1] = A(i+1,i);
@@ -334,7 +428,7 @@ bool Thomas_Tridiagonal(Array2D<double>& A,
 //*******************************************************************
 //-------------------------------------------------------------------
     complex <double> Det33(/*const valarray<double>& D, */
-                          Array2D<complex <double>>& A) {           // Determinant for a 3*3 system
+                          Array2D<complex <double> >& A) {           // Determinant for a 3*3 system
 //-------------------------------------------------------------------
         return A(0,0) * ( A(1,1)*A(2,2) - A(2,1)*A(1,2) ) -
                A(1,0) * ( A(0,1)*A(2,2) - A(2,1)*A(0,2) ) +
@@ -343,8 +437,8 @@ bool Thomas_Tridiagonal(Array2D<double>& A,
 //-------------------------------------------------------------------
 
 //-------------------------------------------------------------------
-    complex <double> Detx33(valarray<complex <double>>& D, 
-                           Array2D<complex <double>>& A) {         // Determinant x for a 3*3 system
+    complex <double> Detx33(valarray<complex <double> >& D, 
+                           Array2D<complex <double> >& A) {         // Determinant x for a 3*3 system
 //-------------------------------------------------------------------
         return D[0] * ( A(1,1)*A(2,2) - A(2,1)*A(1,2) ) -
                D[1] * ( A(0,1)*A(2,2) - A(2,1)*A(0,2) ) +
@@ -353,8 +447,8 @@ bool Thomas_Tridiagonal(Array2D<double>& A,
 //-------------------------------------------------------------------
 
 //-------------------------------------------------------------------
-    complex <double> Dety33(valarray<complex <double>>& D, 
-                           Array2D<complex <double>>& A) {         // Determinant y for a 3*3 system
+    complex <double> Dety33(valarray<complex <double> >& D, 
+                           Array2D<complex <double> >& A) {         // Determinant y for a 3*3 system
 //-------------------------------------------------------------------
         return A(0,0) * ( D[1]*A(2,2) - D[2]*A(1,2) ) -
                A(1,0) * ( D[0]*A(2,2) - D[2]*A(0,2) ) +
@@ -363,8 +457,8 @@ bool Thomas_Tridiagonal(Array2D<double>& A,
 //-------------------------------------------------------------------
 
 //-------------------------------------------------------------------
-    complex <double> Detz33(valarray<complex <double>>& D,
-                           Array2D<complex <double>>& A) {         // Determinant z for a 3*3 system
+    complex <double> Detz33(valarray<complex <double> >& D,
+                           Array2D<complex <double> >& A) {         // Determinant z for a 3*3 system
 //-------------------------------------------------------------------
         return A(0,0) * ( A(1,1)*D[2] - A(2,1)*D[1] ) -
                A(1,0) * ( A(0,1)*D[2] - A(2,1)*D[0] ) +

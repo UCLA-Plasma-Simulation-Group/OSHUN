@@ -24,14 +24,18 @@ public:
                          double xmin, double xmax, size_t Nx);
 //          Advance
     void operator()(const DistFunc1D& Din, DistFunc1D& Dh);
+    void PML(const DistFunc1D& Din, DistFunc1D& Dh);
     void es1d(const DistFunc1D& Din, DistFunc1D& Dh);
     void f1only(const DistFunc1D& Din, DistFunc1D& Dh);
 
 private:
-    SHarmonic1D                   	fd1, fd2;
+    SHarmonic1D                   	fd1, fd2, f00;
     complex<double>                 A00, A10, A20;
     Array2D< complex<double> >  	A1, A2;
     valarray< complex<double> >  	vr;
+
+    // valarray<complex<double> >                   killedbyPML;
+    valarray<complex<double> >    sigma;
 };
 //--------------------------------------------------------------
 
@@ -47,6 +51,9 @@ public:
                       double xmin, double xmax, size_t Nx);
 //          Advance
     void operator()(const DistFunc1D& Din,
+                    const Field1D& FEx, const Field1D& FEy, const Field1D& FEz,
+                    DistFunc1D& Dh);
+    void PML(const DistFunc1D& Din,
                     const Field1D& FEx, const Field1D& FEy, const Field1D& FEz,
                     DistFunc1D& Dh);
     void es1d(const DistFunc1D& Din,
@@ -76,6 +83,9 @@ private:
     valarray< complex<double> >  C1, C3;
     Array2D< complex<double> >   C2, C4;
     valarray< complex<double> >  pr, invpr, Hp0;
+
+    // valarray<complex<double> >                   killedbyPML;
+    valarray<complex<double> >    sigma;
 };
 //--------------------------------------------------------------
 
@@ -92,6 +102,10 @@ public:
     void operator()(const DistFunc1D& Din,
                     const Field1D& FBx, const Field1D& FBy, const Field1D& FBz,
                     DistFunc1D& Dh);
+    void PML(const DistFunc1D& Din,
+                    const Field1D& FBx, const Field1D& FBy, const Field1D& FBz,
+                    DistFunc1D& Dh);
+
     void f1only(const DistFunc1D& Din,
                 const Field1D& FBx, const Field1D& FBy, const Field1D& FBz,
                 DistFunc1D& Dh);
@@ -106,6 +120,9 @@ private:
     valarray< complex<double> >		A1, B1;
     Array2D< complex<double> > 		A2;
     complex<double> 				A3;
+
+    // valarray<complex<double> >                   killedbyPML;
+    valarray<complex<double> >    sigma;
 };
 //--------------------------------------------------------------
 
@@ -117,16 +134,55 @@ class Current_1D {
 public:
 //      Constructors/Destructors
     Current_1D( double pmin, double pmax, size_t Np,
-                size_t Nx );
+                double xmin, double xmax, size_t Nx );
 //          Advance
     void operator()(const DistFunc1D& Din,
                     Field1D& FExh, Field1D& FEyh, Field1D& FEzh);
+
+    void PML(const DistFunc1D& Din,
+                    Field1D& FExh, Field1D& FEyh, Field1D& FEzh);
+
+
     void es1d(const DistFunc1D& Din,
                     Field1D& FExh);
 
 private:
     Field1D Jx, Jy, Jz;
     double small;
+
+    // valarray<complex<double> >                   killedbyPML;
+//            valarray< complex<double> >  pr, invg;
+    valarray<complex<double> >    sigma;
+};
+//--------------------------------------------------------------
+
+//--------------------------------------------------------------
+//  Gauss's Law
+class Gauss_1D {
+//--------------------------------------------------------------
+public:
+//      Constructors/Destructors
+    Gauss_1D( double xmin, double xmax,
+                size_t Nx );
+//          Advance
+    void operator()(const DistFunc1D& Din,
+                    Field1D& FExh, Field1D& FEyh, Field1D& FEzh);
+
+    void es1d(const DistFunc1D& Din,
+                    Field1D& FExh);
+
+private:
+    // Field1D Jx, Jy, Jz;
+    // double small;
+    valarray<double> density;
+    valarray<double> phi;
+    Array2D<double> LHS;
+    double idx;
+    // double idxsquared, minustwoidxsquared;
+    complex<double> itwodeltax;
+
+
+    
 //            valarray< complex<double> >  pr, invg;
 };
 //--------------------------------------------------------------
@@ -140,11 +196,17 @@ public:
     Faraday_1D(double xmin, double xmax, size_t Nx);
 //          Advance
     void operator()(EMF1D& EMFin, EMF1D& EMFh);
+    void PML(EMF1D& EMFin, EMF1D& EMFh);
 
 private:
     Field1D             tmpE;
+
     complex<double>		idx;
     size_t              numx;
+
+    valarray<complex<double> >    sigma;
+
+    // valarray<complex<double> >                   killedbyPML;
 
 };
 //--------------------------------------------------------------
@@ -158,11 +220,17 @@ public:
     Ampere_1D(double xmin, double xmax, size_t Nx);
 //          Advance
     void operator()(EMF1D& EMFin, EMF1D& EMFh);
+    void PML(EMF1D& EMFin, EMF1D& EMFh);
 
 private:
     Field1D             tmpB;
+    
     complex<double>		idx;
     size_t              numx;
+
+    valarray<complex<double> >    sigma;
+
+    // valarray<complex<double> >                   killedbyPML;
 
 };
 //--------------------------------------------------------------

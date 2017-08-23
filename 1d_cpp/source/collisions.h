@@ -14,8 +14,6 @@
 #ifndef DECLERATION_FOKKER_PLANCK_H
 #define DECLERATION_FOKKER_PLANCK_H
 
-#include "interspeciescollisions.h"
-
 //-------------------------------------------------------------------
 /** \addtogroup vfp1d
  *  @{
@@ -269,6 +267,9 @@ class self_f00_explicit_step {
          
 //          Calculate the coefficients
             void reset_coeff(const valarray<double>& f00, double Zvalue, const double Delta_t);
+            void reset_coeff_ee(const valarray<double>& f00, double Zvalue, const double Delta_t);
+            void reset_coeff_ei(const valarray<double>& f00, double Zvalue, const double Delta_t);
+
 
 //          Explicit Advance
             void advance(valarray<complex<double> >& fin, const int el);    
@@ -296,9 +297,13 @@ class self_f00_explicit_step {
 
 ///         Advance f1_loop for 2D code.
             void advancef1(DistFunc1D& DF, valarray<double>& Zarray, DistFunc1D& DFh);
+            void advancef1_ee(DistFunc1D& DF, valarray<double>& Zarray, DistFunc1D& DFh);
+            void advancef1_ei(DistFunc1D& DF, valarray<double>& Zarray, DistFunc1D& DFh);
 
 ///         Advance flm_loop for 2D code.
             void advanceflm(DistFunc1D& DF, valarray<double>& Zarray, DistFunc1D& DFh);
+            void advanceflm_ee(DistFunc1D& DF, valarray<double>& Zarray, DistFunc1D& DFh);
+            void advanceflm_ei(DistFunc1D& DF, valarray<double>& Zarray, DistFunc1D& DFh);
 
         private:
             // State1D& Y;
@@ -318,8 +323,113 @@ class self_f00_explicit_step {
             self_flm_implicit_step  implicit_step;  
 
         };
+//-------------------------------------------------------------------
+
+class self_flm_explicit_step {
+//-------------------------------------------------------------------
+    private:
+     /// Array output by getslope   
+        // valarray<double>  fh;
+        // valarray<double>&  fslope;
+        double mass; 
+        double deltat;
+    ///     Define the velocity axis
+        
+        valarray<double >  vr;
+
+    ///     Various coefficients for the integrals
+        valarray<double>  U4, U4m1, U2, U2m1, U1, U1m1;
+
+    ///     The integrals
+        valarray<double>  J1m, I0, I2;
+        valarray<complex<double> >  Ilplus2, Il, Jminuslminus1,J1minusl;
+
+        valarray<complex<double> > df0,ddf0;
+        valarray<complex<double> > dflm,ddflm;
+
+        valarray<double> eightPitimesf0;        
+        valarray<double> I2plusJ1mover3v;        
+        valarray<double> minusI2plus2J1mplus3I0over3v2;        
+        valarray<double> minusI2plus2J1mplus3I0over3v3;        
+
+    ///     Constants
+        double kpre;
+        Formulary formulas;
+
+        double _LOGee;
+        double _ZLOGei;
+    public:    
+
+        self_flm_explicit_step(const size_t& nump, const double& pmax, const double& _mass, const double& Dt); 
+        void reset_coeff(valarray<double>& fin, double Zvalue);
+        void calculate_flm_integrals(valarray<complex<double> >& fin, const int el);
+        void takestep(valarray< complex <double > > & fin, const int el);    
+};
+
 //--------------------------------------------------------------
-/** @} */ 
+// //  Functor to be used in the Runge-Kutta methods 
+//     class self_flm_RKfunctor : public Algorithms::AbstFunctor<valarray< complex <double> > > {
+// //--------------------------------------------------------------        
+//         public:
+// //          Constructor
+//             self_flm_RKfunctor(const size_t& nump, const double& pmax, const double& mass);
+//             ~self_flm_RKfunctor(){ };
+
+// //          Collect all the operators and apply on Yin
+//             void operator()(const valarray<complex<double> >& fin, valarray<complex<double> >& fslope);
+//             void operator()(const valarray<complex<double> >& fin, valarray<complex<double> >& fslope, size_t dir);
+//             void operator()(const valarray<complex<double> >& fin, const valarray<complex<double> >& f2in, valarray<complex<double> >& fslope);
+//         private:
+//             //          Variables
+//             self_flm_explicit_step collide;
+             
+//     };
+//--------------------------------------------------------------    
+/** 
+ * \class Explicit Anisotropic_Collisions
+ * \brief Middle container for collisions on  l >= 1.
+ * 
+ *   The Anisotropic_Collisions class describes the object that 
+ *   contains the implicit solve step. Note that the main procedures
+ *   return a new state. These procedures extract the data from the relevant
+ *   harmonic and send it to the implicit_step object.
+*/
+        class self_flm_explicit_collisions {
+        public:
+///          Constructors/Destructors
+            self_flm_explicit_collisions(const DistFunc1D &DFin, const double& deltat); 
+
+///         Advance f1_loop for 2D code.
+            void advancef1(DistFunc1D& DF, valarray<double>& Zarray, DistFunc1D& DFh);
+            
+
+///         Advance flm_loop for 2D code.
+            void advanceflm(DistFunc1D& DF, valarray<double>& Zarray, DistFunc1D& DFh);
+            
+        private:
+            valarray<double>                                  f00; //, fout;
+            valarray<complex<double> >                        fc; //, fout;
+            
+            int                         l0, m0;
+            self_flm_explicit_step      collide;
+            int                         f1_m_upperlimit;
+
+            /// This object contains the RK4 algorithm that advances 
+            /// the collision operator. Inside of it is the Collide object
+            /// that contains all the relevant collision integral algebra.
+            
+//             Algorithms::RK4<valarray<complex<double> > >       RK;
+// ///         The object that is responsible for performing the algebra required for the integrals.
+//             self_flm_RKfunctor                      rkflm;
+//             
+            
+
+            // size_t                                  num_h;
+            // double                                  h;
+
+            int                                     Nbc,szx;
+
+        };/** @} */ 
 
 //-------------------------------------------------------------------
 /** 
@@ -342,7 +452,8 @@ class self_f00_explicit_step {
         //  Variables
            self_f00_explicit_collisions self_f00_exp_collisions;
             self_f00_implicit_collisions self_f00_imp_collisions;
-            self_flm_implicit_collisions self_flm_collisions;
+            self_flm_explicit_collisions self_flm_exp_collisions;
+            self_flm_implicit_collisions self_flm_imp_collisions;
         };
 
 //-------------------------------------------------------------------

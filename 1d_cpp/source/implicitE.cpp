@@ -1,6 +1,6 @@
 /*! \brief Implicit Electric Field - Definitions
 * \author PICKSC
- * \date   September 23, 2016
+ * \date   April 2017
  * \file   implicitE.cpp
  * 
  * Contains:
@@ -151,15 +151,15 @@
             current = Yin.DF(s).getcurrent();      
             for (size_t ix(0); ix < Yin.EMF().Ex().numx(); ++ix)
             {
-                jayx(ix) +=   static_cast<complex<double>>(current(0,ix));
-                jayy(ix) +=   static_cast<complex<double>>(current(1,ix));
-                jayz(ix) +=   static_cast<complex<double>>(current(2,ix));
+                jayx(ix) +=   static_cast<complex<double> >(current(0,ix));
+                jayy(ix) +=   static_cast<complex<double> >(current(1,ix));
+                jayz(ix) +=   static_cast<complex<double> >(current(2,ix));
 
             }
             
-            // jayx.array() += static_cast<complex<double>>(Yin.DF(s).getcurrent(0)); 
-            // jayy.array() += static_cast<complex<double>>(Yin.DF(s).getcurrent(1)); 
-            // jayz.array() += static_cast<complex<double>>(Yin.DF(s).getcurrent(2)); 
+            // jayx.array() += static_cast<complex<double> >(Yin.DF(s).getcurrent(0)); 
+            // jayy.array() += static_cast<complex<double> >(Yin.DF(s).getcurrent(1)); 
+            // jayz.array() += static_cast<complex<double> >(Yin.DF(s).getcurrent(2)); 
         }
 }    
 //--------------------------------------------------------------
@@ -265,7 +265,7 @@
 
 //--------------------------------------------------------------
     void Electric_Field_Methods::Implicit_E_Field::
-    advance(Algorithms::RK3<State1D>* rk, State1D& Yin, collisions& coll, VlasovFunctor1D_implicitE_p2* rkF){//, double time, double dt){
+    advance(Algorithms::RK4<State1D>* rk, State1D& Yin, collisions& coll, VlasovFunctor1D_implicitE_p2* rkF){//, double time, double dt){
 //--------------------------------------------------------------
 //  Calculate the implicit electric field
 //--------------------------------------------------------------

@@ -1,32 +1,14 @@
-///////////////////////////////////////////////////////////
-//   Contributing authors :	Michail Tzoufras, Benjamin Winjum
-//
-//	Modified:	September 1 2016
-///////////////////////////////////////////////////////////
-
-//   
-//   Contains the declerations for the communications
-//   between nodes, boundaries and the parallel output
-///////////////////////////////////////////////////////////
-//
-// 
-//   This file contains three modules:
-//
-//   1. class Node_ImplicitE_Communications: 
-//
-//   2. class Node_Communications:
-//        Allows the nodes to exchange information in order
-//        to update their guard cells. For boundary nodes 
-//        it provides the appropriate boundary conditions.
-// 
-//   3. class Parallel_Environment:
-//        - It decomposes the computational domain
-//        - It controls the node communications
-//        - It controls the parallel output
-//        - It controls the restart facility
-//
-///////////////////////////////////////////////////////////
-//
+/*!\brief  Parallelization routines - Definitions
+* \author  PICKSC
+ * \date   March, 2017
+ * \file   parallel.cpp
+ *
+ * In here are the structures that enable parallelization
+ * 
+ * Periodic and reflecting have been implemented.
+ * 
+ * 
+ */
 
     #ifndef PARALLEL_ENVIRONMENT_H
     #define PARALLEL_ENVIRONMENT_H
@@ -65,7 +47,11 @@
 
 //          Information exchange
             int  msg_sizeX;
-			complex<double> *msg_bufX;
+            int  msg_parsizeX;
+			
+            complex<double> *msg_bufX;
+
+            // std::vector<complex<double> > msg_parX;
 
 //          Boundaries for single-node configurations
             void sameNode_periodic_X(State1D& Y);
@@ -114,6 +100,7 @@
 
 //          Boundaries for single-node configurations
             void sameNode_periodic_X(State1D& Y);
+            void sameNode_PML_X(State1D& Y);
             void sameNode_mirror_X(State1D& Y);
 
         };

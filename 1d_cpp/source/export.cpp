@@ -51,22 +51,8 @@
 int Export_Files::Makefolder(string _name){
 
     mode_t _permissions(S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
-    // char*   foldername = new char [_name.length() + 1];
-    
-
     const char*   foldername = _name.data();
-    
-
-    // strcpy(foldername, _name.c_str());
-    
-    // vector<char> foldername(_name.c_str(), _name.c_str() + _name.size() + 1);
-
     int   status(mkdir(foldername,_permissions));
-
-    // if (status != 0) cout << "Warning: Folder "<< _name<< " exists\n";
-
-    // delete[] foldername;
-
     return status;
 }
 //--------------------------------------------------------------
@@ -85,7 +71,7 @@ void Export_Files::Folders(){
     }
 
     if ( Input::List().o_Ex ||  Input::List().o_Ey || Input::List().o_Ez ||
-         Input::List().o_Bx ||  Input::List().o_By || Input::List().o_Bz )  {
+       Input::List().o_Bx ||  Input::List().o_By || Input::List().o_Bz )  {
         if (Makefolder("OUTPUT/FLD") != 0)
             cout<<"Warning: Folder 'OUTPUT/FLD' exists" << endl;
 
@@ -116,16 +102,16 @@ void Export_Files::Folders(){
     }
 
     if ( Input::List().o_x1x2 ||  Input::List().o_pth ||
-         Input::List().o_G  ||
-         Input::List().o_Px || Input::List().o_PxPx ||
-         Input::List().o_Py || Input::List().o_PxPy || Input::List().o_PyPy ||
-         Input::List().o_Pz || Input::List().o_PxPz || Input::List().o_PyPz || Input::List().o_PzPz ||
-         Input::List().o_Vx || Input::List().o_VxVx ||
-         Input::List().o_Vy || Input::List().o_VxVy || Input::List().o_VyVy ||
-         Input::List().o_VxVz || Input::List().o_VyVz || Input::List().o_VzVz ||
-         Input::List().o_Vsq || Input::List().o_Temperature || Input::List().o_Pressure ||
-         Input::List().o_Qx || Input::List().o_Qy || Input::List().o_Qz ||
-         Input::List().o_p1x1 )  {
+       Input::List().o_G  ||
+       Input::List().o_Px || Input::List().o_PxPx ||
+       Input::List().o_Py || Input::List().o_PxPy || Input::List().o_PyPy ||
+       Input::List().o_Pz || Input::List().o_PxPz || Input::List().o_PyPz || Input::List().o_PzPz ||
+       Input::List().o_Vx || Input::List().o_VxVx ||
+       Input::List().o_Vy || Input::List().o_VxVy || Input::List().o_VyVy ||
+       Input::List().o_VxVz || Input::List().o_VyVz || Input::List().o_VzVz ||
+       Input::List().o_Vsq || Input::List().o_Temperature || Input::List().o_Pressure ||
+       Input::List().o_Qx || Input::List().o_Qy || Input::List().o_Qz ||
+       Input::List().o_p1x1 )  {
 
         if (Makefolder("OUTPUT/MOM") != 0)
             cout<<"Warning: Folder 'OUTPUT/MOM' exists" << endl;
@@ -301,6 +287,20 @@ void Export_Files::Folders(){
             if (Makefolder("OUTPUT/MOM/Ti") != 0)
                 cout<<"Warning: Folder 'OUTPUT/MOM/Ti' exists" << endl;
         }
+
+        if (Input::List().particlepusher) {
+            if (Makefolder("OUTPUT/PARTICLES") != 0)
+                cout<<"Warning: Folder 'OUTPUT/PARTICLES' exists" << endl;
+            if (Makefolder("OUTPUT/PARTICLES/prtx") != 0)
+                cout<<"Warning: Folder 'OUTPUT/PARTICLES/prtx' exists" << endl;
+            if (Makefolder("OUTPUT/PARTICLES/prtpx") != 0)
+                cout<<"Warning: Folder 'OUTPUT/PARTICLES/prtpx' exists" << endl;
+            if (Makefolder("OUTPUT/PARTICLES/prtpy") != 0)
+                cout<<"Warning: Folder 'OUTPUT/PARTICLES/prtpy' exists" << endl;
+            if (Makefolder("OUTPUT/PARTICLES/prtpz") != 0)
+                cout<<"Warning: Folder 'OUTPUT/PARTICLES/prtpz' exists" << endl;
+        }
+
 //><-><-><-><-><-><-><-><-><-><-><-><-><-><-><-><-><-><-><-><-><-><-><-><-><-><-><
 //      TWO STREAM STUFF
 //><-><-><-><-><-><-><-><-><-><-><-><-><-><-><-><-><-><-><-><-><-><-><-><-><-><-><
@@ -312,15 +312,15 @@ void Export_Files::Folders(){
 
     }
 
-    if ( Input::List().o_f0x1 || Input::List().o_p1x1 
-        ||  Input::List().o_f10x1 ||  Input::List().o_f11x1 ||  Input::List().o_f20x1
-        || Input::List().o_fl0x1) {
+    if (  Input::List().o_p1x1 || Input::List().o_p2x1 || Input::List().o_p2p1x1 ||
+        Input::List().o_f0x1 ||  Input::List().o_f10x1 ||  Input::List().o_f11x1 
+        ||  Input::List().o_f20x1 || Input::List().o_fl0x1) {
         if (Makefolder("OUTPUT/DISTR") != 0)
             cout<<"Warning: Folder 'OUTPUT/DISTR' exists" << endl;
 
     }
 
-
+    
 }
 //--------------------------------------------------------------
 //**************************************************************
@@ -402,8 +402,10 @@ Export_Files::DefaultTags::DefaultTags(size_t species){
     mom.push_back( "ni"      );
     mom.push_back( "Ti"      );
 
-
-
+    part.push_back("prtx");
+    part.push_back("prtpx");
+    part.push_back("prtpy");
+    part.push_back("prtpz");
 
 //  p-x
     for (size_t s(0); s < species; ++s) {
@@ -439,11 +441,11 @@ Export_Files::DefaultTags::DefaultTags(size_t species){
 // Constructor 
 Export_Files::oAxis::oAxis() : label(""), units(""), min(0.0), max(1.0), sz(3) {}
 Export_Files::oAxis::oAxis( const float _m, const float _M,
-                            const size_t _sz)
-        : label(""), units(""), min(_m), max(_M), sz(_sz) {}
+    const size_t _sz)
+: label(""), units(""), min(_m), max(_M), sz(_sz) {}
 Export_Files::oAxis::oAxis(const string _l, const string _u, const float _m, const float _M,
-                           const size_t _sz)
-        : label(_l), units(_u), min(_m), max(_M), sz(_sz) {}
+ const size_t _sz)
+: label(_l), units(_u), min(_m), max(_M), sz(_sz) {}
 // Copy constructor 
 Export_Files::oAxis::oAxis(const oAxis& other) {
     label = other.label;
@@ -457,35 +459,35 @@ Export_Files::oAxis::oAxis(const oAxis& other) {
 //--------------------------------------------------------------
 // 1D header constructor
 Export_Files::Header::Header(oAxis _x,
-                             string _Ql, float _Qc,
-                             string _tl, string _tu, float _tc,
-                             string _oD)
-        : title(_Ql), titleC(_Qc),
-          time(_tl),  timeU(_tu),  timeC(_tc),
-          oDir(_oD) {
+   string _Ql, float _Qc,
+   string _tl, string _tu, float _tc,
+   string _oD)
+: title(_Ql), titleC(_Qc),
+time(_tl),  timeU(_tu),  timeC(_tc),
+oDir(_oD) {
     xyz_axis.push_back(_x);
 }
 
 // 2D header constructor
 Export_Files::Header::Header(oAxis _x, oAxis _y,
-                             string _Ql, float _Qc,
-                             string _tl, string _tu, float _tc,
-                             string _oD)
-        : title(_Ql),  time(_tl), timeU(_tu),
-          titleC(_Qc), timeC(_tc),
-          oDir(_oD) {
+   string _Ql, float _Qc,
+   string _tl, string _tu, float _tc,
+   string _oD)
+: title(_Ql),  time(_tl), timeU(_tu),
+titleC(_Qc), timeC(_tc),
+oDir(_oD) {
     xyz_axis.push_back(_x);
     xyz_axis.push_back(_y);
 }
 
 // 3D header constructor
 Export_Files::Header::Header(oAxis _x, oAxis _y, oAxis _z,
-                             string _Ql, float _Qc,
-                             string _tl, string _tu, float _tc,
-                             string _oD)
-        : title(_Ql), time(_tl), timeU(_tu),
-          titleC(_Qc), timeC(_tc),
-          oDir(_oD) {
+   string _Ql, float _Qc,
+   string _tl, string _tu, float _tc,
+   string _oD)
+: title(_Ql), time(_tl), timeU(_tu),
+titleC(_Qc), timeC(_tc),
+oDir(_oD) {
     xyz_axis.push_back(_x);
     xyz_axis.push_back(_y);
     xyz_axis.push_back(_z);
@@ -493,12 +495,12 @@ Export_Files::Header::Header(oAxis _x, oAxis _y, oAxis _z,
 
 // xD header constructor
 Export_Files::Header::Header(vector< oAxis > _xyz,
-                             string _Ql, float _Qc,
-                             string _tl, string _tu, float _tc,
-                             string _oD)
-        : xyz_axis(_xyz), title(_Ql), time(_tl), timeU(_tu),
-          titleC(_Qc), timeC(_tc),
-          oDir(_oD) {}
+   string _Ql, float _Qc,
+   string _tl, string _tu, float _tc,
+   string _oD)
+: xyz_axis(_xyz), title(_Ql), time(_tl), timeU(_tu),
+titleC(_Qc), timeC(_tc),
+oDir(_oD) {}
 
 // number of header dimensions
 size_t Export_Files::Header::dim() {
@@ -528,14 +530,15 @@ string Export_Files::Header::Directory()   { return oDir; }
 //--------------------------------------------------------------
 // Constructor of the export facility for data structures
 Export_Files::Xport::Xport(const Algorithms::AxisBundle<double>& _axis,
-                           const vector< string > oTags,
-                           string homedir){
+ const vector< string > oTags,
+ string homedir){
 
     size_t species(_axis.pdim());
     DefaultTags dTags(species);
 
-    vector< oAxis > xyz, pxyz, imre, pr;
+    vector< oAxis > xyz, pxyz, imre, pr, parts;
     xyz.push_back( Export_Files::oAxis(_axis.xgmin(0), _axis.xgmax(0), _axis.Nxg(0)) );
+    parts.push_back( Export_Files::oAxis(0.5, Input::List().numparticles+0.5, Input::List().numparticles));
 
     for (size_t s(0); s < species; ++s) {
         pr.push_back( Export_Files::oAxis(_axis.pmin(s), _axis.pmax(s), _axis.Np(s)));
@@ -547,59 +550,61 @@ Export_Files::Xport::Xport(const Algorithms::AxisBundle<double>& _axis,
 //  Time 
     size_t tloc(0);                  // Find the location of the right tag
     while ( ( tloc < dTags.time.size()-1 ) &&
-            ( find(oTags.begin(),oTags.end(), dTags.time[tloc]) == oTags.end() ) ) {
+        ( find(oTags.begin(),oTags.end(), dTags.time[tloc]) == oTags.end() ) ) {
         ++tloc;
-    }
-    string tlabel = "t[" +formulary().Label(dTags.time[tloc])+"]";
-    string tunits = formulary().Label(dTags.time[tloc]);
-    float  tconv  =  formulary().Uconv(dTags.time[tloc]);
+}
+string tlabel = "t[" +formulary().Label(dTags.time[tloc])+"]";
+string tunits = formulary().Label(dTags.time[tloc]);
+float  tconv  =  formulary().Uconv(dTags.time[tloc]);
 
 //  xyz Axis
     size_t xloc(0);                  // Find the location of the right tag
     while ( ( xloc < dTags.space.size()-1 ) &&
-            ( find(oTags.begin(),oTags.end(), dTags.space[xloc]) == oTags.end() ) ) {
+        ( find(oTags.begin(),oTags.end(), dTags.space[xloc]) == oTags.end() ) ) {
         ++xloc;
-    }
-    xyz[0].label = "x["+ formulary().Label(dTags.space[xloc]) +"]";
-    if ( xyz.size() > 1 ) xyz[1].label = "y["+ formulary().Label(dTags.space[xloc]) +"]";
-    if ( xyz.size() > 2 ) xyz[2].label = "z["+ formulary().Label(dTags.space[xloc]) +"]";
-    xyz[0].units = formulary().Label(dTags.space[xloc]);
-    if ( xyz.size() > 1 ) xyz[1].units = formulary().Label(dTags.space[xloc]);
-    if ( xyz.size() > 2 ) xyz[2].units = formulary().Label(dTags.space[xloc]);
+}
+xyz[0].label = "x["+ formulary().Label(dTags.space[xloc]) +"]";
+if ( xyz.size() > 1 ) xyz[1].label = "y["+ formulary().Label(dTags.space[xloc]) +"]";
+if ( xyz.size() > 2 ) xyz[2].label = "z["+ formulary().Label(dTags.space[xloc]) +"]";
+xyz[0].units = formulary().Label(dTags.space[xloc]);
+if ( xyz.size() > 1 ) xyz[1].units = formulary().Label(dTags.space[xloc]);
+if ( xyz.size() > 2 ) xyz[2].units = formulary().Label(dTags.space[xloc]);
 
+parts[0].label = "particle index";
+parts[0].units = "#";
 
 //  pxyz Axis
-    for (size_t i(0); i < species; ++i) {
-        pr[i].label = "p";
-        pr[i].units = "m_e c";
+for (size_t i(0); i < species; ++i) {
+    pr[i].label = "p";
+    pr[i].units = "m_e c";
 
-        pxyz[i].label = "px[mc]";
-        pxyz[i].units = "m_e c";
+    pxyz[i].label = "px[mc]";
+    pxyz[i].units = "m_e c";
         // if ( pxyz.size()/species > 1 ) 
-        pxyz[1+i].label = "py[mc]";
-        pxyz[1+i].units = "m_e c";
+    pxyz[1+i].label = "py[mc]";
+    pxyz[1+i].units = "m_e c";
         // if ( pxyz.size()/species > 2 )
-        pxyz[2+i].label = "pz[mc]";
-        pxyz[2+i].units = "m_e c";
+    pxyz[2+i].label = "pz[mc]";
+    pxyz[2+i].units = "m_e c";
 
         // if ( pxyz.size()/species > 1 ) 
         // if ( pxyz.size()/species > 2 ) pxyz[2*species+i].units = "m_e c";
-    }
+}
 
 //  Tags for Fields -->
-    for (size_t i(0); i < dTags.fld.size(); ++i) {
+for (size_t i(0); i < dTags.fld.size(); ++i) {
 
         //     If this tag is an output tag
-        if ( find(oTags.begin(),oTags.end(), dTags.fld[i]) != oTags.end() ) {
+    if ( find(oTags.begin(),oTags.end(), dTags.fld[i]) != oTags.end() ) {
 
-            string nounits = dTags.fld[i].substr(0, dTags.fld[i].find("_"));
-            string folder = homedir + "OUTPUT/FLD/" + nounits + "/";
+        string nounits = dTags.fld[i].substr(0, dTags.fld[i].find("_"));
+        string folder = homedir + "OUTPUT/FLD/" + nounits + "/";
             //         Generate a header file for this tag
-            Hdr[dTags.fld[i]] = Header(xyz,
-                                       nounits+"["+formulary().Label(dTags.fld[i])+"]",
-                                       formulary().Uconv(dTags.fld[i]),
-                                       tlabel, tunits, tconv, folder);
-        }
+        Hdr[dTags.fld[i]] = Header(xyz,
+         nounits+"["+formulary().Label(dTags.fld[i])+"]",
+         formulary().Uconv(dTags.fld[i]),
+         tlabel, tunits, tconv, folder);
+    }
     } // <--
 
 //  Tags for Moments -->
@@ -612,11 +617,30 @@ Export_Files::Xport::Xport(const Algorithms::AxisBundle<double>& _axis,
             string folder = homedir + "OUTPUT/MOM/" + nounits + "/";
             //         Generate a header file for this tag
             Hdr[dTags.mom[i]] = Header(xyz,
-                                       nounits+"["+formulary().Label(dTags.mom[i])+"]",
-                                       formulary().Uconv(dTags.mom[i]),
-                                       tlabel, tunits, tconv, folder);
+             nounits+"["+formulary().Label(dTags.mom[i])+"]",
+             formulary().Uconv(dTags.mom[i]),
+             tlabel, tunits, tconv, folder);
         }
     } // <--
+
+//  Tags for Particles -->
+    for (size_t i(0); i < dTags.part.size(); ++i) {
+
+        //     If this tag is an output tag
+        if ( find(oTags.begin(),oTags.end(), dTags.part[i]) != oTags.end() ) {
+
+            string nounits = dTags.part[i].substr(0, dTags.part[i].find("_"));
+            string folder = homedir + "OUTPUT/PARTICLES/" + nounits + "/";
+            //         Generate a header file for this tag
+            
+
+            Hdr[dTags.part[i]] = Header(parts,
+             "particles", //nounits+"["+formulary().Label(dTags.mom[i])+"]",
+             1.0,//formulary().Uconv(dTags.mom[i]),
+             tlabel, tunits, tconv, folder);
+        }
+    } // <--
+
 
 //  Tags for p-x -->
     for (size_t i(0); i < dTags.pvsx.size(); ++i) {
@@ -634,7 +658,7 @@ Export_Files::Xport::Xport(const Algorithms::AxisBundle<double>& _axis,
 //          Generate a header file for this tag
 //          For each 9 you have a different species 
             Hdr[dTags.pvsx[i]] = Header( pr[i/3], xyz[0],
-                                         "f"+stringify(i/3), 1.0, tlabel, tunits, tconv, folder);
+               "f"+stringify(i/3), 1.0, tlabel, tunits, tconv, folder);
             // std::cout << " \n k = " << dTags.pvsx[i] << "\n";
             // std::cout << " \n \n 11 ";
         }
@@ -651,7 +675,7 @@ Export_Files::Xport::Xport(const Algorithms::AxisBundle<double>& _axis,
 
 //          Generate a header file for this tag
             Hdr[dTags.fvsx[i]] = Header( pr[i/5], xyz[0], imre[0],
-                                         "f", 1.0, tlabel, tunits, tconv, folder);
+               "f", 1.0, tlabel, tunits, tconv, folder);
 
         }
     } //<--
@@ -667,7 +691,7 @@ Export_Files::Xport::Xport(const Algorithms::AxisBundle<double>& _axis,
 
 //          Generate a header file for this tag
             Hdr[dTags.pvspvsx[i]] = Header( pxyz[i/1+species],pxyz[(i+1)/1+species], xyz[0],
-                                            "f"+stringify(i/1), 1.0, tlabel, tunits, tconv, folder);
+                "f"+stringify(i/1), 1.0, tlabel, tunits, tconv, folder);
 
             // std::cout << " \n \n 11 ";
         }
@@ -736,15 +760,17 @@ void Export_Files::Restart_Facility::Read(const int rank, const size_t re_step, 
         }
     }
     else {
-        
+
         if (!rank) std::cout << "\n\n ERROR :: No files to read! \n\n";
         exit(1);
 
     }
 
-//      Read Ex
-    for(size_t i(0); i < Y.EMF().Ex().numx(); ++i){
-        fin.read((char *)(&Y.EMF().Ex()(i)), sizeof(Y.EMF().Ex()(i)));
+//      Read fields
+    for(size_t ifields(0); ifields < Y.Fields(); ++ifields){
+        for(size_t i(0); i < Y.EMF().Ex().numx(); ++i) {
+            fin.read((char *)(&(Y.FLD(ifields))(i)), sizeof(Y.FLD(ifields)(i)));
+        }
     }
 
     fin.close();
@@ -763,20 +789,21 @@ void Export_Files::Restart_Facility::Write(const int rank, const size_t re_step,
     ofstream  fout(filename.c_str(), ios::binary);
 
 //      Write distribution functions
-    for(size_t s(0); s < Y.Species(); ++s) {
-        for (size_t s(0); s < Y.Species(); ++s) {
-            for (size_t nh(0); nh < Y.DF(s).dim(); ++nh) {
-                for (size_t i(0); i < (Y.DF(s))(nh).dim(); ++i) {
-                    fout.write((char *) &(Y.DF(s))(nh)(i), sizeof((Y.DF(s))(nh)(i)));
-                }
+    for (size_t s(0); s < Y.Species(); ++s) {
+        for (size_t nh(0); nh < Y.DF(s).dim(); ++nh) {
+            for (size_t i(0); i < (Y.DF(s))(nh).dim(); ++i) {
+                fout.write((char *) &(Y.DF(s))(nh)(i), sizeof((Y.DF(s))(nh)(i)));
             }
         }
     }
 
-//      Write Ex
-    for(size_t i(0); i < Y.EMF().Ex().numx(); ++i) {
-        fout.write((char *)(&Y.EMF().Ex()(i)), sizeof(Y.EMF().Ex()(i)));
+//      Write fields
+    for(size_t ifields(0); ifields < Y.Fields(); ++ifields){
+        for(size_t i(0); i < Y.EMF().Ex().numx(); ++i) {
+            fout.write((char *)(&(Y.FLD(ifields))(i)), sizeof(Y.FLD(ifields)(i)));
+        }
     }
+
 
     fout.flush();
     fout.close();
@@ -813,131 +840,132 @@ string Export_Files::Restart_Facility::rFextension(const int rank, const size_t 
 
 //**************************************************************
 //--------------------------------------------------------------
-Output_Data::PLegendre1D::PLegendre1D( size_t Nl, size_t Nm, size_t Np,
-                                       float pmin, float pmax, size_t Npx ) {
+// Output_Data::PLegendre1D::PLegendre1D( size_t Nl, size_t Nm, size_t Np,
+//                                        float pmin, float pmax, size_t Npx ) {
 
-    size_t sz(0);
+//     size_t sz(0);
 
-    valarray<float> p( Algorithms::MakeAxis(pmin, pmax, Np)),
-            px(Algorithms::MakeAxis(float(-1.0)*pmax, pmax, Npx));
+//     valarray<float> p( Algorithms::MakeAxis(pmin, pmax, Np)),
+//             px(Algorithms::MakeAxis(float(-1.0)*pmax, pmax, Npx));
 
-//  Generate the structure to save the polynomials
-    sz = ((Nm+1)*(2*Nl-Nm+2))/2;
-//  
-    plegendre = new vector< Array2D<float>>(sz,Array2D<float>(Npx,Np))  ;
-    //    for (size_t m(0); m < Nm+1; ++m) {
-    //     for (size_t l(m); l < Nl+1; ++l) { 
-    //         (*plegendre).push_back( Array2D<float>(Npx,Np) );
-    //         ++sz;
-    //  }
-    // }
-    size_t k(0);
-//  Generate the polynomial values for each cos(theta) = px/p 
-    for (size_t j(0); j < p.size(); ++j) {
-        float invp(1.0/p[j]);
-        for (size_t i(0); i < px.size(); ++i) {
+// //  Generate the structure to save the polynomials
+//     sz = ((Nm+1)*(2*Nl-Nm+2))/2;
+// //  
+//     plegendre = new vector< Array2D<float>>(sz,Array2D<float>(Npx,Np))  ;
+//     //    for (size_t m(0); m < Nm+1; ++m) {
+//     //     for (size_t l(m); l < Nl+1; ++l) { 
+//     //         (*plegendre).push_back( Array2D<float>(Npx,Np) );
+//     //         ++sz;
+//     //  }
+//     // }
+//     size_t k(0);
+// //  Generate the polynomial values for each cos(theta) = px/p 
+//     for (size_t j(0); j < p.size(); ++j) {
+//         float invp(1.0/p[j]);
+//         for (size_t i(0); i < px.size(); ++i) {
 
-//          For given px/p generate all the polynomial values ...
-//             valarray<float> vL( Algorithms::Legendre( px[i]*invp, Nl, Nm ) );
-            Array2D<float> vL( Algorithms::Legendre( px[i]*invp, Nl, Nm ) );
-            // std::cout << "\n x = " << px[i]*invp << ", sqrt(1-x^2) = " << sqrt(1.0-px[i]*invp*px[i]*invp) ;
-//          ... and save them
-            // std::cout << "dim = " << vL.dim() << "\n";
-            // std::cout << "dim1:" << vL.dim1() << "\n";
-            // std::cout << "dim2:" << vL.dim1() << "\n\n";
-            for (size_t l(0); l < Nl+1; ++l){
-                for (size_t m=0; m<((Nm<l)?Nm:l)+1; ++m){
-                    // for (size_t k(0); k < sz; ++k) {
-                    k = ((l < Nm+1)?((l*(l+1))/2+m):(l*(Nm+1)-(Nm*(Nm+1))/2 + m));
+// //          For given px/p generate all the polynomial values ...
+// //             valarray<float> vL( Algorithms::Legendre( px[i]*invp, Nl, Nm ) );
+//             Array2D<float> vL( Algorithms::Legendre( px[i]*invp, Nl, Nm ) );
+//             // std::cout << "\n x = " << px[i]*invp << ", sqrt(1-x^2) = " << sqrt(1.0-px[i]*invp*px[i]*invp) ;
+// //          ... and save them
+//             // std::cout << "dim = " << vL.dim() << "\n";
+//             // std::cout << "dim1:" << vL.dim1() << "\n";
+//             // std::cout << "dim2:" << vL.dim1() << "\n\n";
+//             for (size_t l(0); l < Nl+1; ++l){
+//                 for (size_t m=0; m<((Nm<l)?Nm:l)+1; ++m){
+//                     // for (size_t k(0); k < sz; ++k) {
+//                     k = ((l < Nm+1)?((l*(l+1))/2+m):(l*(Nm+1)-(Nm*(Nm+1))/2 + m));
 
-                    (*plegendre)[k](i,j) = vL(l,m);
+//                     (*plegendre)[k](i,j) = vL(l,m);
 
-                    std::cout << "\n LP(" << l << "," << m << "," << k << ") = " <<  vL(l,m);
+//                     std::cout << "\n LP(" << l << "," << m << "," << k << ") = " <<  vL(l,m);
 
-                }
-                // (*plegendre)[k](i,j) = vL(k);
-            }
+//                 }
+//                 // (*plegendre)[k](i,j) = vL(k);
+//             }
 
-            // exit(1);
-        }
-    }
+//             // exit(1);
+//         }
+//     }
 
-}
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+// }
+// //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
-Output_Data::PLegendre1D::PLegendre1D( const PLegendre1D& other ) {
+// Output_Data::PLegendre1D::PLegendre1D( const PLegendre1D& other ) {
 
-//  Generate the structure to save the polynomials
-    plegendre = new vector< Array2D<float> > ;
-    for (size_t i(0); i < other.dim(); ++i) {
-        (*plegendre).push_back( other(i) );
-    }
-}
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+// //  Generate the structure to save the polynomials
+//     plegendre = new vector< Array2D<float> > ;
+//     for (size_t i(0); i < other.dim(); ++i) {
+//         (*plegendre).push_back( other(i) );
+//     }
+// }
+// //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
-Output_Data::PLegendre1D::~PLegendre1D(){
-    delete plegendre;
-}
+// Output_Data::PLegendre1D::~PLegendre1D(){
+//     delete plegendre;
+// }
 //--------------------------------------------------------------
 //**************************************************************
 
 //**************************************************************
 //--------------------------------------------------------------
 Output_Data::PLegendre2D::PLegendre2D( size_t Nl, size_t Nm, size_t Np,
-                                       float pmin, float pmax, size_t Npx, size_t Npy ) {
+ float pmin, float pmax, size_t Npx, size_t Npy ) {
 
     size_t sz(0);
 
+
     valarray<float> p( Algorithms::MakeAxis(pmin, pmax, Np)),
-            px(Algorithms::MakeAxis(float(-1.0)*pmax, pmax, Npx)),
-            py(Algorithms::MakeAxis(float(-1.0)*pmax, pmax, Npy));
+    px(Algorithms::MakeAxis(float(-1.0)*pmax, pmax, Npx)),
+    py(Algorithms::MakeAxis(float(-1.0)*pmax, pmax, Npy));
 
 //  Generate the structure to save the polynomials
     sz = ((Nm+1)*(2*Nl-Nm+2))/2;
-//  
+
     plegendre = new vector< Array2D<float>>(sz,Array2D<float>(Npx,Npy))  ;
-    //    for (size_t m(0); m < Nm+1; ++m) {
-    //     for (size_t l(m); l < Nl+1; ++l) { 
-    //         (*plegendre).push_back( Array2D<float>(Npx,Np) );
-    //         ++sz;
-    //  }
-    // }
+
     size_t k(0);
-    // float invpmax(1.0/pmax);
 //  Generate the polynomial values for each cos(theta) = px/p 
-    for (size_t j(0); j < py.size(); ++j) {
+    if (Nl > 1)
+    {
+        for (size_t ipy(0); ipy < py.size(); ++ipy) {
 
-        for (size_t i(0); i < px.size(); ++i) {
-            float invp(sqrt(py[j]*py[j]+px[i]+px[i]));
-            if (invp > 0.0 ) invp=1.0/invp;
-            else if (invp > pmax) invp *= 2;
-            else invp = 0.0;
-//          For given px/p generate all the polynomial values ...
-//             valarray<float> vL( Algorithms::Legendre( px[i]*invp, Nl, Nm ) );
+            for (size_t ipx(0); ipx < px.size(); ++ipx) {
 
-            Array2D<float> vL( Algorithms::Legendre( px[i]*invp, Nl, Nm ) );
-            // std::cout << "\n x = " << px[i]*invp << ", sqrt(1-x^2) = " << sqrt(1.0-px[i]*invp*px[i]*invp) ;
-            //          ... and save them
-            // std::cout << "dim = " << vL.dim() << "\n";
-            // std::cout << "dim1:" << vL.dim1() << "\n";
-            // std::cout << "dim2:" << vL.dim1() << "\n\n";
-            for (size_t l(0); l < Nl+1; ++l){
-                for (size_t m(0); m<((Nm<l)?Nm:l)+1; ++m){
-                    // for (size_t k(0); k < sz; ++k) {
-                    k = ((l < Nm+1)?((l*(l+1))/2+m):(l*(Nm+1)-(Nm*(Nm+1))/2 + m));
+                float invp(sqrt(py[ipy] * py[ipy] + px[ipx] * px[ipx]));
 
-                    (*plegendre)[k](i,j) = vL(l,m);
-                    // if (invp == 0.0) (*plegendre)[k](i,j) = 0.0;
+                // std::cout << "\n px[ipx] = " << px[ipx];
+                // std::cout << "\n py[ipy] = " << py[ipy];
+                // std::cout << "\n invp = " << invp;
+                
+                if (invp > pmax) invp = 0;
+                if (invp > 0.0) invp = 1.0 / invp;
 
-                    // std::cout << "\n LP(" << l << "," << m << "," << k << ") = " <<  vL(l,m);
+    //          For given px/p generate all the polynomial values ...
+                Array2D<float> vL(Algorithms::Legendre(px[ipx] * invp, Nl, Nm));
+                //          ... and save them
 
+                for (size_t l(0); l < Nl + 1; ++l) {
+                    for (size_t m(0); m < ((Nm < l) ? Nm : l) + 1; ++m) {
+                        // for (size_t k(0); k < sz; ++k) {
+                        k = ((l < Nm + 1) ? ((l * (l + 1)) / 2 + m) : (l * (Nm + 1) - (Nm * (Nm + 1)) / 2 + m));
+
+                        // if (isnan(vL(l,m)))
+                        // {
+                        //     std::cout << "\n\n ipx,ipy = " << ipx << " , " << ipy;
+                        //     std::cout << "\n invp = " << invp;
+                        //     std::cout << "\n px[ipx] = " << px[ipx];
+                        //     exit(1);
+                        // }
+                        (*plegendre)[k](ipx, ipy) = vL(l, m);
+
+                    }
                 }
-                // (*plegendre)[k](i,j) = vL(k);
             }
         }
-        // exit(1);
     }
-
+    
 }
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
@@ -1064,12 +1092,12 @@ valarray<float>  Output_Data::p1x1_1D::operator()(DistFunc1D& df, size_t x0, siz
     int sgn(1);
     size_t midpoint,ipxp,ipxm;
 
-    for (size_t i(0); i < df.dim(); ++i)
+    for (size_t il(0); il < df.l0()+1; ++il)
     {
-        dummyvec = df(i).xVec(x0);
+        dummyvec = df(il,0).xVec(x0);
 
         midpoint = df(0,0).nump();
-        p1x1[s][midpoint] = (float) ((dummyvec[0]).real());
+        
         for (size_t ip(0); ip < df(0,0).nump(); ++ip)
         {
             ipxm = midpoint - 1 - ip;
@@ -1080,10 +1108,78 @@ valarray<float>  Output_Data::p1x1_1D::operator()(DistFunc1D& df, size_t x0, siz
         }
         sgn *= -1;
     }
+    p1x1[s][midpoint] = (float) (df(0,0)(0,x0)).real();
 
 //    p1x1[s] *= 2.0 * M_PI;
     // exit(1);
     return p1x1[s];
+}
+//--------------------------------------------------------------
+//**************************************************************
+
+//**************************************************************
+//--------------------------------------------------------------
+Output_Data::p2x1_1D::p2x1_1D( const Grid_Info& _G) {
+
+//  Generate the required structures
+    for (size_t s(0); s < _G.axis.pdim(); ++s) {
+        pmax.push_back( static_cast<float>(_G.axis.pmax(s)) );
+        pmin.push_back( static_cast<float>(-1.0*_G.axis.pmax(s)) );
+
+        
+        Pl.push_back( PLegendre2D( _G.l0[s], _G.m0[s], _G.axis.Np(s), static_cast<float>(_G.axis.pmin(s)),
+         static_cast<float>(_G.axis.pmax(s)), _G.axis.Npx(s), _G.axis.Npy(s) ) );
+
+        
+        p2x1.push_back( valarray<float>( _G.axis.Npy(s)) );
+
+    }
+}
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
+Output_Data::p2x1_1D::p2x1_1D( const p2x1_1D& other) {
+
+    for (size_t s(0); s < other.Species(); ++s) {
+        pmin.push_back( other.Pmin(s) );
+        pmax.push_back( other.Pmax(s) );
+        Pl.push_back( other.PL(s) );
+        p2x1.push_back( other.p2_x1(s) );
+    }
+}
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
+Output_Data::p2x1_1D::~p2x1_1D(){
+    // delete p1x1;
+}
+//--------------------------------------------------------------
+
+//--------------------------------------------------------------
+//  Turn the Distribution function at some spatial location x0 
+//  into a cartesian grid.
+valarray<float>  Output_Data::p2x1_1D::operator()(DistFunc1D& df, size_t x0, size_t s) {
+
+    p2x1[s] = 0.0; // this is a valarray<float>
+    vector<complex<double> > dummyvec;
+
+    size_t midpoint,ipxp,ipxm,k;
+
+    for (size_t il(0); il < df.m0()+1; ++il) {            
+        dummyvec = df(il, il).xVec(x0);
+
+        midpoint = df(0, 0).nump();
+        p2x1[s][midpoint] = (float) ((dummyvec[0]).real());
+
+        for (size_t ip(0); ip < df(0, 0).nump(); ++ip) {
+            ipxm = midpoint - 1 - ip;
+            ipxp = midpoint + 1 + ip;
+
+            (p2x1[s])[ipxm] += (float) ((dummyvec[ip]).real() * Pl[s](k)(midpoint, ipxm));
+            (p2x1[s])[ipxp] += (float) ((dummyvec[ip]).real() * Pl[s](k)(midpoint, ipxp));
+        }
+    }
+
+    p2x1[s][midpoint] = (float) (df(0,0)(0,x0)).real();
+    return p2x1[s];
 }
 //--------------------------------------------------------------
 //**************************************************************
@@ -1128,24 +1224,9 @@ Array2D<float>  Output_Data::fx1_1D::operator()(DistFunc1D& df, size_t l, size_t
 
     for (size_t ip(0); ip < Np(s); ++ip) {
         //  At each location in |p|
-        // fx1[0.5*(Npx(s)-1)+ip] = (float( (df(whichdist))(ip,x0).real() ));
-        // fx1[0.5*(Npx(s)-1)-ip] = (float( (df(whichdist))(ip,x0).real() ));
-
-        // fx1(0.5*(Npx(s)-1)+1+ip,1) = (float( (df(whichdist))(ip,x0).real() ));
-        // fx1(0.5*(Npx(s)-1)-1-ip,1) = (float( (df(whichdist))(ip,x0).real() ));
-
-        // fx1(0.5*(Npx(s)-1)+1+ip,2) = (float( (df(whichdist))(ip,x0).imag() ));
-        // fx1(0.5*(Npx(s)-1)-1-ip,2) = (float( (df(whichdist))(ip,x0).imag() ));
-        // 
         fx1(ip,0) = (float( (df(l,m))(ip,x0).real() ));
         fx1(ip,1) = (float( (df(l,m))(ip,x0).imag() ));
-
-        // std::cout << "fx1(" << ip << ") = " << (df(whichdist))(ip,x0).real() << "\n";
-        // << fx1(0.5*(Npx(s)-1)+1+ip,1) << "," << fx1(0.5*(Npx(s)-1)+1+ip,2) << "\n";
     }
-    // fx1[Npx(s)] = (float( (df(whichdist))(0,x0).real() ));
-    // fx1(,1) = (float( (df(whichdist))(0,x0).real() ));
-    // fx1(0.5*(Npx(s)-1),2) = (float( (df(whichdist))(0,x0).imag() ));
     return fx1;
 }
 //--------------------------------------------------------------
@@ -1163,11 +1244,11 @@ Output_Data::p2p1x1_1D::p2p1x1_1D( const Grid_Info& _G) {
         numm.push_back( _G.m0[s]);
 
         Pl.push_back( PLegendre2D( _G.l0[s], _G.m0[s], _G.axis.Np(s), static_cast<float>(_G.axis.pmin(s)),
-                                   static_cast<float>(_G.axis.pmax(s)), _G.axis.Npx(s), _G.axis.Npy(s) ) );
+         static_cast<float>(_G.axis.pmax(s)), _G.axis.Npx(s), _G.axis.Npy(s) ) );
         pr.push_back( Array2D<float>( _G.axis.Npx(s),_G.axis.Npy(s)));
 
 
-        nextpcell.push_back( Array2D<size_t>( _G.axis.Npx(s),_G.axis.Npy(s)));
+        pcelltotheleft.push_back( Array2D<int>( _G.axis.Npx(s),_G.axis.Npy(s)));
         distancetothatcell.push_back( Array2D<float>( _G.axis.Npx(s),_G.axis.Npy(s)));
 
 
@@ -1178,27 +1259,49 @@ Output_Data::p2p1x1_1D::p2p1x1_1D( const Grid_Info& _G) {
     //  Calculate a 2D array for the pr for each px and py   
     for (size_t s(0); s < _G.axis.pdim(); ++s) {
 
-        valarray<float> p( Algorithms::MakeAxis( pmin[s], pmax[s], _G.axis.Np(s) )),
-                px(Algorithms::MakeAxis( float(-1.0)* pmax[s], pmax[s], _G.axis.Npx(s) )),
-                py(Algorithms::MakeAxis( float(-1.0)* pmax[s], pmax[s], _G.axis.Npy(s) ));
+        valarray<float> p( Algorithms::MakeCAxis( pmin[s], pmax[s], _G.axis.Np(s) )),
+        px(Algorithms::MakeAxis( float(-1.0)* pmax[s], pmax[s], _G.axis.Npx(s) )),
+        py(Algorithms::MakeAxis( float(-1.0)* pmax[s], pmax[s], _G.axis.Npy(s) ));
 //      --->
         for (size_t i(0); i < _G.axis.Npx(s); ++i){
             for (size_t j(0); j < _G.axis.Npy(s); ++j){
                 pr[s](i,j) = sqrt(px[i]*px[i]+py[j]*py[j]);
 
-                while ((pr[s](i,j) > p[k]) && (k < _G.axis.Np(s))) ++k;
-                if (k == 0) ++k;
-                nextpcell[s](i,j) = k-1;
-                distancetothatcell[s](i,j) = (p[k] - pr[s](i,j))/(p[1]-p[0]);
-                // std::cout << "\n\n (px,py,pr,p[k],nextpcell(i,j)) = " << px[i]
-                // << ", " << py[j] 
-                // << ", " << pr[s](i,j) 
-                // << ", " << p[k] 
-                // << ", " << nextpcell[s](i,j);
+                if (!(pr[s](i,j) >= p[_G.axis.Np(s)-1]) && (pr[s](i,j) != 0.0))
+                {                
+                    // std::cout << "\n\n (px,py) = " << px[i] << " , " << py[j];
 
-                k = 0;
+
+                    while ((p[k] < pr[s](i,j)) && (k < _G.axis.Np(s))) ++k;
+                    if (k == 0) ++k;
+                    pcelltotheleft[s](i,j) = k-1;
+                    distancetothatcell[s](i,j) = -(p[k-1] - pr[s](i,j))/(p[1]-p[0]);
+
+                    // std::cout << "\n p[" << k-1 << "] = " << p[k-1];
+
+                    // std::cout << "\n ipx,ipy = " << i << "," << j;
+                    // std::cout << "\n pcelltotheleft = " << pcelltotheleft[s](i,j);
+                    // std::cout << "\n distancetothatcell = " << distancetothatcell[s](i,j);
+
+                    // std::cout << "\n\n (px,py,pr,p[k],pcelltotheleft(i,j)) = " << px[i]
+                    // << ", " << py[j] 
+                    // << ", " << pr[s](i,j) 
+                    // << ", " << p[k] 
+                    // << ", " << pcelltotheleft[s](i,j);
+
+                    k = 0;
+                }
+                else
+                {
+                    // std::cout << "\n\n pr = " << pr[s](i,j);
+                    // exit(1);
+                    pcelltotheleft[s](i,j) = -1;
+                    distancetothatcell[s](i,j) = 1e-10;           
+                }
 
             }
+            // exit(1);
+
         }
 //      <---
     }
@@ -1217,7 +1320,7 @@ Output_Data::p2p1x1_1D::p2p1x1_1D( const p2p1x1_1D& other) {
         numm.push_back( other.Nm(s));
         Pl.push_back(other.PL(s));
         pr.push_back(other.prad(s));
-        nextpcell.push_back(other.npcell(s));
+        pcelltotheleft.push_back(other.npcell(s));
         distancetothatcell.push_back(other.dcell(s));
         p2p1x1.push_back( other.p2p1_x1(s) );
     }
@@ -1238,34 +1341,47 @@ Array2D<float>  Output_Data::p2p1x1_1D::operator()(DistFunc1D& df, size_t x0, si
     size_t i(0), temploc(0);
     float tempdist(0.0);
 
+    float temp;
+
     // valarray<float> p( Algorithms::MakeAxis(pmin, pmax, Np));
 
     for (size_t l(0); l < Nl(s)+1; ++l){
         for (size_t m(0); m<((Nm(s)<l)?Nm(s):l)+1; ++m){
 
             i = ((l < Nm(s)+1)?((l*(l+1))/2+m):(l*(Nm(s)+1)-(Nm(s)*(Nm(s)+1))/2 + m));
+            // std::cout << "\n(l,m,i) = " << l << " , " << m << " , " << i;
 
             for (size_t ipy(0); ipy < Npy(s); ++ipy) {
                 for (size_t ipx(0); ipx < Npx(s); ++ipx) {
                     //  At each location in px,py
-                    if (nextpcell[s](ipx,ipy) == 0)
+                    if (pcelltotheleft[s](ipx,ipy) < 0)
                     {
                         temploc = 1;
                         tempdist = 1.0;
+
+                        // temp = Pl[s](i)(ipx, ipy) *
+                        //                   ((float((df(i))(temploc  ,x0).real())*(1.0-tempdist))+
+                        //                    (float((df(i))(temploc-1,x0).real())*(    tempdist)));
+
+
+                        p2p1x1[s](ipx,ipy) += 0.0;
                     }
                     else
                     {
-                        temploc = nextpcell[s](ipx,ipy);
+                        temploc = pcelltotheleft[s](ipx,ipy);
                         tempdist = distancetothatcell[s](ipx,ipy);
-                    }
 
-                    p2p1x1[s](ipx,ipy) += Pl[s](i)(ipx, ipy) *
-                                          ((float((df(i))(temploc  ,x0).real())*(1.0-tempdist))+
-                                           (float((df(i))(temploc-1,x0).real())*(    tempdist)));
+                        temp = Pl[s](i)(ipx, ipy) *
+                        ((float((df(i))(temploc+1,x0).real())*(    tempdist))+
+                         (float((df(i))(temploc  ,x0).real())*(1.0-tempdist)));
+
+                        p2p1x1[s](ipx,ipy) += temp;
+                    }
                 }
             }
         }
     }
+    p2p1x1[s]((Npx(s)-1)/2,(Npy(s)-1)/2) = float(((df(0))(0,x0)).real());
     return p2p1x1[s];
 }
 //--------------------------------------------------------------
@@ -1275,7 +1391,7 @@ Array2D<float>  Output_Data::p2p1x1_1D::operator()(DistFunc1D& df, size_t x0, si
 //--------------------------------------------------------------
 
 void Output_Data::Output_Preprocessor_1D::operator()(const State1D& Y, const Grid_Info& grid, const size_t tout,
-                                                     const Parallel_Environment_1D& PE) {
+   const Parallel_Environment_1D& PE) {
 
     if (Input::List().o_Ex) {
         Ex( Y, grid, tout, PE );
@@ -1342,22 +1458,6 @@ void Output_Data::Output_Preprocessor_1D::operator()(const State1D& Y, const Gri
         vNz( Y, grid, tout, PE );
     }
 
-//    if (Input::List().o_p1x1){
-//        px( Y, grid, tout, PE );
-//    }
-//    if (Input::List().o_f0x1){
-//        f0( Y, grid, tout, PE );
-//    }
-//    if (Input::List().o_f10x1){
-//        f10( Y, grid, tout, PE );
-//    }
-//    if (Input::List().o_f11x1){
-//        f11( Y, grid, tout, PE );
-//    }
-//    if (Input::List().o_p2p1x1){
-//        pxpy( Y, grid, tout, PE );
-//    }
-
     if (Input::List().o_Ux) {
         Ux( Y, grid, tout, PE );
     }
@@ -1382,15 +1482,27 @@ void Output_Data::Output_Preprocessor_1D::operator()(const State1D& Y, const Gri
         Ti( Y, grid, tout, PE );
     }
 
+    if (Input::List().particlepusher) {
+        particles_x( Y, grid, tout, PE );
+        particles_px( Y, grid, tout, PE );
+        particles_py( Y, grid, tout, PE );
+        particles_pz( Y, grid, tout, PE );
+    }
+
 }
 //--------------------------------------------------------------
 //--------------------------------------------------------------
 
 void Output_Data::Output_Preprocessor_1D::distdump(const State1D& Y, const Grid_Info& grid, const size_t tout,
-                                                   const Parallel_Environment_1D& PE) {
+ const Parallel_Environment_1D& PE) {
+
+
 
     if (Input::List().o_p1x1){
         px( Y, grid, tout, PE );
+    }
+    if (Input::List().o_p2x1){
+        py( Y, grid, tout, PE );
     }
     if (Input::List().o_f0x1){
         f0( Y, grid, tout, PE );
@@ -1407,19 +1519,24 @@ void Output_Data::Output_Preprocessor_1D::distdump(const State1D& Y, const Grid_
     if (Input::List().o_fl0x1){
         fl0( Y, grid, tout, PE );
     }
-//    if (Input::List().o_p2p1x1){
-//        pxpy( Y, grid, tout, PE );
-//    }
+
+}
+
+void Output_Data::Output_Preprocessor_1D::bigdistdump(const State1D& Y, const Grid_Info& grid, const size_t tout,
+ const Parallel_Environment_1D& PE) {
+
+    if (Input::List().o_p2p1x1){
+     pxpy( Y, grid, tout, PE );
+ }
 
 }
 //--------------------------------------------------------------
 //--------------------------------------------------------------
-//     void Parallel_Output::parallel_Ex(size_t step, State1D& Y) {
 //--------------------------------------------------------------
 //  Parallel output for Ex
 //--------------------------------------------------------------
 void Output_Data::Output_Preprocessor_1D::Ex(const State1D& Y, const Grid_Info& grid, const size_t tout,
-                                             const Parallel_Environment_1D& PE) {
+   const Parallel_Environment_1D& PE) {
 
     size_t Nbc = Input::List().BoundaryCells;
     MPI_Status status;
@@ -1469,7 +1586,7 @@ void Output_Data::Output_Preprocessor_1D::Ex(const State1D& Y, const Grid_Info& 
 //--------------------------------------------------------------
 ////--------------------------------------------------------------
 void Output_Data::Output_Preprocessor_1D::Ey(const State1D& Y, const Grid_Info& grid, const size_t tout,
-                                             const Parallel_Environment_1D& PE) {
+   const Parallel_Environment_1D& PE) {
 
     size_t Nbc = Input::List().BoundaryCells;
     MPI_Status status;
@@ -1519,7 +1636,7 @@ void Output_Data::Output_Preprocessor_1D::Ey(const State1D& Y, const Grid_Info& 
 //--------------------------------------------------------------
 ////--------------------------------------------------------------
 void Output_Data::Output_Preprocessor_1D::Ez(const State1D& Y, const Grid_Info& grid, const size_t tout,
-                                             const Parallel_Environment_1D& PE) {
+   const Parallel_Environment_1D& PE) {
 
     size_t Nbc = Input::List().BoundaryCells;
     MPI_Status status;
@@ -1569,7 +1686,7 @@ void Output_Data::Output_Preprocessor_1D::Ez(const State1D& Y, const Grid_Info& 
 //--------------------------------------------------------------
 ////--------------------------------------------------------------
 void Output_Data::Output_Preprocessor_1D::Bx(const State1D& Y, const Grid_Info& grid, const size_t tout,
-                                             const Parallel_Environment_1D& PE) {
+   const Parallel_Environment_1D& PE) {
 
     size_t Nbc = Input::List().BoundaryCells;
     MPI_Status status;
@@ -1619,7 +1736,7 @@ void Output_Data::Output_Preprocessor_1D::Bx(const State1D& Y, const Grid_Info& 
 //--------------------------------------------------------------
 ////--------------------------------------------------------------
 void Output_Data::Output_Preprocessor_1D::By(const State1D& Y, const Grid_Info& grid, const size_t tout,
-                                             const Parallel_Environment_1D& PE) {
+   const Parallel_Environment_1D& PE) {
 
     size_t Nbc = Input::List().BoundaryCells;
     MPI_Status status;
@@ -1669,7 +1786,7 @@ void Output_Data::Output_Preprocessor_1D::By(const State1D& Y, const Grid_Info& 
 //--------------------------------------------------------------
 ////--------------------------------------------------------------
 void Output_Data::Output_Preprocessor_1D::Bz(const State1D& Y, const Grid_Info& grid, const size_t tout,
-                                             const Parallel_Environment_1D& PE) {
+   const Parallel_Environment_1D& PE) {
 
     size_t Nbc = Input::List().BoundaryCells;
     MPI_Status status;
@@ -1718,7 +1835,7 @@ void Output_Data::Output_Preprocessor_1D::Bz(const State1D& Y, const Grid_Info& 
 //--------------------------------------------------------------     
 //--------------------------------------------------------------
 void Output_Data::Output_Preprocessor_1D::px(const State1D& Y, const Grid_Info& grid, const size_t tout,
-                                             const Parallel_Environment_1D& PE) {
+   const Parallel_Environment_1D& PE) {
     // std::cout << "0 \n";
     size_t Nbc = Input::List().BoundaryCells;
     MPI_Status status;
@@ -1780,87 +1897,151 @@ void Output_Data::Output_Preprocessor_1D::px(const State1D& Y, const Grid_Info& 
 
 }
 //--------------------------------------------------------------
+//--------------------------------------------------------------
+void Output_Data::Output_Preprocessor_1D::py(const State1D& Y, const Grid_Info& grid, const size_t tout,
+   const Parallel_Environment_1D& PE) {
+    // std::cout << "0 \n";
+    size_t Nbc = Input::List().BoundaryCells;
+    MPI_Status status;
+    size_t st(0), bi(0);
+    size_t outNxLocal(grid.axis.Nx(0) - 2*Nbc);
+    size_t outNxGlobal(grid.axis.Nxg(0));
+
+
+
+    for(int s(0); s < Y.Species(); ++s) {
+        size_t Npy(2*f_x.Np(s)+1);
+        int msg_sz(outNxLocal*Npy);
+        Array2D<float> p2x1Global(Npy,outNxGlobal); //, yglob_axis.dim());
+        float* pybuf = new float[Npy*outNxLocal];
+
+        for (size_t i(0); i < outNxLocal; ++i) {
+
+            valarray<float> data1D = py_x( Y.DF(s), i+Nbc, s);
+
+            for (size_t j(0); j < Npy; ++j) {
+                pybuf[j+i*Npy]=data1D[j];
+            }
+        }
+
+        if (PE.NODES() > 1) {
+            if (PE.RANK()!=0) {
+                MPI_Send(pybuf, msg_sz, MPI_FLOAT, 0, PE.RANK(), MPI_COMM_WORLD);
+            }
+            else {
+                // Fill data for rank = 0
+                for(size_t i(0); i < outNxLocal; i++) {
+                    for (size_t j(0); j < Npy; ++j) {
+                        p2x1Global(j,i) = pybuf[j+i*Npy];
+                    }
+                }
+                // Fill data for rank > 0
+                for (int rr = 1; rr < PE.NODES(); ++rr){
+                    MPI_Recv(pybuf, msg_sz, MPI_FLOAT, rr, rr, MPI_COMM_WORLD, &status);
+                    for(size_t i(0); i < outNxLocal; i++) {
+                        for (size_t j(0); j < Npy; ++j) {
+                            p2x1Global(j,i + outNxLocal*rr) = pybuf[j+i*Npy];
+                        }
+                    }
+                }
+            }
+        }
+        else {
+            for(size_t i(0); i < outNxGlobal; i++) {
+                for (size_t j(0); j < Npy; ++j) {
+                    p2x1Global(j,i) = pybuf[j+i*Npy];
+                }
+            }
+        }
+
+        if (PE.RANK() == 0) expo.Export_h5("py-x", p2x1Global, tout, s);
+
+        delete[] pybuf;
+    }
+
+}
 ////--------------------------------------------------------------
-//void Output_Data::Output_Preprocessor_1D::pxpy(const State1D& Y, const Grid_Info& grid, const size_t tout,
-//                                               const Parallel_Environment_1D& PE) {
-//
-//    size_t Nbc = Input::List().BoundaryCells;
-//    MPI_Status status;
-//    size_t st(0), bi(0);
-//    size_t outNxLocal(grid.axis.Nx(0) - 2*Nbc);
-//    size_t outNxGlobal(grid.axis.Nxg(0));
-//    size_t ind(0);
-//    for(int s(0); s < Y.Species(); ++s) {
-//
-//        int msg_sz(outNxLocal*pxpy_x.Npx(s)*pxpy_x.Npy(s));
-//        Array3D<float> pxpyGlobal(pxpy_x.Npx(s),pxpy_x.Npy(s),outNxGlobal); //, yglob_axis.dim());
-//        float* pbuf = new float[pxpy_x.Npx(s)*pxpy_x.Npy(s)*outNxGlobal];
-//
-//        for (size_t i(0); i < outNxLocal; ++i) {
-//
-//            Array2D<float> data2D = pxpy_x( Y.DF(s), i+Nbc, s);
-//
-//            for (size_t j(0); j < pxpy_x.Npx(s); ++j) {
-//                for (size_t k(0); k < pxpy_x.Npy(s); ++k) {
-//                    pbuf[ind+i*(pxpy_x.Npx(s)*pxpy_x.Npy(s))]=data2D(j,k);
-//                    ++ind;
-//                }
-//            }
-//            ind = 0;
-//        }
-//
-//        if (PE.NODES() > 1) {
-//            if (PE.RANK()!=0) {
-//                MPI_Send(pbuf, msg_sz, MPI_FLOAT, 0, PE.RANK(), MPI_COMM_WORLD);
-//            }
-//            else {
-//                // Fill data for rank = 0
-//                for(size_t i(0); i < outNxLocal; i++) {
-//                    ind = 0;
-//                    for (size_t j(0); j < pxpy_x.Npx(s); ++j) {
-//                        for (size_t k(0); k < pxpy_x.Npy(s); ++k) {
-//                            pxpyGlobal(k,j,i) = pbuf[ind+i*(pxpy_x.Npx(s)*pxpy_x.Npy(s))];
-//                            ++ind;
-//                        }
-//                    }
-//                }
-//                // Fill data for rank > 0
-//                for (int rr = 1; rr < PE.NODES(); ++rr){
-//                    MPI_Recv(pbuf, msg_sz, MPI_FLOAT, rr, rr, MPI_COMM_WORLD, &status);
-//                    for(size_t i(0); i < outNxLocal; i++) {
-//                        ind = 0;
-//                        for (size_t j(0); j < pxpy_x.Npx(s); ++j) {
-//                            for (size_t k(0); k < pxpy_x.Npy(s); ++k) {
-//                                pxpyGlobal(k,j,i + outNxLocal*rr) = pbuf[ind+i*(pxpy_x.Npx(s)*pxpy_x.Npy(s))];
-//                                // p1x1Global(j,i + outNxLocal*rr) = pxbuf[j+i*f_x.Np(s)];
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//        else {
-//            for(size_t i(0); i < outNxLocal; i++) {
-//                ind = 0;
-//                for (size_t j(0); j < pxpy_x.Npx(s); ++j) {
-//                    for (size_t k(0); k < pxpy_x.Npy(s); ++k) {
-//                        pxpyGlobal(k,j,i) = pbuf[ind+i*(pxpy_x.Npx(s)*pxpy_x.Npy(s))];
-//                        ++ind;
-//                    }
-//                }
-//            }
-//        }
-//
-//        if (PE.RANK() == 0) expo.Export_h5("pxpy-x", pxpyGlobal, tout, s);
-//
-//        delete[] pbuf;
-//    }
-//
-//}
+void Output_Data::Output_Preprocessor_1D::pxpy(const State1D& Y, const Grid_Info& grid, const size_t tout,
+  const Parallel_Environment_1D& PE) {
+
+ size_t Nbc = Input::List().BoundaryCells;
+ MPI_Status status;
+ size_t st(0), bi(0);
+ size_t outNxLocal(grid.axis.Nx(0) - 2*Nbc);
+ size_t outNxGlobal(grid.axis.Nxg(0));
+ size_t ind(0);
+
+ for(int s(0); s < Y.Species(); ++s) {
+
+     int msg_sz(outNxLocal*pxpy_x.Npx(s)*pxpy_x.Npy(s));
+       Array3D<float> pxpyGlobal(pxpy_x.Npx(s),pxpy_x.Npy(s),outNxGlobal); //, yglob_axis.dim());
+       float* pbuf = new float[pxpy_x.Npx(s)*pxpy_x.Npy(s)*outNxLocal];
+
+       for (size_t i(0); i < outNxLocal; ++i) {
+
+         Array2D<float> data2D = pxpy_x( Y.DF(s), i+Nbc, s);
+
+         for (size_t j(0); j < pxpy_x.Npx(s); ++j) {
+             for (size_t k(0); k < pxpy_x.Npy(s); ++k) {
+                 pbuf[ind+i*(pxpy_x.Npx(s)*pxpy_x.Npy(s))]=data2D(j,k);
+                 ++ind;
+             }
+         }
+         ind = 0;
+     }
+
+     if (PE.NODES() > 1) {
+         if (PE.RANK()!=0) {
+             MPI_Send(pbuf, msg_sz, MPI_FLOAT, 0, PE.RANK(), MPI_COMM_WORLD);
+         }
+         else {
+               // Fill data for rank = 0
+             for(size_t i(0); i < outNxLocal; i++) {
+                 ind = 0;
+                 for (size_t j(0); j < pxpy_x.Npx(s); ++j) {
+                     for (size_t k(0); k < pxpy_x.Npy(s); ++k) {
+                         pxpyGlobal(k,j,i) = pbuf[ind+i*(pxpy_x.Npx(s)*pxpy_x.Npy(s))];
+                         ++ind;
+                     }
+                 }
+             }
+               // Fill data for rank > 0
+             for (int rr(1); rr < PE.NODES(); ++rr){
+                 MPI_Recv(pbuf, msg_sz, MPI_FLOAT, rr, rr, MPI_COMM_WORLD, &status);
+                 for(size_t i(0); i < outNxLocal; i++) {
+                     ind = 0;
+                     for (size_t j(0); j < pxpy_x.Npx(s); ++j) {
+                         for (size_t k(0); k < pxpy_x.Npy(s); ++k) {
+                             pxpyGlobal(k,j,i + outNxLocal*rr) = pbuf[ind+i*(pxpy_x.Npx(s)*pxpy_x.Npy(s))];
+                             ++ind;
+                         }
+                     }
+                 }
+             }
+         }
+     }
+     else {
+         for(size_t i(0); i < outNxLocal; i++) {
+             ind = 0;
+             for (size_t j(0); j < pxpy_x.Npx(s); ++j) {
+                 for (size_t k(0); k < pxpy_x.Npy(s); ++k) {
+                     pxpyGlobal(k,j,i) = pbuf[ind+i*(pxpy_x.Npx(s)*pxpy_x.Npy(s))];
+                     ++ind;
+                 }
+             }
+         }
+     }
+
+     if (PE.RANK() == 0) expo.Export_h5("pxpy-x", pxpyGlobal, tout, s);
+
+     delete[] pbuf;
+ }
+
+}
 //--------------------------------------------------------------
 //--------------------------------------------------------------
 void Output_Data::Output_Preprocessor_1D::f0(const State1D& Y, const Grid_Info& grid, const size_t tout,
-                                             const Parallel_Environment_1D& PE) {
+   const Parallel_Environment_1D& PE) {
 
     size_t Nbc = Input::List().BoundaryCells;
     MPI_Status status;
@@ -1995,7 +2176,7 @@ void Output_Data::Output_Preprocessor_1D::f0(const State1D& Y, const Grid_Info& 
 // //--------------------------------------------------------------  
 //--------------------------------------------------------------
 void Output_Data::Output_Preprocessor_1D::f10(const State1D& Y, const Grid_Info& grid, const size_t tout,
-                                              const Parallel_Environment_1D& PE) {
+  const Parallel_Environment_1D& PE) {
 
     size_t Nbc = Input::List().BoundaryCells;
     MPI_Status status;
@@ -2066,7 +2247,7 @@ void Output_Data::Output_Preprocessor_1D::f10(const State1D& Y, const Grid_Info&
 //--------------------------------------------------------------
 //--------------------------------------------------------------
 void Output_Data::Output_Preprocessor_1D::f11(const State1D& Y, const Grid_Info& grid, const size_t tout,
-                                              const Parallel_Environment_1D& PE) {
+  const Parallel_Environment_1D& PE) {
 
     size_t Nbc = Input::List().BoundaryCells;
     MPI_Status status;
@@ -2138,7 +2319,7 @@ void Output_Data::Output_Preprocessor_1D::f11(const State1D& Y, const Grid_Info&
 //--------------------------------------------------------------
 //--------------------------------------------------------------
 void Output_Data::Output_Preprocessor_1D::f20(const State1D& Y, const Grid_Info& grid, const size_t tout,
-                                              const Parallel_Environment_1D& PE) {
+  const Parallel_Environment_1D& PE) {
 
     size_t Nbc = Input::List().BoundaryCells;
     MPI_Status status;
@@ -2210,7 +2391,7 @@ void Output_Data::Output_Preprocessor_1D::f20(const State1D& Y, const Grid_Info&
 //--------------------------------------------------------------
 //--------------------------------------------------------------
 void Output_Data::Output_Preprocessor_1D::fl0(const State1D& Y, const Grid_Info& grid, const size_t tout,
-                                              const Parallel_Environment_1D& PE) {
+  const Parallel_Environment_1D& PE) {
 
     size_t Nbc = Input::List().BoundaryCells;
     MPI_Status status;
@@ -2283,7 +2464,7 @@ void Output_Data::Output_Preprocessor_1D::fl0(const State1D& Y, const Grid_Info&
 //--------------------------------------------------------------    
 //--------------------------------------------------------------
 void Output_Data::Output_Preprocessor_1D::n(const State1D& Y, const Grid_Info& grid, const size_t tout,
-                                            const Parallel_Environment_1D& PE) {
+    const Parallel_Environment_1D& PE) {
 
 
     size_t Nbc = Input::List().BoundaryCells;
@@ -2340,10 +2521,205 @@ void Output_Data::Output_Preprocessor_1D::n(const State1D& Y, const Grid_Info& g
     delete[] nbuf;
 
 }
+//--------------------------------------------------------------    
 //--------------------------------------------------------------
+void Output_Data::Output_Preprocessor_1D::particles_x(const State1D& Y, const Grid_Info& grid, const size_t tout,
+    const Parallel_Environment_1D& PE) {
 
+
+    size_t Nbc = Input::List().BoundaryCells;
+    MPI_Status status;
+
+    int msg_sz(Y.particles().numpar()) ; 
+    float* buf = new float[msg_sz];
+    valarray<float> pGlobal(Y.particles().numpar()); 
+
+    for (int ip(0); ip < Y.particles().numpar(); ++ip) {
+        buf[ip] = Y.particles().x(ip)* (double (Y.particles().ishere(ip)));
+    }
+
+
+    if (PE.NODES() > 1) {
+        if (PE.RANK()!=0) {
+            MPI_Send(buf, msg_sz, MPI_FLOAT, 0, PE.RANK(), MPI_COMM_WORLD);
+        }
+        else {
+            // Fill data for rank = 0
+            for(size_t i(0); i < msg_sz; i++) {
+                pGlobal[i] += buf[i];
+            }
+            // Fill data for rank > 0
+            for (int rr = 1; rr < PE.NODES(); ++rr){
+                MPI_Recv(buf, msg_sz, MPI_FLOAT, rr, rr, MPI_COMM_WORLD, &status);
+                for(size_t i(0); i < msg_sz; i++) {
+                    pGlobal[i] += buf[i];
+                }
+            }
+        }
+    }
+        // Fill data for Nodes = 0
+    else {
+        for(size_t i(0); i < msg_sz; i++) {
+            pGlobal[i] = buf[i];
+        }
+    }
+    
+
+    if (PE.RANK() == 0) expo.Export_h5("prtx", pGlobal, tout);
+
+    delete[] buf;
+
+}
+//--------------------------------------------------------------
+//--------------------------------------------------------------    
+//--------------------------------------------------------------
+void Output_Data::Output_Preprocessor_1D::particles_px(const State1D& Y, const Grid_Info& grid, const size_t tout,
+    const Parallel_Environment_1D& PE) {
+
+
+    size_t Nbc = Input::List().BoundaryCells;
+    MPI_Status status;
+
+    int msg_sz(Y.particles().numpar()) ; 
+    float* buf = new float[msg_sz];
+    valarray<float> pGlobal(Y.particles().numpar()); 
+
+    for (int ip(0); ip < Y.particles().numpar(); ++ip) {
+        buf[ip] = Y.particles().px(ip)* (double (Y.particles().ishere(ip)));
+    }
+
+
+    if (PE.NODES() > 1) {
+        if (PE.RANK()!=0) {
+            MPI_Send(buf, msg_sz, MPI_FLOAT, 0, PE.RANK(), MPI_COMM_WORLD);
+        }
+        else {
+            // Fill data for rank = 0
+            for(size_t i(0); i < msg_sz; i++) {
+                pGlobal[i] += buf[i];
+            }
+            // Fill data for rank > 0
+            for (int rr = 1; rr < PE.NODES(); ++rr){
+                MPI_Recv(buf, msg_sz, MPI_FLOAT, rr, rr, MPI_COMM_WORLD, &status);
+                for(size_t i(0); i < msg_sz; i++) {
+                    pGlobal[i] += buf[i];
+                }
+            }
+        }
+    }
+        // Fill data for Nodes = 0
+    else {
+        for(size_t i(0); i < msg_sz; i++) {
+            pGlobal[i] = buf[i];
+        }
+    }
+
+    if (PE.RANK() == 0) expo.Export_h5("prtpx", pGlobal, tout);
+
+    delete[] buf;
+
+}
+//--------------------------------------------------------------
+//--------------------------------------------------------------    
+//--------------------------------------------------------------
+void Output_Data::Output_Preprocessor_1D::particles_py(const State1D& Y, const Grid_Info& grid, const size_t tout,
+    const Parallel_Environment_1D& PE) {
+
+
+    size_t Nbc = Input::List().BoundaryCells;
+    MPI_Status status;
+
+    int msg_sz(Y.particles().numpar()) ; 
+    float* buf = new float[msg_sz];
+    valarray<float> pGlobal(Y.particles().numpar()); 
+
+    for (int ip(0); ip < Y.particles().numpar(); ++ip) {
+        buf[ip] = Y.particles().py(ip)* (double (Y.particles().ishere(ip)));
+    }
+
+
+    if (PE.NODES() > 1) {
+        if (PE.RANK()!=0) {
+            MPI_Send(buf, msg_sz, MPI_FLOAT, 0, PE.RANK(), MPI_COMM_WORLD);
+        }
+        else {
+            // Fill data for rank = 0
+            for(size_t i(0); i < msg_sz; i++) {
+                pGlobal[i] += buf[i];
+            }
+            // Fill data for rank > 0
+            for (int rr = 1; rr < PE.NODES(); ++rr){
+                MPI_Recv(buf, msg_sz, MPI_FLOAT, rr, rr, MPI_COMM_WORLD, &status);
+                for(size_t i(0); i < msg_sz; i++) {
+                    pGlobal[i] += buf[i];
+                }
+            }
+        }
+    }
+        // Fill data for Nodes = 0
+    else {
+        for(size_t i(0); i < msg_sz; i++) {
+            pGlobal[i] = buf[i];
+        }
+    }
+
+    if (PE.RANK() == 0) expo.Export_h5("prtpy", pGlobal, tout);
+
+    delete[] buf;
+
+}
+//--------------------------------------------------------------
+//--------------------------------------------------------------    
+//--------------------------------------------------------------
+void Output_Data::Output_Preprocessor_1D::particles_pz(const State1D& Y, const Grid_Info& grid, const size_t tout,
+    const Parallel_Environment_1D& PE) {
+
+
+    size_t Nbc = Input::List().BoundaryCells;
+    MPI_Status status;
+
+    int msg_sz(Y.particles().numpar()) ; 
+    float* buf = new float[msg_sz];
+    valarray<float> pGlobal(Y.particles().numpar()); 
+
+    for (int ip(0); ip < Y.particles().numpar(); ++ip) {
+        buf[ip] = Y.particles().pz(ip)* (double (Y.particles().ishere(ip)));
+    }
+
+
+    if (PE.NODES() > 1) {
+        if (PE.RANK()!=0) {
+            MPI_Send(buf, msg_sz, MPI_FLOAT, 0, PE.RANK(), MPI_COMM_WORLD);
+        }
+        else {
+            // Fill data for rank = 0
+            for(size_t i(0); i < msg_sz; i++) {
+                pGlobal[i] += buf[i];
+            }
+            // Fill data for rank > 0
+            for (int rr = 1; rr < PE.NODES(); ++rr){
+                MPI_Recv(buf, msg_sz, MPI_FLOAT, rr, rr, MPI_COMM_WORLD, &status);
+                for(size_t i(0); i < msg_sz; i++) {
+                    pGlobal[i] += buf[i];
+                }
+            }
+        }
+    }
+        // Fill data for Nodes = 0
+    else {
+        for(size_t i(0); i < msg_sz; i++) {
+            pGlobal[i] = buf[i];
+        }
+    }
+
+    if (PE.RANK() == 0) expo.Export_h5("prtpz", pGlobal, tout);
+
+    delete[] buf;
+
+}
+//--------------------------------------------------------------
 void Output_Data::Output_Preprocessor_1D::T(const State1D& Y, const Grid_Info& grid, const size_t tout,
-                                            const Parallel_Environment_1D& PE) {
+    const Parallel_Environment_1D& PE) {
 
 
     size_t Nbc = Input::List().BoundaryCells;
@@ -2432,7 +2808,7 @@ void Output_Data::Output_Preprocessor_1D::T(const State1D& Y, const Grid_Info& g
 //--------------------------------------------------------------
 //--------------------------------------------------------------
 void Output_Data::Output_Preprocessor_1D::Jx(const State1D& Y, const Grid_Info& grid, const size_t tout,
-                                             const Parallel_Environment_1D& PE) {
+   const Parallel_Environment_1D& PE) {
 
 
     size_t Nbc = Input::List().BoundaryCells;
@@ -2451,7 +2827,7 @@ void Output_Data::Output_Preprocessor_1D::Jx(const State1D& Y, const Grid_Info& 
         valarray<float> pra( Algorithms::MakeCAxis(float(0.0), f_x.Pmax(s), f_x.Np(s) ) );
 
         for(size_t i(0); i < msg_sz; ++i) {
-            Jxbuf[i] = Y.DF(s).q()/Y.DF(s).mass()*4.0/3.0*M_PI*Algorithms::moment(  vfloat( (Y.SH(s,1,0)).xVec(i+Nbc) ), pra, 3);
+            Jxbuf[i] = Y.DF(s).q()*4.0/3.0*M_PI*Algorithms::moment(  vfloat( (Y.SH(s,1,0)).xVec(i+Nbc) ), pra, 3);
         }
 
         if (PE.NODES() > 1) {
@@ -2491,7 +2867,7 @@ void Output_Data::Output_Preprocessor_1D::Jx(const State1D& Y, const Grid_Info& 
 //--------------------------------------------------------------
 //--------------------------------------------------------------
 void Output_Data::Output_Preprocessor_1D::Jy(const State1D& Y, const Grid_Info& grid, const size_t tout,
-                                             const Parallel_Environment_1D& PE) {
+   const Parallel_Environment_1D& PE) {
 
 
     size_t Nbc = Input::List().BoundaryCells;
@@ -2510,7 +2886,7 @@ void Output_Data::Output_Preprocessor_1D::Jy(const State1D& Y, const Grid_Info& 
         valarray<float> pra( Algorithms::MakeCAxis(float(0.0), f_x.Pmax(s), f_x.Np(s) ) );
 
         for(size_t i(0); i < msg_sz; ++i) {
-            Jybuf[i] = Y.DF(s).q()/Y.DF(s).mass()*8.0/3.0*M_PI*Algorithms::moment(  vfloat( (Y.SH(s,1,1)).xVec(i+Nbc) ), pra, 3);
+            Jybuf[i] = Y.DF(s).q()*8.0/3.0*M_PI*Algorithms::moment(  vfloat( (Y.SH(s,1,1)).xVec(i+Nbc) ), pra, 3);
         }
 
         if (PE.NODES() > 1) {
@@ -2549,7 +2925,7 @@ void Output_Data::Output_Preprocessor_1D::Jy(const State1D& Y, const Grid_Info& 
 //--------------------------------------------------------------
 //--------------------------------------------------------------
 void Output_Data::Output_Preprocessor_1D::Jz(const State1D& Y, const Grid_Info& grid, const size_t tout,
-                                             const Parallel_Environment_1D& PE) {
+   const Parallel_Environment_1D& PE) {
 
 
     size_t Nbc = Input::List().BoundaryCells;
@@ -2567,7 +2943,7 @@ void Output_Data::Output_Preprocessor_1D::Jz(const State1D& Y, const Grid_Info& 
 //        valarray<float> pra( Algorithms::MakeAxis( f_x.Pmin(s), f_x.Pmax(s), f_x.Np(s) ) );
         valarray<float> pra( Algorithms::MakeCAxis(float(0.0), f_x.Pmax(s), f_x.Np(s) ) );
         for(size_t i(0); i < msg_sz; ++i) {
-            Jzbuf[i] = Y.DF(s).q()/Y.DF(s).mass()*-8.0/3.0*M_PI*Algorithms::moment(  vfloat_complex( (Y.SH(s,1,1)).xVec(i+Nbc) ), pra, 3);
+            Jzbuf[i] = Y.DF(s).q()*-8.0/3.0*M_PI*Algorithms::moment(  vfloat_complex( (Y.SH(s,1,1)).xVec(i+Nbc) ), pra, 3);
         }
 
         if (PE.NODES() > 1) {
@@ -2605,7 +2981,7 @@ void Output_Data::Output_Preprocessor_1D::Jz(const State1D& Y, const Grid_Info& 
 //--------------------------------------------------------------
 //--------------------------------------------------------------
 void Output_Data::Output_Preprocessor_1D::Qx(const State1D& Y, const Grid_Info& grid, const size_t tout,
-                                             const Parallel_Environment_1D& PE) {
+   const Parallel_Environment_1D& PE) {
 
 
     size_t Nbc = Input::List().BoundaryCells;
@@ -2711,7 +3087,7 @@ void Output_Data::Output_Preprocessor_1D::Qx(const State1D& Y, const Grid_Info& 
 //--------------------------------------------------------------
 //--------------------------------------------------------------
 void Output_Data::Output_Preprocessor_1D::Qy(const State1D& Y, const Grid_Info& grid, const size_t tout,
-                                             const Parallel_Environment_1D& PE) {
+   const Parallel_Environment_1D& PE) {
 
 
     size_t Nbc = Input::List().BoundaryCells;
@@ -2817,7 +3193,7 @@ void Output_Data::Output_Preprocessor_1D::Qy(const State1D& Y, const Grid_Info& 
 //--------------------------------------------------------------
 //--------------------------------------------------------------
 void Output_Data::Output_Preprocessor_1D::Qz(const State1D& Y, const Grid_Info& grid, const size_t tout,
-                                             const Parallel_Environment_1D& PE) {
+   const Parallel_Environment_1D& PE) {
 
 
     size_t Nbc = Input::List().BoundaryCells;
@@ -2924,7 +3300,7 @@ void Output_Data::Output_Preprocessor_1D::Qz(const State1D& Y, const Grid_Info& 
 //--------------------------------------------------------------
 //--------------------------------------------------------------
 void Output_Data::Output_Preprocessor_1D::vNx(const State1D& Y, const Grid_Info& grid, const size_t tout,
-                                              const Parallel_Environment_1D& PE) {
+  const Parallel_Environment_1D& PE) {
 
 
     size_t Nbc = Input::List().BoundaryCells;
@@ -2945,7 +3321,7 @@ void Output_Data::Output_Preprocessor_1D::vNx(const State1D& Y, const Grid_Info&
 
         for(size_t i(0); i < msg_sz; ++i) {
             vNxbuf[i] = (float) (1.0 / 6.0 * (Algorithms::moment(vfloat((Y.SH(s, 1, 0)).xVec(i + Nbc) ), pra, 6)
-                                              / Algorithms::moment(  vfloat( (Y.SH(s,0,0)).xVec(i+Nbc) ), pra, 5)));
+              / Algorithms::moment(  vfloat( (Y.SH(s,0,0)).xVec(i+Nbc) ), pra, 5)));
         }
 
         if (PE.NODES() > 1) {
@@ -2983,7 +3359,7 @@ void Output_Data::Output_Preprocessor_1D::vNx(const State1D& Y, const Grid_Info&
 //--------------------------------------------------------------
 //--------------------------------------------------------------
 void Output_Data::Output_Preprocessor_1D::vNy(const State1D& Y, const Grid_Info& grid, const size_t tout,
-                                              const Parallel_Environment_1D& PE) {
+  const Parallel_Environment_1D& PE) {
 
 
     size_t Nbc = Input::List().BoundaryCells;
@@ -3001,7 +3377,7 @@ void Output_Data::Output_Preprocessor_1D::vNy(const State1D& Y, const Grid_Info&
 
         for(size_t i(0); i < msg_sz; ++i) {
             vNxbuf[i] = (float) (2.0 / 6.0 * (Algorithms::moment(vfloat((Y.SH(s, 1, 1)).xVec(i + Nbc) ), pra, 6)
-                                              / Algorithms::moment(  vfloat( (Y.SH(s,0,0)).xVec(i+Nbc) ), pra, 5)));
+              / Algorithms::moment(  vfloat( (Y.SH(s,0,0)).xVec(i+Nbc) ), pra, 5)));
         }
         if (PE.NODES() > 1) {
             if (PE.RANK()!=0) {
@@ -3035,7 +3411,7 @@ void Output_Data::Output_Preprocessor_1D::vNy(const State1D& Y, const Grid_Info&
 // --------------------------------------------------------------
 //--------------------------------------------------------------
 void Output_Data::Output_Preprocessor_1D::vNz(const State1D& Y, const Grid_Info& grid, const size_t tout,
-                                              const Parallel_Environment_1D& PE) {
+  const Parallel_Environment_1D& PE) {
 
 
     size_t Nbc = Input::List().BoundaryCells;
@@ -3054,7 +3430,7 @@ void Output_Data::Output_Preprocessor_1D::vNz(const State1D& Y, const Grid_Info&
 
         for(size_t i(0); i < msg_sz; ++i) {
             vNxbuf[i] = (float) (-2.0 / 6.0 * (Algorithms::moment(vfloat_complex((Y.SH(s, 1, 1)).xVec(i + Nbc) ), pra, 6)
-                                               / Algorithms::moment(  vfloat( (Y.SH(s,0,0)).xVec(i+Nbc) ), pra, 5)));
+             / Algorithms::moment(  vfloat( (Y.SH(s,0,0)).xVec(i+Nbc) ), pra, 5)));
         }
         if (PE.NODES() > 1) {
             if (PE.RANK()!=0) {
@@ -3090,7 +3466,7 @@ void Output_Data::Output_Preprocessor_1D::vNz(const State1D& Y, const Grid_Info&
 
 //--------------------------------------------------------------
 void Output_Data::Output_Preprocessor_1D::Ux(const State1D& Y, const Grid_Info& grid, const size_t tout,
-                                             const Parallel_Environment_1D& PE) {
+   const Parallel_Environment_1D& PE) {
 
 
     size_t Nbc = Input::List().BoundaryCells;
@@ -3142,7 +3518,7 @@ void Output_Data::Output_Preprocessor_1D::Ux(const State1D& Y, const Grid_Info& 
 //--------------------------------------------------------------
 //--------------------------------------------------------------
 void Output_Data::Output_Preprocessor_1D::Uy(const State1D& Y, const Grid_Info& grid, const size_t tout,
-                                             const Parallel_Environment_1D& PE) {
+   const Parallel_Environment_1D& PE) {
 
 
     size_t Nbc = Input::List().BoundaryCells;
@@ -3194,7 +3570,7 @@ void Output_Data::Output_Preprocessor_1D::Uy(const State1D& Y, const Grid_Info& 
 //--------------------------------------------------------------
 //--------------------------------------------------------------
 void Output_Data::Output_Preprocessor_1D::Uz(const State1D& Y, const Grid_Info& grid, const size_t tout,
-                                             const Parallel_Environment_1D& PE) {
+   const Parallel_Environment_1D& PE) {
 
 
     size_t Nbc = Input::List().BoundaryCells;
@@ -3247,7 +3623,7 @@ void Output_Data::Output_Preprocessor_1D::Uz(const State1D& Y, const Grid_Info& 
 //--------------------------------------------------------------
 //--------------------------------------------------------------
 void Output_Data::Output_Preprocessor_1D::Z(const State1D& Y, const Grid_Info& grid, const size_t tout,
-                                            const Parallel_Environment_1D& PE) {
+    const Parallel_Environment_1D& PE) {
 
 
     size_t Nbc = Input::List().BoundaryCells;
@@ -3303,7 +3679,7 @@ void Output_Data::Output_Preprocessor_1D::Z(const State1D& Y, const Grid_Info& g
 //--------------------------------------------------------------
 //--------------------------------------------------------------
 void Output_Data::Output_Preprocessor_1D::ni(const State1D& Y, const Grid_Info& grid, const size_t tout,
-                                             const Parallel_Environment_1D& PE) {
+   const Parallel_Environment_1D& PE) {
 
 
     size_t Nbc = Input::List().BoundaryCells;
@@ -3358,7 +3734,7 @@ void Output_Data::Output_Preprocessor_1D::ni(const State1D& Y, const Grid_Info& 
 //--------------------------------------------------------------
 //--------------------------------------------------------------
 void Output_Data::Output_Preprocessor_1D::Ti(const State1D& Y, const Grid_Info& grid, const size_t tout,
-                                             const Parallel_Environment_1D& PE) {
+   const Parallel_Environment_1D& PE) {
 
 
     size_t Nbc = Input::List().BoundaryCells;
@@ -3414,9 +3790,9 @@ void Output_Data::Output_Preprocessor_1D::Ti(const State1D& Y, const Grid_Info& 
 //--------------------------------------------------------------
 //--------------------------------------------------------------
 void Export_Files::Xport:: Export_h5(const std::string tag,
-                                     std::valarray<float> data,
-                                     const size_t& step,
-                                     const int spec){
+   std::valarray<float> data,
+   const size_t& step,
+   const int spec){
 //--------------------------------------------------------------
 //  Export data to H5 file
 //--------------------------------------------------------------
@@ -3473,9 +3849,9 @@ void Export_Files::Xport:: Export_h5(const std::string tag,
 
 //--------------------------------------------------------------
 void Export_Files::Xport:: Export_h5(const std::string tag,
-                                     Array2D<float> data,
-                                     const size_t& step,
-                                     const int spec){
+   Array2D<float> data,
+   const size_t& step,
+   const int spec){
 //--------------------------------------------------------------
 //  Export data to H5 file
 //--------------------------------------------------------------
@@ -3497,355 +3873,355 @@ void Export_Files::Xport:: Export_h5(const std::string tag,
     H5::DataSet dataset = file.createDataSet( tag, H5::PredType::NATIVE_FLOAT, dataspace );
 
     float xmin[2] = {  static_cast<float>( Hdr[tag].min(0)),
-                       static_cast<float>( Hdr[tag].min(1)) };
+     static_cast<float>( Hdr[tag].min(1)) };
 
-    float xmax[2] = {  static_cast<float>( Hdr[tag].max(0)),
-                       static_cast<float>( Hdr[tag].max(1)) };
+     float xmax[2] = {  static_cast<float>( Hdr[tag].max(0)),
+         static_cast<float>( Hdr[tag].max(1)) };
 
-    hinit_attr2(file, tag, step, xmax, xmin);
+         hinit_attr2(file, tag, step, xmax, xmin);
 
-    H5::Group group = file.createGroup("/AXIS");
+         H5::Group group = file.createGroup("/AXIS");
 
-    std::size_t pos = Hdr[tag].label(1).find("[");
+         std::size_t pos = Hdr[tag].label(1).find("[");
 
-    string axismainname = "AXIS1";
-    float axisrange[2];
-    axisrange[0] = xmin[1];
-    axisrange[1] = xmax[1];
-    string axislongname = Hdr[tag].label(1).substr(0,pos);
-    string axisname = Hdr[tag].label(1).substr(0,pos);
-    string axistype = "linear";
-    string axisunits = Hdr[tag].units(1);
+         string axismainname = "AXIS1";
+         float axisrange[2];
+         axisrange[0] = xmin[1];
+         axisrange[1] = xmax[1];
+         string axislongname = Hdr[tag].label(1).substr(0,pos);
+         string axisname = Hdr[tag].label(1).substr(0,pos);
+         string axistype = "linear";
+         string axisunits = Hdr[tag].units(1);
 
-    haxis(group, axismainname, axisrange, axislongname, axisname, axistype, axisunits);
+         haxis(group, axismainname, axisrange, axislongname, axisname, axistype, axisunits);
 
-    pos = Hdr[tag].label(0).find("[");
+         pos = Hdr[tag].label(0).find("[");
 
-    axismainname = "AXIS2";
-    axisrange[0] = xmin[0];
-    axisrange[1] = xmax[0];
-    axislongname = Hdr[tag].label(0).substr(0,pos);
-    axisname = Hdr[tag].label(0).substr(0,pos);
-    axisunits = Hdr[tag].units(0);
+         axismainname = "AXIS2";
+         axisrange[0] = xmin[0];
+         axisrange[1] = xmax[0];
+         axislongname = Hdr[tag].label(0).substr(0,pos);
+         axisname = Hdr[tag].label(0).substr(0,pos);
+         axisunits = Hdr[tag].units(0);
 
-    haxis(group, axismainname, axisrange, axislongname, axisname, axistype, axisunits);
+         haxis(group, axismainname, axisrange, axislongname, axisname, axistype, axisunits);
 
-    group.close();
+         group.close();
 
-    dataset.write( &(data.array())[0] , H5::PredType::NATIVE_FLOAT );
-    hfile_add_attr_todataset(dataset, "LONG_NAME", tag);
-    hfile_add_attr_todataset(dataset, "UNITS", formulary().Label(tag));
+         dataset.write( &(data.array())[0] , H5::PredType::NATIVE_FLOAT );
+         hfile_add_attr_todataset(dataset, "LONG_NAME", tag);
+         hfile_add_attr_todataset(dataset, "UNITS", formulary().Label(tag));
 
-    dataset.close();
+         dataset.close();
 
-    hclose_file(file);
+         hclose_file(file);
 
-}
+     }
 //--------------------------------------------------------------
 
 
 //--------------------------------------------------------------
-void Export_Files::Xport:: Export_h5(const std::string tag,
-                                     Array3D<float> data,
-                                     const size_t& step,
-                                     const int spec){
+     void Export_Files::Xport:: Export_h5(const std::string tag,
+       Array3D<float> data,
+       const size_t& step,
+       const int spec){
 //--------------------------------------------------------------
 //  Export data to H5 file
 //--------------------------------------------------------------
 
-    string      filename(Hdr[tag].Directory());
+        string      filename(Hdr[tag].Directory());
 
 //  Check Header file correctness
-    if (Hdr[tag].dim() != 3) {
-        cout << "ERROR "<< tag <<" : "  << Hdr[tag].dim() << " dimensions != 3D structure\n";
-        exit(1);
-    }
+        if (Hdr[tag].dim() != 3) {
+            cout << "ERROR "<< tag <<" : "  << Hdr[tag].dim() << " dimensions != 3D structure\n";
+            exit(1);
+        }
 
 //  Open File
-    filename.append(tag).append(oH5Fextension(step,spec));
-    H5::H5File file = hmake_file(filename);
+        filename.append(tag).append(oH5Fextension(step,spec));
+        H5::H5File file = hmake_file(filename);
 
     hsize_t dimsf[3] = { data.dim3(), data.dim2(), data.dim1() };              // dataset dimensions
     H5::DataSpace dataspace( 3, dimsf );
     H5::DataSet dataset = file.createDataSet( tag, H5::PredType::NATIVE_FLOAT, dataspace );
 
     float xmin[3] = {  static_cast<float>( Hdr[tag].min(0)),
-                       static_cast<float>( Hdr[tag].min(1)),
-                       static_cast<float>( Hdr[tag].min(2))};
-    float xmax[3] = {  static_cast<float>( Hdr[tag].max(0)),
-                       static_cast<float>( Hdr[tag].max(1)),
-                       static_cast<float>( Hdr[tag].max(2))};
+     static_cast<float>( Hdr[tag].min(1)),
+     static_cast<float>( Hdr[tag].min(2))};
+     float xmax[3] = {  static_cast<float>( Hdr[tag].max(0)),
+         static_cast<float>( Hdr[tag].max(1)),
+         static_cast<float>( Hdr[tag].max(2))};
 
-    hinit_attr2(file, tag, step, xmax, xmin);
+         hinit_attr2(file, tag, step, xmax, xmin);
 
-    H5::Group group = file.createGroup("/AXIS");
+         H5::Group group = file.createGroup("/AXIS");
 
-    std::size_t pos = Hdr[tag].label(1).find("[");
+         std::size_t pos = Hdr[tag].label(1).find("[");
 
-    string axismainname = "AXIS1";
-    float axisrange[2];
-    axisrange[0] = xmin[1];
-    axisrange[1] = xmax[1];
-    string axislongname = Hdr[tag].label(1).substr(0,pos);
-    string axisname = Hdr[tag].label(1).substr(0,pos);
-    string axistype = "linear";
-    string axisunits = Hdr[tag].units(1);
+         string axismainname = "AXIS1";
+         float axisrange[2];
+         axisrange[0] = xmin[1];
+         axisrange[1] = xmax[1];
+         string axislongname = Hdr[tag].label(1).substr(0,pos);
+         string axisname = Hdr[tag].label(1).substr(0,pos);
+         string axistype = "linear";
+         string axisunits = Hdr[tag].units(1);
 
-    haxis(group, axismainname, axisrange, axislongname, axisname, axistype, axisunits);
+         haxis(group, axismainname, axisrange, axislongname, axisname, axistype, axisunits);
 
-    pos = Hdr[tag].label(0).find("[");
+         pos = Hdr[tag].label(0).find("[");
 
-    axismainname = "AXIS2";
-    axisrange[0] = xmin[0];
-    axisrange[1] = xmax[0];
-    axislongname = Hdr[tag].label(0).substr(0,pos);
-    axisname = Hdr[tag].label(0).substr(0,pos);
-    axisunits = Hdr[tag].units(0);
+         axismainname = "AXIS2";
+         axisrange[0] = xmin[0];
+         axisrange[1] = xmax[0];
+         axislongname = Hdr[tag].label(0).substr(0,pos);
+         axisname = Hdr[tag].label(0).substr(0,pos);
+         axisunits = Hdr[tag].units(0);
 
-    haxis(group, axismainname, axisrange, axislongname, axisname, axistype, axisunits);
+         haxis(group, axismainname, axisrange, axislongname, axisname, axistype, axisunits);
 
-    pos = Hdr[tag].label(2).find("[");
+         pos = Hdr[tag].label(2).find("[");
 
-    axismainname = "AXIS3";
-    axisrange[0] = xmin[2];
-    axisrange[1] = xmax[2];
-    axislongname = Hdr[tag].label(2).substr(0,pos);
-    axisname = Hdr[tag].label(2).substr(0,pos);
-    axisunits = Hdr[tag].units(2);
+         axismainname = "AXIS3";
+         axisrange[0] = xmin[2];
+         axisrange[1] = xmax[2];
+         axislongname = Hdr[tag].label(2).substr(0,pos);
+         axisname = Hdr[tag].label(2).substr(0,pos);
+         axisunits = Hdr[tag].units(2);
 
-    haxis(group, axismainname, axisrange, axislongname, axisname, axistype, axisunits);
+         haxis(group, axismainname, axisrange, axislongname, axisname, axistype, axisunits);
 
-    group.close();
+         group.close();
 
-    dataset.write( &(data.array())[0] , H5::PredType::NATIVE_FLOAT );
-    hfile_add_attr_todataset(dataset, "LONG_NAME", tag);
-    hfile_add_attr_todataset(dataset, "UNITS", formulary().Label(tag));
+         dataset.write( &(data.array())[0] , H5::PredType::NATIVE_FLOAT );
+         hfile_add_attr_todataset(dataset, "LONG_NAME", tag);
+         hfile_add_attr_todataset(dataset, "UNITS", formulary().Label(tag));
 
-    dataset.close();
+         dataset.close();
 
-    hclose_file(file);
+         hclose_file(file);
 
-}
+     }
 //--------------------------------------------------------------
 //
 //--------------------------------------------------------------
-H5::H5File Export_Files::Xport:: hmake_file(string ofilename) {
+     H5::H5File Export_Files::Xport:: hmake_file(string ofilename) {
 //--------------------------------------------------------------
 //    Create HDF5 file
 //--------------------------------------------------------------
 
-    const H5std_string  FILE_NAME( ofilename );
-    H5::H5File file( FILE_NAME, H5F_ACC_TRUNC );
-    return file;
+        const H5std_string  FILE_NAME( ofilename );
+        H5::H5File file( FILE_NAME, H5F_ACC_TRUNC );
+        return file;
 
-}
+    }
 //--------------------------------------------------------------
 
 
 //--------------------------------------------------------------
-void Export_Files::Xport:: hclose_file(H5::H5File &file) {
+    void Export_Files::Xport:: hclose_file(H5::H5File &file) {
 //--------------------------------------------------------------
 //    Close HDF5 file
 //--------------------------------------------------------------
 
-    file.close();
+        file.close();
 
-}
+    }
 //--------------------------------------------------------------
 
 
 //--------------------------------------------------------------
-void Export_Files::Xport:: hinit_attr(H5::H5File &hfilehandle, const std::string tag,
-                                      size_t step,
-                                      float xmax, float xmin) {
+    void Export_Files::Xport:: hinit_attr(H5::H5File &hfilehandle, const std::string tag,
+      size_t step,
+      float xmax, float xmin) {
 //--------------------------------------------------------------
 //    Add initial attributes:
 //    time step, iteration number, name of diagnostic,
 //    physical time, time units, type, and max and min of axes ranges
 //--------------------------------------------------------------
 
-    double dt_out(Input::List().t_stop / Input::List().n_outsteps);
+        double dt_out(Input::List().t_stop / Input::List().n_outsteps);
 
-    float dt = { static_cast<float>(
-                         dt_out/static_cast<double>(
-                                 size_t(static_cast<int>(dt_out
-                                                         /Input::List().clf_dp))+1
-                         ))};
-    
-    hfile_add_attr(hfilehandle, "DT", dt);
+        float dt = { static_cast<float>(
+           dt_out/static_cast<double>(
+               size_t(static_cast<int>(dt_out
+                   /Input::List().clf_dp))+1
+               ))};
 
-    float time = { static_cast<float>(dt_out*step) };
-    hfile_add_attr(hfilehandle, "TIME", time);
+        hfile_add_attr(hfilehandle, "DT", dt);
 
-    hfile_add_attr(hfilehandle, "NAME", tag);
+        float time = { static_cast<float>(dt_out*step) };
+        hfile_add_attr(hfilehandle, "TIME", time);
+
+        hfile_add_attr(hfilehandle, "NAME", tag);
 
     // float time = { static_cast<float>(dt_out*step*dt) };
     // hfile_add_attr(hfilehandle, "TIME", time);
 
-    string timeunits = "1/\\omega_p";
-    hfile_add_attr(hfilehandle, "TIME UNITS", timeunits);
+        string timeunits = "1/\\omega_p";
+        hfile_add_attr(hfilehandle, "TIME UNITS", timeunits);
 
-    string typegrid = "grid";
-    hfile_add_attr(hfilehandle, "TYPE", typegrid);
+        string typegrid = "grid";
+        hfile_add_attr(hfilehandle, "TYPE", typegrid);
 
-    hfile_add_attr(hfilehandle, "XMAX", xmax);
+        hfile_add_attr(hfilehandle, "XMAX", xmax);
 
-    hfile_add_attr(hfilehandle, "XMIN", xmin);
+        hfile_add_attr(hfilehandle, "XMIN", xmin);
 
-}
+    }
 //--------------------------------------------------------------
 //--------------------------------------------------------------
-void Export_Files::Xport:: hinit_attr2(H5::H5File &hfilehandle, const std::string tag,
-                                       size_t step,
-                                       float xmax[], float xmin[]) {
+    void Export_Files::Xport:: hinit_attr2(H5::H5File &hfilehandle, const std::string tag,
+     size_t step,
+     float xmax[], float xmin[]) {
 //--------------------------------------------------------------
 //    Add initial attributes:
 //    time step, iteration number, name of diagnostic,
 //    physical time, time units, type, and max and min of axes ranges
 //--------------------------------------------------------------
 
-    double dt_out(Input::List().t_stop / Input::List().n_outsteps);
+        double dt_out(Input::List().t_stop / Input::List().n_outsteps);
 
-    float dt = { static_cast<float>(
-                         dt_out/static_cast<double>(
-                                 size_t(static_cast<int>(dt_out
-                                                         /Input::List().clf_dp))+1
-                         ))};
-    hfile_add_attr(hfilehandle, "DT", dt);
+        float dt = { static_cast<float>(
+           dt_out/static_cast<double>(
+               size_t(static_cast<int>(dt_out
+                   /Input::List().clf_dp))+1
+               ))};
+        hfile_add_attr(hfilehandle, "DT", dt);
 
-    float time = { static_cast<float>(dt_out*step) };
-    hfile_add_attr(hfilehandle, "TIME", time);
+        float time = { static_cast<float>(dt_out*step) };
+        hfile_add_attr(hfilehandle, "TIME", time);
 
-    hfile_add_attr(hfilehandle, "NAME", tag);
+        hfile_add_attr(hfilehandle, "NAME", tag);
 
-    string timeunits = "1/\\omega_p";
-    hfile_add_attr(hfilehandle, "TIME UNITS", timeunits);
+        string timeunits = "1/\\omega_p";
+        hfile_add_attr(hfilehandle, "TIME UNITS", timeunits);
 
-    string typegrid = "grid";
-    hfile_add_attr(hfilehandle, "TYPE", typegrid);
+        string typegrid = "grid";
+        hfile_add_attr(hfilehandle, "TYPE", typegrid);
 
-    hfile_add_attr2(hfilehandle, "XMAX", xmax);
+        hfile_add_attr2(hfilehandle, "XMAX", xmax);
 
-    hfile_add_attr2(hfilehandle, "XMIN", xmin);
+        hfile_add_attr2(hfilehandle, "XMIN", xmin);
 
-}
+    }
 //--------------------------------------------------------------
 
 
 //--------------------------------------------------------------
-void Export_Files::Xport:: haxis(H5::Group &hgrouphandle, string axismainname, float axisrange[2],
-                                 string axislongname, string axisname,
-                                 string axistype, string axisunits) {
+    void Export_Files::Xport:: haxis(H5::Group &hgrouphandle, string axismainname, float axisrange[2],
+       string axislongname, string axisname,
+       string axistype, string axisunits) {
 //--------------------------------------------------------------
 //   Add axis attributes
 //--------------------------------------------------------------
 
-    hsize_t dims2[1] = { 2 };
-    H5::DataSpace dataspaceg1( 1, dims2 );
-    H5::DataSet datasetg1 = hgrouphandle.createDataSet(axismainname, H5::PredType::NATIVE_FLOAT,
-                                                       dataspaceg1);
-    datasetg1.write( axisrange, H5::PredType::NATIVE_FLOAT );
-    hfile_add_attr_todataset(datasetg1, "LONG_NAME", axislongname);
-    hfile_add_attr_todataset(datasetg1, "NAME", axisname);
-    hfile_add_attr_todataset(datasetg1, "TYPE", axistype);
-    hfile_add_attr_todataset(datasetg1, "UNITS", axisunits);
+        hsize_t dims2[1] = { 2 };
+        H5::DataSpace dataspaceg1( 1, dims2 );
+        H5::DataSet datasetg1 = hgrouphandle.createDataSet(axismainname, H5::PredType::NATIVE_FLOAT,
+         dataspaceg1);
+        datasetg1.write( axisrange, H5::PredType::NATIVE_FLOAT );
+        hfile_add_attr_todataset(datasetg1, "LONG_NAME", axislongname);
+        hfile_add_attr_todataset(datasetg1, "NAME", axisname);
+        hfile_add_attr_todataset(datasetg1, "TYPE", axistype);
+        hfile_add_attr_todataset(datasetg1, "UNITS", axisunits);
 
-    dataspaceg1.close();
-    datasetg1.close();
+        dataspaceg1.close();
+        datasetg1.close();
 
-}
+    }
 //--------------------------------------------------------------
 
 
 //--------------------------------------------------------------
-void Export_Files::Xport:: hfile_add_attr(H5::H5File &hfilehandle, string attrname,
-                                          int attrdata) {
+    void Export_Files::Xport:: hfile_add_attr(H5::H5File &hfilehandle, string attrname,
+      int attrdata) {
 //--------------------------------------------------------------
 //   Add 1D integer attribute 
 //--------------------------------------------------------------
 
-    hsize_t dims1[1] = { 1 };
-    H5::DataSpace attr_dataspace_1 = H5::DataSpace (1, dims1 );
-    H5::Attribute attribute_int = hfilehandle.createAttribute( attrname, H5::PredType::NATIVE_INT,
-                                                               attr_dataspace_1);
-    attribute_int.write( H5::PredType::NATIVE_INT, &attrdata);
-    attr_dataspace_1.close();
-    attribute_int.close();
+        hsize_t dims1[1] = { 1 };
+        H5::DataSpace attr_dataspace_1 = H5::DataSpace (1, dims1 );
+        H5::Attribute attribute_int = hfilehandle.createAttribute( attrname, H5::PredType::NATIVE_INT,
+         attr_dataspace_1);
+        attribute_int.write( H5::PredType::NATIVE_INT, &attrdata);
+        attr_dataspace_1.close();
+        attribute_int.close();
 
-}
-
-//--------------------------------------------------------------
-
+    }
 
 //--------------------------------------------------------------
-void Export_Files::Xport:: hfile_add_attr2(H5::H5File &hfilehandle, string attrname,
-                                           int attrdata[2]) {
+
+
+//--------------------------------------------------------------
+    void Export_Files::Xport:: hfile_add_attr2(H5::H5File &hfilehandle, string attrname,
+     int attrdata[2]) {
 //--------------------------------------------------------------
 //   Add 2D integer attribute 
 //--------------------------------------------------------------
 
-    hsize_t dims1[1] = { 2 };
-    H5::DataSpace attr_dataspace_2 = H5::DataSpace (1, dims1 );
-    H5::Attribute attribute_int = hfilehandle.createAttribute( attrname, H5::PredType::NATIVE_INT,
-                                                               attr_dataspace_2);
-    attribute_int.write( H5::PredType::NATIVE_INT, attrdata);
-    attr_dataspace_2.close();
-    attribute_int.close();
+        hsize_t dims1[1] = { 2 };
+        H5::DataSpace attr_dataspace_2 = H5::DataSpace (1, dims1 );
+        H5::Attribute attribute_int = hfilehandle.createAttribute( attrname, H5::PredType::NATIVE_INT,
+         attr_dataspace_2);
+        attribute_int.write( H5::PredType::NATIVE_INT, attrdata);
+        attr_dataspace_2.close();
+        attribute_int.close();
 
-}
-
-//--------------------------------------------------------------
-
+    }
 
 //--------------------------------------------------------------
-void Export_Files::Xport:: hfile_add_attr(H5::H5File &hfilehandle, string attrname,
-                                          float attrdata) {
+
+
+//--------------------------------------------------------------
+    void Export_Files::Xport:: hfile_add_attr(H5::H5File &hfilehandle, string attrname,
+      float attrdata) {
 //--------------------------------------------------------------
 //   Add 1D float attribute 
 //--------------------------------------------------------------
 
-    hsize_t dims1[1] = { 1 };
-    H5::DataSpace attr_dataspace_1 = H5::DataSpace (1, dims1 );
-    H5::Attribute attribute_float = hfilehandle.createAttribute( attrname, H5::PredType::NATIVE_FLOAT,
-                                                                 attr_dataspace_1);
-    attribute_float.write( H5::PredType::NATIVE_FLOAT, &attrdata);
-    attr_dataspace_1.close();
-    attribute_float.close();
+        hsize_t dims1[1] = { 1 };
+        H5::DataSpace attr_dataspace_1 = H5::DataSpace (1, dims1 );
+        H5::Attribute attribute_float = hfilehandle.createAttribute( attrname, H5::PredType::NATIVE_FLOAT,
+           attr_dataspace_1);
+        attribute_float.write( H5::PredType::NATIVE_FLOAT, &attrdata);
+        attr_dataspace_1.close();
+        attribute_float.close();
 
-}
-
-//--------------------------------------------------------------
-
+    }
 
 //--------------------------------------------------------------
-void Export_Files::Xport:: hfile_add_attr2(H5::H5File &hfilehandle, string attrname,
-                                           float attrdata[2]) {
+
+
+//--------------------------------------------------------------
+    void Export_Files::Xport:: hfile_add_attr2(H5::H5File &hfilehandle, string attrname,
+     float attrdata[2]) {
 //--------------------------------------------------------------
 //   Add 2D float attribute 
 //--------------------------------------------------------------
 
-    hsize_t dims1[1] = { 2 };
-    H5::DataSpace attr_dataspace_2 = H5::DataSpace (1, dims1 );
-    H5::Attribute attribute_float = hfilehandle.createAttribute( attrname, H5::PredType::NATIVE_FLOAT,
-                                                                 attr_dataspace_2);
-    attribute_float.write( H5::PredType::NATIVE_FLOAT, attrdata);
-    attr_dataspace_2.close();
-    attribute_float.close();
+        hsize_t dims1[1] = { 2 };
+        H5::DataSpace attr_dataspace_2 = H5::DataSpace (1, dims1 );
+        H5::Attribute attribute_float = hfilehandle.createAttribute( attrname, H5::PredType::NATIVE_FLOAT,
+           attr_dataspace_2);
+        attribute_float.write( H5::PredType::NATIVE_FLOAT, attrdata);
+        attr_dataspace_2.close();
+        attribute_float.close();
 
-}
-
-//--------------------------------------------------------------
-
+    }
 
 //--------------------------------------------------------------
-void Export_Files::Xport:: hfile_add_attr(H5::H5File &hfilehandle, string attrname,
-                                          string attrdata) {
+
+
+//--------------------------------------------------------------
+    void Export_Files::Xport:: hfile_add_attr(H5::H5File &hfilehandle, string attrname,
+      string attrdata) {
 //--------------------------------------------------------------
 //   Add string attribute 
 //--------------------------------------------------------------
 
-    hsize_t dims1[1] = { 1 };
-    H5::DataSpace attr_dataspace_1 = H5::DataSpace (1, dims1 );
+        hsize_t dims1[1] = { 1 };
+        H5::DataSpace attr_dataspace_1 = H5::DataSpace (1, dims1 );
     H5::StrType strdatatype(H5::PredType::C_S1, 256); // of length 256 characters
     H5std_string strwritebuf ( attrdata );
     H5::Attribute attribute_string = hfilehandle.createAttribute( attrname, strdatatype, attr_dataspace_1);
@@ -3860,7 +4236,7 @@ void Export_Files::Xport:: hfile_add_attr(H5::H5File &hfilehandle, string attrna
 
 //--------------------------------------------------------------
 void Export_Files::Xport:: hfile_add_attr_todataset(H5::DataSet &hdatasethandle, string attrname,
-                                                    string attrdata) {
+    string attrdata) {
 //--------------------------------------------------------------
 //   Add string attribute to a specific dataset
 //--------------------------------------------------------------
