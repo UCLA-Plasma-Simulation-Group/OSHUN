@@ -44,7 +44,8 @@ filter_distribution = false
 filter_dp = 0.001
 filter_pmax = 0.005
 
-lnLambda = -1
+lnLambda_ee = -1     // > 0 implies fixing it at a certain value
+lnLambda_ei = -1     // > 0 implies fixing it at a certain value
 
 /   ---   /   ---   /   ---   /   ---   /   ---   /   ---   /   ---   /
 /// Fokker-Planck
