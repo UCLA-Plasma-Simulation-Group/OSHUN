@@ -2,7 +2,7 @@
 // 1D or 2D mode. If 1D, all the y-grid information is overwritten
 //-----------------------------------------------------------------------
 
-Dimensionality = 1D		/// Make sure to run 2D with #Y-cells > 2
+Dimensionality = 2D		/// Make sure to run 2D with #Y-cells > 2
 
 //-----------------------------------------------------------------------
 // Momentum Grid per species
@@ -236,13 +236,13 @@ Ux(x,y) = cst{0.0}		// DOESNT DO ANYTHING YET
 //      Laser parameters
 //-----------------------------------------------------------------------
 
-inverse_bremsstrahlung = false
+inverse_bremsstrahlung = true
 lambda_0 = 0.351
 I_0 = 3.0e14
 
 /   ---   /   ---   /   ---   /   ---   /   ---   /   ---   /   ---
 
-I(x,y) = fnc{exp(-5e-9*((x-20000)^2))+exp(-5e-9*((x+20000)^2))}
+I(x,y) = fnc{exp(-5e-9*((x-20000)^2+y*y))+exp(-5e-9*((x+20000)^2+y*y))}
 I(t) = cst{1.0}
 
 //-----------------------------------------------------------------------
