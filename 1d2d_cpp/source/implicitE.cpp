@@ -362,6 +362,9 @@
         Yh = 0.0;
         
         FindDE(Yin.EMF());                           //  Reset DE
+
+        SHarmonic1D f00(Yin.SH(0,0,0));
+        SHarmonic1D f10(Yin.SH(0,1,0)), f11(Yin.SH(0,1,1));
         
 // - - - - - - - - - - - - - - - - - - - - - -
         while ( (zeros_in_det > 0) && ( execution_attempt < 4) ) {  // Execute this loop at most twice
@@ -373,35 +376,40 @@
             coll.advancef1(Yin,Yh);                 // Collisions for f10, f11
             
             J0.calculate_J_1D(Yh);
-            // for (size_t ix(0); ix < szx; ++ix)
-            // {
-            //     Yin.EMF().Ex()(ix+Nbc) = DE.Ex_1D()(ix);   // Ex = DEx
-            // }
+            Yin.SH(0,0,0) = f00;
+            Yin.SH(0,1,0) = f10;
+            Yin.SH(0,1,1) = f11;
+
+            // Ex
             Yin.EMF().Ex() = DE.Ex_1D();
             Yin = (*rk)(Yin, dt, rkF, 1);           // Effect of DEx on Y00, Y10, Y11, Y20, Y21, Y22            
-            
-
             coll.advancef1(Yin,Yh);                 // Collisions for f10, f11
             J_Ex.calculate_J_1D(Yh);                   // Evaluate J(DEx)
-            // for (size_t ix(0); ix < szx; ++ix)
-            // {
-            //     Yin.EMF().Ey()(ix+Nbc) = DE.Ey_1D()(ix);               // Ey = DEy
-            // }
+            Yin.SH(0,0,0) = f00;
+            Yin.SH(0,1,0) = f10;
+            Yin.SH(0,1,1) = f11;
+
+            // Ey
             Yin.EMF().Ey() = DE.Ey_1D();               // Ey = DEy
             Yin = (*rk)(Yin, dt, rkF, 2);           // Effect of DEy on Y00, Y10, Y11, Y20, Y21, Y22
-
             coll.advancef1(Yin,Yh);                 // Collisions for f10, f11
             J_Ey.calculate_J_1D(Yh);                   // Evaluate J(DEy)           
-            // for (size_t ix(0); ix < szx; ++ix)
-            // {
-            //     Yin.EMF().Ez()(ix+Nbc) = DE.Ez_1D()(ix);               // Ey = DEy
-            // }
+
+            Yin.SH(0,0,0) = f00;
+            Yin.SH(0,1,0) = f10;
+            Yin.SH(0,1,1) = f11;
+
+            // Ez
             Yin.EMF().Ez() = DE.Ez_1D();               // Ey = DEy
-            Yin = (*rk)(Yin, dt, rkF, 3);           // Effect of DEy on Y00, Y10, Y11, Y20, Y21, Y22
-            
+            Yin = (*rk)(Yin, dt, rkF, 3);           // Effect of DEy on Y00, Y10, Y11, Y20, Y21, Y22            
             coll.advancef1(Yin,Yh);                 // Collisions for f10, f11
             J_Ez.calculate_J_1D(Yh);                   // Evaluate J(DEy)
             
+            Yin.SH(0,0,0) = f00;
+            Yin.SH(0,1,0) = f10;
+            Yin.SH(0,1,1) = f11;
+
+
             Ampere(Yin.EMF());                           // Calculate JN
                            
 // - - - - - - - - - - - - - - - - - - - - - -
@@ -559,6 +567,9 @@
         Yh = 0.0;
         
         FindDE(Yin.EMF());                           //  Reset DE
+
+        SHarmonic2D f00(Yin.SH(0,0,0));
+        SHarmonic2D f10(Yin.SH(0,1,0)), f11(Yin.SH(0,1,1));
         
 // - - - - - - - - - - - - - - - - - - - - - -
         while ( (zeros_in_det > 0) && ( execution_attempt < 10) ) {  // Execute this loop at most twice
@@ -568,45 +579,42 @@
 // - - - - - - - - - - - - - - - - - - - - - -  
             // Effect of E = 0 on f00, f10, f11
             coll.advancef1(Yin,Yh);                 // Collisions for f10, f11
-            
             J0.calculate_J_2D(Yh);
-            // for (size_t ix(0); ix < szx; ++ix)
-            // {
-            //     for (size_t iy(0); iy < szy; ++iy)
-            //     {
-            //         Yin.EMF().Ex()(ix+Nbc,iy+Nbc) = DE.Ex_2D()(ix,iy);   // Ex = DEx
-            //     }
-            // }
+            Yin.SH(0,0,0) = f00;
+            Yin.SH(0,1,0) = f10;
+            Yin.SH(0,1,1) = f11;
+
+
+            // Ex
             Yin.EMF().Ex() = DE.Ex_2D();   // Ex = DEx
             Yin = (*rk)(Yin, dt, rkF, 1);           // Effect of DEx on Y00, Y10, Y11, Y20, Y21, Y22            
-            
-
             coll.advancef1(Yin,Yh);                 // Collisions for f10, f11
             J_Ex.calculate_J_2D(Yh);                   // Evaluate J(DEx)
-            // for (size_t ix(0); ix < szx; ++ix)
-            // {
-            //     for (size_t iy(0); iy < szy; ++iy)
-            //     {
-                    // Yin.EMF().Ey()(ix+Nbc, iy+Nbc) = DE.Ey_2D()(ix,iy);               // Ey = DEy
-            //     }
-            // }
+
+            Yin.SH(0,0,0) = f00;
+            Yin.SH(0,1,0) = f10;
+            Yin.SH(0,1,1) = f11;
+            
+
+            // Ey
             Yin.EMF().Ey() = DE.Ey_2D();               // Ey = DEy
             Yin = (*rk)(Yin, dt, rkF, 2);           // Effect of DEy on Y00, Y10, Y11, Y20, Y21, Y22
-
             coll.advancef1(Yin,Yh);                 // Collisions for f10, f11
             J_Ey.calculate_J_2D(Yh);                   // Evaluate J(DEy)           
-            // for (size_t ix(0); ix < szx; ++ix)
-            // {
-            //     for (size_t iy(0); iy < szy; ++iy)
-            //     {
-            //         Yin.EMF().Ez()(ix+Nbc, iy+Nbc) = DE.Ez_2D()(ix,iy);               // Ey = DEy
-            //     }
-            // }
-            Yin.EMF().Ez() = DE.Ez_2D();               // Ey = DEy
-            Yin = (*rk)(Yin, dt, rkF, 3);           // Effect of DEy on Y00, Y10, Y11, Y20, Y21, Y22
+
+            Yin.SH(0,0,0) = f00;
+            Yin.SH(0,1,0) = f10;
+            Yin.SH(0,1,1) = f11;
             
+            // Ez
+            Yin.EMF().Ez() = DE.Ez_2D();               // Ey = DEy
+            Yin = (*rk)(Yin, dt, rkF, 3);           // Effect of DEy on Y00, Y10, Y11, Y20, Y21, Y22            
             coll.advancef1(Yin,Yh);                 // Collisions for f10, f11
             J_Ez.calculate_J_2D(Yh);                   // Evaluate J(DEy)
+
+            Yin.SH(0,0,0) = f00;
+            Yin.SH(0,1,0) = f10;
+            Yin.SH(0,1,1) = f11;
             
             Ampere(Yin.EMF());                           // Calculate JN
                            
