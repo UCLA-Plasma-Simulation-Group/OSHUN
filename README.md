@@ -4,7 +4,7 @@
 
 OSHUN is a parallel Vlasov-Fokker-Planck plasma simulation code that employs an arbitrary-order spherical harmonic velocity-space decomposition.
 
-This is the UCLA Plasma Simulation Group's official open-source repository for OSHUN. This repository houses a 1D C++ version and a 1D pure Python version (with optional C-modules for improved performance).  A 2D C++ version will be added shortly.
+This is the UCLA Plasma Simulation Group's official open-source repository for OSHUN. This repository houses a 1D + 2D C++ version and a 1D pure Python version (with optional C-modules for improved performance).
 
 # Upon cloning the repository
 
