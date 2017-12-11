@@ -798,7 +798,7 @@ DistFunc1D:: DistFunc1D(size_t l, size_t m,
                         valarray<double> _dp, 
                         size_t nx, 
                         double q, double _ma)
-        : lmax(l), mmax(m), 
+        : lmax(l), mmax(m), sz(((m+1)*(2*l-m+2))/2),
         dp(_dp), 
         charge(q), ma(_ma), ind(l+1,m+1) {
 
@@ -809,7 +809,7 @@ DistFunc1D:: DistFunc1D(size_t l, size_t m,
     }
 
 //      Generate container for the harmonics
-    sz = ((mmax+1)*(2*lmax-mmax+2))/2;
+    // sz = ((mmax+1)*(2*lmax-mmax+2))/2;
     df = new vector<SHarmonic1D>(sz,SHarmonic1D(_dp.size(),nx));
     
 //      Define the index for the triangular array 
@@ -840,6 +840,7 @@ DistFunc1D:: DistFunc1D(size_t l, size_t m,
 //  Copy constructor
 DistFunc1D:: DistFunc1D(const DistFunc1D& other)
         : lmax(other.l0()), mmax(other.m0()),
+        sz(((other.m0()+1)*(2*other.l0()-other.m0()+2))/2),
             dp(other.getdp()),
           charge(other.q()), ma(other.mass()), 
           ind(other.l0()+1,other.m0()+1)
@@ -1321,7 +1322,8 @@ void DistFunc1D::checknan(){
                             valarray<double> _dp, 
                             size_t nx, size_t ny,
                             double q=1, double _ma=1) 
-             : lmax(l), mmax(m), dp(_dp), charge(q), ma(_ma), ind(l+1,m+1) {
+             : lmax(l), mmax(m), sz(((m+1)*(2*l-m+2))/2),
+             dp(_dp), charge(q), ma(_ma), ind(l+1,m+1) {
              
 //      Initialize the array of the harmonics
         if (lmax < 1 || mmax < 1) {
@@ -1361,7 +1363,9 @@ void DistFunc1D::checknan(){
 
 //  Copy constructor
     DistFunc2D:: DistFunc2D(const DistFunc2D& other)
-              : lmax(other.l0()), mmax(other.m0()), dp(other.getdp()),
+              : lmax(other.l0()), mmax(other.m0()), 
+              sz(((other.m0()+1)*(2*other.l0()-other.m0()+2))/2),
+              dp(other.getdp()),
               charge(other.q()), ma(other.mass()), ind(other.l0()+1,other.m0()+1)
     {
         sz = ((mmax+1)*(2*lmax-mmax+2))/2;
