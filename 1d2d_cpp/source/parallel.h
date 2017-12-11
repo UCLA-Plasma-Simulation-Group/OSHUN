@@ -132,12 +132,13 @@
             void Neighbor_Communications(State1D& Y);
 
         private:
-//          Parallel parameters
-            int MPI_Procs;
 
 //          Boundaries 
             int bndX;
 
+
+//          Parallel parameters
+            int MPI_Procs;
             int rank;
 
 
