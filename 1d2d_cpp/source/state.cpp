@@ -24,11 +24,12 @@
 //--------------------------------------------------------------
 
 // Standard Libraries
+#include <mpi.h>
 #include <iostream>
 #include <vector>
 #include <valarray>
 #include <complex>
-#include <mpi.h>
+
 
 // My Libraries
 #include "lib-array.h"
@@ -847,7 +848,7 @@ DistFunc1D:: DistFunc1D(const DistFunc1D& other)
           {
 
 //      Generate container for the harmonics
-    sz = ((mmax+1)*(2*lmax-mmax+2))/2;
+    // sz = ((mmax+1)*(2*lmax-mmax+2))/2;
     df = new vector<SHarmonic1D>(sz,SHarmonic1D(other(0).nump(),other(0).numx()));
     
 
@@ -1331,7 +1332,7 @@ void DistFunc1D::checknan(){
             exit(1);
         }
 
-        sz = ((mmax+1)*(2*lmax-mmax+2))/2;
+        // sz = ((mmax+1)*(2*lmax-mmax+2))/2;
         //      Generate container for the harmonics
         df = new vector<SHarmonic2D>(sz,SHarmonic2D(_dp.size(),nx,ny)); 
         
@@ -1368,7 +1369,7 @@ void DistFunc1D::checknan(){
               dp(other.getdp()),
               charge(other.q()), ma(other.mass()), ind(other.l0()+1,other.m0()+1)
     {
-        sz = ((mmax+1)*(2*lmax-mmax+2))/2;
+        // sz = ((mmax+1)*(2*lmax-mmax+2))/2;
 
 //      Generate container for the harmonics
         df = new vector<SHarmonic2D>(sz,SHarmonic2D(other(0).nump(),other(0).numx(),other(0).numy()));
