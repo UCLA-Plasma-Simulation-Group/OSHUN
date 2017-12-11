@@ -92,7 +92,7 @@
         private:
 //          Domain information
             int Nbc, bndX;
-            int numspec, numpmax;
+            int numspec;// numpmax;
 
 //          Information exchange
             int  msg_sizeX;
@@ -133,11 +133,13 @@
 
         private:
 //          Parallel parameters
-            int rank;
             int MPI_Procs;
 
 //          Boundaries 
             int bndX;
+
+            int rank;
+
 
 //          Information Exchange
             Node_ImplicitE_Communications_1D Bfield_Data;
