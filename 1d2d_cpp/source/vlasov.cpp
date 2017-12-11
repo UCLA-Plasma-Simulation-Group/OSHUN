@@ -2321,7 +2321,7 @@ void Electric_Field::operator()(const DistFunc2D& Din,
             dist_il[id] = il;
             dist_im[id] = im;
 
-            if (im < il && im < Nm + 1)
+            if (im < il && im < Nm)
             {
                 ++im;
             }
@@ -2395,7 +2395,6 @@ void Electric_Field::operator()(const DistFunc2D& Din,
         
         for (size_t id = f_start_thread; id < f_end_thread ; ++id)
         {   
-
 
             l = dist_il[id];
             m = dist_im[id];

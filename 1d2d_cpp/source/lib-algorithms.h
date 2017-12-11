@@ -375,7 +375,7 @@ namespace Algorithms {
             }
             // std::cout << "\n ";
 
-            for (size_t l = 0; l < ((Nm < Nl) ? Nm+1 : Nl+1); ++l){
+            for (size_t l = 0; l < ((Nm < Nl) ? Nm+1 : Nl); ++l){
                 // std::cout << "\n l=" << l;
                 P_Legendre(l+1,l) = P_Legendre(l,l)*(x*(2.0*l+1.0));
             }
@@ -392,6 +392,8 @@ namespace Algorithms {
         }
 
         // std::cout << "\n leaving \n ";
+
+        // exit(1);
 
         return P_Legendre;
     }

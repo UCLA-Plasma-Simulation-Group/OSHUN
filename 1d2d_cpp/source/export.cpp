@@ -1160,6 +1160,8 @@ Output_Data::PLegendre2D::PLegendre2D( size_t Nl, size_t Nm,
                         ++k;
                     }
                 }
+
+                // exit(1);
             }
         }
     }
