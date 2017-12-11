@@ -43,7 +43,7 @@
 
         private:
 //          Domain information
-            int Nbc, bndX;
+            size_t Nbc, bndX;
 
 //          Information exchange
             int  msg_sizeX;
@@ -91,7 +91,7 @@
 
         private:
 //          Domain information
-            int Nbc, bndX;
+            size_t Nbc, bndX;
             int numspec;// numpmax;
 
 //          Information exchange
@@ -251,7 +251,7 @@
         private:
 //          Domain information
             // int Nbc, bndX, bndY;
-            int numspec, numpmax;
+            int numspec; // numpmax;
 
             size_t Nbc, bndX, bndY;
             size_t Nx_local, Ny_local;
@@ -312,13 +312,15 @@
 
         private:
 //          Parallel parameters
+//          Boundaries 
+            int bndX, bndY;
+            int MPI_Processes_X, MPI_Processes_Y,MPI_Procs;
 
             int rank;
             vector<int> rankx;
-            int MPI_Procs, MPI_Processes_X, MPI_Processes_Y;
+            
 
-//          Boundaries 
-            int bndX, bndY;
+
 
 
 //          Information Exchange

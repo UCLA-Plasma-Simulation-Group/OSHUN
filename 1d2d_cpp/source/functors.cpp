@@ -103,7 +103,7 @@ void VlasovFunctor1D_explicitE::operator()(const State1D& Yin, State1D& Yslope){
             //         std::cout << "\nEx(" << ix << ") = " << Yin.EMF().Ex()(ix);
             //     }            
             // }
-            EF[s].es1d(Yin.DF(s),Yin.EMF().Ex(),Yin.EMF().Ey(),Yin.EMF().Ez(),Yslope.DF(s));
+            EF[s].es1d(Yin.DF(s),Yin.EMF().Ex(),Yslope.DF(s));
 
 
             // if (debug) 

@@ -33,9 +33,9 @@ void Parser::parseprofile(const std::valarray<double>& grid, std::string& str_pr
 //**************************************************************
 //--------------------------------------------------------------
 Input::Input_List::Input_List():
+    isthisarestart(0),
     dim(1),
     ompthreads(1),
-    isthisarestart(0),
     numsp(1),
     l0(6),
     m0(4),

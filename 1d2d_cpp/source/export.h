@@ -185,8 +185,10 @@ public:
 
         private:
             vector< oAxis >    xyz_axis;         // axis 0, 1, 2  : size 0-2
-            string             title,  time, timeU;
-            float              titleC, timeC;
+            string             title;
+            float              titleC;
+            string             time, timeU;
+            float              timeC;
             string         oDir;
         };
 //--------------------------------------------------------------

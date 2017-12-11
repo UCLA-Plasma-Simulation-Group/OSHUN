@@ -63,7 +63,7 @@ public:
                     const Field1D& FEx, const Field1D& FEy, const Field1D& FEz,
                     DistFunc1D& Dh);
     void es1d(const DistFunc1D& Din,
-                    const Field1D& FEx, const Field1D& FEy, const Field1D& FEz,
+                    const Field1D& FEx,
                     DistFunc1D& Dh);
     void f1only(const DistFunc1D& Din,
                 const Field1D& FEx, const Field1D& FEy, const Field1D& FEz,

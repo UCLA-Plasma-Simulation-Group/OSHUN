@@ -833,7 +833,7 @@ void Electric_Field::operator()(const DistFunc1D& Din,
 //--------------------------------------------------------------
 //
 void Electric_Field::es1d(const DistFunc1D& Din,
-   const Field1D& FEx, const Field1D& FEy, const Field1D& FEz,
+   const Field1D& FEx,
    DistFunc1D& Dh) {
 //--------------------------------------------------------------
 //  This is the core calculation for the electric field
@@ -2336,6 +2336,163 @@ void Electric_Field::operator()(const DistFunc2D& Din,
     }
 //--------------------------------------------------------------
 
+
+//--------------------------------------------------------------
+  void Magnetic_Field::operator()(const DistFunc1D& Din,
+   const Field1D& FBx, const Field1D& FBy, const Field1D& FBz,
+   DistFunc1D& Dh) {
+//--------------------------------------------------------------
+//  This is the core calculation for the magnetic field
+//--------------------------------------------------------------
+
+    complex<double> ii(0.0,1.0);
+
+    #pragma omp parallel num_threads(Input::List().ompthreads)
+    {
+        valarray<complex<double> > Bx(FBx.array());
+        valarray<complex<double> > Bm(FBy.array());
+        Bm *= (-1.0)*ii;
+        Bm += FBz.array();
+        valarray<complex<double> > Bp(FBy.array());
+        Bp *= ii;
+        Bp += FBz.array();
+
+        Bx *= Din.q();
+        Bm *= Din.q();
+        Bp *= Din.q();
+
+        size_t l0(Din.l0());
+        size_t m0(Din.m0());
+
+        size_t this_thread  = omp_get_thread_num();
+
+        size_t f_start_thread(f_start[this_thread]);
+        size_t f_end_thread(f_end[this_thread]);
+
+        SHarmonic1D FLM(Din(0,0)), TMP(Din(0,0));
+
+        Bp *= A3;
+
+        size_t l(0),m(0);
+
+        if (this_thread == 0)
+        {
+            FLM = Din(1,0);                 Dh(1,1) += FLM.mxaxis(Bp);
+            // - - - - - - - - - - - - - - - - - - - - - - - - - - -
+            //      l = 1, m = 1
+            // - - - - - - - - - - - - - - - - - - - - - - - - - - -
+            FLM = Din(1,1); Bx *= A1[1];    Dh(1,1) += FLM.mxaxis(Bx);  Bx /= A1[1];
+        
+            // - - - - - - - - - - - - - - - - - - - - - - - - - - -
+            //      m = 1, l = 1
+            // - - - - - - - - - - - - - - - - - - - - - - - - - - -
+            FLM = Din(1,1); Bm *= B1[1];    FLM = FLM.mxaxis(Bm);     Dh(1,0) += FLM.Re();  Bm /= B1[1];
+        }
+
+        // ----------------------------------------- //
+        //              Do the chunks
+        // ----------------------------------------- //       
+        
+        for (size_t id = f_start_thread; id < f_end_thread ; ++id)
+        {   
+
+
+            l = dist_il[id];
+            m = dist_im[id];
+
+            FLM = Din(l,m);
+            TMP = FLM;
+
+            if (l == m || m == m0)         // Diagonal, no m + 1
+            {
+                            Bx *= A1[m];        Dh(l,m  ) += TMP.mxaxis(Bx);        Bx /= A1[m];
+                            Bm *= A2(l,m);      Dh(l,m-1) += FLM.mxaxis(Bm);        Bm /= A2(l,m);                   
+            }
+            else if (m == 0)    // m = 0, no m - 1
+            {   
+                                                Dh(l,1) += TMP.mxaxis(Bp);
+            }
+            else if (m == 1)
+            {
+                            Bm *= B1[l];        TMP = TMP.mxaxis(Bm);               Dh(l,0) += TMP.Re();        Bm /= B1[l];
+                TMP = FLM;                      Dh(l,2) += TMP.mxaxis(Bp);
+                TMP = FLM;  Bx *= A1[1];        Dh(l,1) += TMP.mxaxis(Bx);          Bx /= A1[1];
+            }
+            else
+            {
+                                                Dh(l,m+1) += TMP.mxaxis(Bp);
+                TMP = FLM; Bx *= A1[m];         Dh(l,m  ) += TMP.mxaxis(Bx);        Bx /= A1[m];
+                TMP = FLM; Bm *= A2(l,m);       Dh(l,m-1) += TMP.mxaxis(Bm);        Bm /= A2(l,m);                   
+            } 
+        }
+    }
+
+    // ----------------------------------------- //
+    //          Boundaries between chunks
+    // ----------------------------------------- //
+
+    #pragma omp parallel for num_threads(f_start.size()-1)
+    for (size_t threadboundaries = 0; threadboundaries < f_start.size()-1; ++threadboundaries)
+    {
+        valarray<complex<double> > Bx(FBx.array());
+        valarray<complex<double> > Bm(FBy.array());
+        Bm *= (-1.0)*ii;
+        Bm += FBz.array();
+        valarray<complex<double> > Bp(FBy.array());
+        Bp *= ii;
+        Bp += FBz.array();
+
+        Bx *= Din.q();
+        Bm *= Din.q();
+        Bp *= Din.q();
+
+        size_t l0(Din.l0());
+        size_t m0(Din.m0());
+
+        size_t this_thread  = omp_get_thread_num();
+
+        size_t f_start_thread(f_start[this_thread]);
+        size_t f_end_thread(f_end[this_thread]);
+
+        SHarmonic1D FLM(Din(0,0)), TMP(Din(0,0));
+
+        Bp *= A3;
+
+        size_t l(0),m(0);
+
+        for (size_t id = f_end[threadboundaries]; id < f_start[threadboundaries+1]; ++id)
+        {   
+            l = dist_il[id];
+            m = dist_im[id];
+
+            FLM = Din(l,m);
+            TMP = FLM;
+
+            if (l == m || m == m0)         // Diagonal, no m + 1
+            {
+                            Bx *= A1[m];        Dh(l,m  ) += TMP.mxaxis(Bx);        Bx /= A1[m];
+                            Bm *= A2(l,m);      Dh(l,m-1) += FLM.mxaxis(Bm);        Bm /= A2(l,m);                   
+            }
+            else if (m == 0)    // m = 0, no m - 1
+            {
+                                                Dh(l,1) += TMP.mxaxis(Bp);
+            }
+            else if (m == 1)
+            {
+                            Bm *= B1[l];        TMP = TMP.mxaxis(Bm);               Dh(l,0) += TMP.Re();        Bm /= B1[l];           
+                TMP = FLM;                      Dh(l,2) += TMP.mxaxis(Bp);
+                TMP = FLM;  Bx *= A1[1];        Dh(l,1) += TMP.mxaxis(Bx);          Bx /= A1[1];        
+            }
+            else
+            {
+                                                Dh(l,m+1) += TMP.mxaxis(Bp);
+                TMP = FLM; Bx *= A1[m];         Dh(l,m  ) += TMP.mxaxis(Bx);        Bx /= A1[m];
+                TMP = FLM; Bm *= A2(l,m);       Dh(l,m-1) += TMP.mxaxis(Bm);        Bm /= A2(l,m);                   
+            }
+        }
+    }
+}
+//--------------------------------------------------------------
 //--------------------------------------------------------------
 void Magnetic_Field::operator()(const DistFunc2D& Din, 
        const Field2D& FBx, const Field2D& FBy, const Field2D& FBz, 
@@ -2570,163 +2727,6 @@ void Magnetic_Field::operator()(const DistFunc2D& Din,
 }
 //--------------------------------------------------------------
 //**************************************************************
-
-//--------------------------------------------------------------
-  void Magnetic_Field::operator()(const DistFunc1D& Din,
-   const Field1D& FBx, const Field1D& FBy, const Field1D& FBz,
-   DistFunc1D& Dh) {
-//--------------------------------------------------------------
-//  This is the core calculation for the magnetic field
-//--------------------------------------------------------------
-
-    complex<double> ii(0.0,1.0);
-
-    #pragma omp parallel num_threads(Input::List().ompthreads)
-    {
-        valarray<complex<double> > Bx(FBx.array());
-        valarray<complex<double> > Bm(FBy.array());
-        Bm *= (-1.0)*ii;
-        Bm += FBz.array();
-        valarray<complex<double> > Bp(FBy.array());
-        Bp *= ii;
-        Bp += FBz.array();
-
-        Bx *= Din.q();
-        Bm *= Din.q();
-        Bp *= Din.q();
-
-        size_t l0(Din.l0());
-        size_t m0(Din.m0());
-
-        size_t this_thread  = omp_get_thread_num();
-
-        size_t f_start_thread(f_start[this_thread]);
-        size_t f_end_thread(f_end[this_thread]);
-
-        SHarmonic1D FLM(Din(0,0)), TMP(Din(0,0));
-
-        Bp *= A3;
-
-        size_t l(0),m(0);
-
-        if (this_thread == 0)
-        {
-            FLM = Din(1,0);                 Dh(1,1) += FLM.mxaxis(Bp);
-            // - - - - - - - - - - - - - - - - - - - - - - - - - - -
-            //      l = 1, m = 1
-            // - - - - - - - - - - - - - - - - - - - - - - - - - - -
-            FLM = Din(1,1); Bx *= A1[1];    Dh(1,1) += FLM.mxaxis(Bx);  Bx /= A1[1];
-        
-            // - - - - - - - - - - - - - - - - - - - - - - - - - - -
-            //      m = 1, l = 1
-            // - - - - - - - - - - - - - - - - - - - - - - - - - - -
-            FLM = Din(1,1); Bm *= B1[1];    FLM = FLM.mxaxis(Bm);     Dh(1,0) += FLM.Re();  Bm /= B1[1];
-        }
-
-        // ----------------------------------------- //
-        //              Do the chunks
-        // ----------------------------------------- //       
-        
-        for (size_t id = f_start_thread; id < f_end_thread ; ++id)
-        {   
-
-
-            l = dist_il[id];
-            m = dist_im[id];
-
-            FLM = Din(l,m);
-            TMP = FLM;
-
-            if (l == m || m == m0)         // Diagonal, no m + 1
-            {
-                            Bx *= A1[m];        Dh(l,m  ) += TMP.mxaxis(Bx);        Bx /= A1[m];
-                            Bm *= A2(l,m);      Dh(l,m-1) += FLM.mxaxis(Bm);        Bm /= A2(l,m);                   
-            }
-            else if (m == 0)    // m = 0, no m - 1
-            {   
-                                                Dh(l,1) += TMP.mxaxis(Bp);
-            }
-            else if (m == 1)
-            {
-                            Bm *= B1[l];        TMP = TMP.mxaxis(Bm);               Dh(l,0) += TMP.Re();        Bm /= B1[l];
-                TMP = FLM;                      Dh(l,2) += TMP.mxaxis(Bp);
-                TMP = FLM;  Bx *= A1[1];        Dh(l,1) += TMP.mxaxis(Bx);          Bx /= A1[1];
-            }
-            else
-            {
-                                                Dh(l,m+1) += TMP.mxaxis(Bp);
-                TMP = FLM; Bx *= A1[m];         Dh(l,m  ) += TMP.mxaxis(Bx);        Bx /= A1[m];
-                TMP = FLM; Bm *= A2(l,m);       Dh(l,m-1) += TMP.mxaxis(Bm);        Bm /= A2(l,m);                   
-            } 
-        }
-    }
-
-    // ----------------------------------------- //
-    //          Boundaries between chunks
-    // ----------------------------------------- //
-
-    #pragma omp parallel for num_threads(f_start.size()-1)
-    for (size_t threadboundaries = 0; threadboundaries < f_start.size()-1; ++threadboundaries)
-    {
-        valarray<complex<double> > Bx(FBx.array());
-        valarray<complex<double> > Bm(FBy.array());
-        Bm *= (-1.0)*ii;
-        Bm += FBz.array();
-        valarray<complex<double> > Bp(FBy.array());
-        Bp *= ii;
-        Bp += FBz.array();
-
-        Bx *= Din.q();
-        Bm *= Din.q();
-        Bp *= Din.q();
-
-        size_t l0(Din.l0());
-        size_t m0(Din.m0());
-
-        size_t this_thread  = omp_get_thread_num();
-
-        size_t f_start_thread(f_start[this_thread]);
-        size_t f_end_thread(f_end[this_thread]);
-
-        SHarmonic1D FLM(Din(0,0)), TMP(Din(0,0));
-
-        Bp *= A3;
-
-        size_t l(0),m(0);
-
-        for (size_t id = f_end[threadboundaries]; id < f_start[threadboundaries+1]; ++id)
-        {   
-            l = dist_il[id];
-            m = dist_im[id];
-
-            FLM = Din(l,m);
-            TMP = FLM;
-
-            if (l == m || m == m0)         // Diagonal, no m + 1
-            {
-                            Bx *= A1[m];        Dh(l,m  ) += TMP.mxaxis(Bx);        Bx /= A1[m];
-                            Bm *= A2(l,m);      Dh(l,m-1) += FLM.mxaxis(Bm);        Bm /= A2(l,m);                   
-            }
-            else if (m == 0)    // m = 0, no m - 1
-            {
-                                                Dh(l,1) += TMP.mxaxis(Bp);
-            }
-            else if (m == 1)
-            {
-                            Bm *= B1[l];        TMP = TMP.mxaxis(Bm);               Dh(l,0) += TMP.Re();        Bm /= B1[l];           
-                TMP = FLM;                      Dh(l,2) += TMP.mxaxis(Bp);
-                TMP = FLM;  Bx *= A1[1];        Dh(l,1) += TMP.mxaxis(Bx);          Bx /= A1[1];        
-            }
-            else
-            {
-                                                Dh(l,m+1) += TMP.mxaxis(Bp);
-                TMP = FLM; Bx *= A1[m];         Dh(l,m  ) += TMP.mxaxis(Bx);        Bx /= A1[m];
-                TMP = FLM; Bm *= A2(l,m);       Dh(l,m-1) += TMP.mxaxis(Bm);        Bm /= A2(l,m);                   
-            }
-        }
-    }
-}
-//--------------------------------------------------------------
 
 //--------------------------------------------------------------
 void Magnetic_Field::f1only(const DistFunc1D& Din,

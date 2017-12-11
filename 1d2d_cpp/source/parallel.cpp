@@ -91,7 +91,7 @@ void Node_ImplicitE_Communications_1D::Send_right_X(State1D& Y, int dest) {
 
     // Fields:   x0 "Right-Bound --> "
     for(size_t i(3); i < Y.EMF().dim(); ++i){  // "3" as opposed to "0"
-        for(int e(0); e < Nbc; e++) {
+        for(size_t e(0); e < Nbc; e++) {
             msg_bufX[bufind + e] = Y.FLD(i)(Y.FLD(i).numx()-2*Nbc+e);
         }
         bufind += step_f;
@@ -116,8 +116,8 @@ void Node_ImplicitE_Communications_1D::Recv_from_left_X(State1D& Y, int origin) 
     MPI_Recv(msg_bufX, msg_sizeX, MPI_DOUBLE_COMPLEX, origin, 0, MPI_COMM_WORLD, &status);
 
     // Fields:   x0-"---> Left-Guard"
-    for(int i(3); i < Y.EMF().dim(); ++i){ // "3" as opposed to "0"
-        for(int e(0); e < Nbc; e++) {
+    for(size_t i(3); i < Y.EMF().dim(); ++i){ // "3" as opposed to "0"
+        for(size_t e(0); e < Nbc; e++) {
             Y.FLD(i)(e) = msg_bufX[bufind + e];
         }
         bufind += step_f;
@@ -136,8 +136,8 @@ void Node_ImplicitE_Communications_1D::Send_left_X(State1D& Y, int dest) {
     size_t bufind(0);
 
     // Fields:   x0 " <--- Left-Bound "
-    for(int i(3); i < Y.EMF().dim(); ++i){ // "3" as opposed to "0"
-        for(int e(0); e < Nbc; e++) {
+    for(size_t i(3); i < Y.EMF().dim(); ++i){ // "3" as opposed to "0"
+        for(size_t e(0); e < Nbc; e++) {
             msg_bufX[bufind + e] = Y.FLD(i)(Nbc+e);
         }
         bufind += step_f;
@@ -162,8 +162,8 @@ void Node_ImplicitE_Communications_1D::Recv_from_right_X(State1D& Y, int origin)
     MPI_Recv(msg_bufX, msg_sizeX, MPI_DOUBLE_COMPLEX, origin, 1, MPI_COMM_WORLD, &status);
 
     // Fields:   x0-"Right-Guard <--- "
-    for(int i(3); i < Y.EMF().dim(); ++i){ // "3" as opposed to "0"
-        for(int e(0); e < Nbc; e++) {
+    for(size_t i(3); i < Y.EMF().dim(); ++i){ // "3" as opposed to "0"
+        for(size_t e(0); e < Nbc; e++) {
             Y.FLD(i)(Y.FLD(i).numx()-Nbc+e) = msg_bufX[bufind + e];
         }
         bufind += step_f;
@@ -189,13 +189,13 @@ void Node_ImplicitE_Communications_1D::mirror_bound_Xleft(State1D& Y) {
     size_t Nx(Y.SH(0,0,0).numx());
 
     // Mirror the fields
-    for(int i(3); i < Y.EMF().dim(); ++i){ // "3" as opposed to "0"
-        for (int c(0); c < Nbc; ++c)
+    for(size_t i(3); i < Y.EMF().dim(); ++i){ // "3" as opposed to "0"
+        for (size_t c(0); c < Nbc; ++c)
             Y.FLD(i)(c) = Y.FLD(i)(2*Nbc-c-1);
     }
 
     //Bx
-    for(int c(0); c < Nbc; ++c) {
+    for(size_t c(0); c < Nbc; ++c) {
         Y.EMF().Bx()(c) *= -1.0; // left  boundary
     }
 
@@ -211,13 +211,13 @@ void Node_ImplicitE_Communications_1D::mirror_bound_Xright(State1D& Y) {
     size_t Nx(Y.SH(0,0,0).numx());
 
     // Mirror the fields
-    for(int i(3); i < Y.EMF().dim(); ++i){ // "3" as opposed to "0"
-        for (int c(0); c < Nbc; ++c)
+    for(size_t i(3); i < Y.EMF().dim(); ++i){ // "3" as opposed to "0"
+        for (size_t c(0); c < Nbc; ++c)
             Y.FLD(i)(Nx-c-1) = Y.FLD(i)(Nx-2*Nbc+c);
     }
 
     //Bx
-    for(int c(0); c < Nbc; ++c) {
+    for(size_t c(0); c < Nbc; ++c) {
         Y.EMF().Bx()(Nx-1-c) *= -1.0; // right  boundary
     }
 
@@ -256,14 +256,14 @@ void Node_ImplicitE_Communications_1D::sameNode_periodic_X(State1D& Y) {
 //--------------------------------------------------------------
 
     // Fields:   x0 "Right-Bound ---> Left-Guard"
-    for(int i(3); i < Y.EMF().dim(); ++i) // "3" as opposed to "0"
-        for(int c(0); c < Nbc; c++) {
+    for(size_t i(3); i < Y.EMF().dim(); ++i) // "3" as opposed to "0"
+        for(size_t c(0); c < Nbc; c++) {
             Y.FLD(i)(c) = Y.FLD(i)(Y.EMF().Ex().numx()-2*Nbc+c);
         }
 
     // Fields:   x0 "Left-Bound ---> Right-Guard"
-    for(int i(3); i < Y.EMF().dim(); ++i) // "3" as opposed to "0"
-        for(int c(0); c < Nbc; c++) {
+    for(size_t i(3); i < Y.EMF().dim(); ++i) // "3" as opposed to "0"
+        for(size_t c(0); c < Nbc; c++) {
             Y.FLD(i)(Y.EMF().Ex().numx()-Nbc+c) = Y.FLD(i)(Nbc+c);
         }
 
@@ -279,17 +279,17 @@ void Node_ImplicitE_Communications_1D::sameNode_mirror_X(State1D& Y) {
     size_t Nx(Y.SH(0,0,0).numx());
 
     // Mirror the fields
-    for(int i(3); i < Y.EMF().dim(); ++i){ // "3" as opposed to "0"
+    for(size_t i(3); i < Y.EMF().dim(); ++i){ // "3" as opposed to "0"
         // right boundary
-        for (int c(0); c < Nbc; ++c)
+        for (size_t c(0); c < Nbc; ++c)
             Y.FLD(i)(Nx-c-1) = Y.FLD(i)(Nx-2*Nbc+c);
         // left boundary
-        for (int c(0); c < Nbc; ++c)
+        for (size_t c(0); c < Nbc; ++c)
             Y.FLD(i)(c) = Y.FLD(i)(2*Nbc-c-1);
     }
 
     //Bx
-    for (int c(0); c < Nbc; ++c) {
+    for (size_t c(0); c < Nbc; ++c) {
         Y.EMF().Bx()(c) *= -1.0; // left  boundary
         Y.EMF().Bx()(Nx-Nbc+c) *= -1.0; // right  boundary
     }
@@ -321,7 +321,7 @@ Node_Communications_1D:: Node_Communications_1D() :
 
     // # of harmonics
     msg_sizeX = 0; temp = 0;
-    for(int s(0); s < numspec; ++s) {
+    for(size_t s(0); s < numspec; ++s) {
         temp = ((Input::List().ms[s]+1)*(2*Input::List().ls[s]-Input::List().ms[s]+2))/2;
         msg_sizeX += temp*(Input::List().dp[s]).size();
     }
@@ -383,10 +383,10 @@ void Node_Communications_1D::Send_right_X(State1D& Y, int dest) {
     size_t bufind(0);
 
     // Harmonics:x0 "Right-Bound ---> "
-    for(int s(0); s < Y.Species(); ++s) {
+    for(size_t s(0); s < Y.Species(); ++s) {
         for(size_t i = 0; i < Y.DF(s).dim(); ++i){
-            for(int p(0); p < Y.SH(s,0,0).nump(); ++p) {
-                for(int e(0); e < Nbc; e++) {
+            for(size_t p(0); p < Y.SH(s,0,0).nump(); ++p) {
+                for(size_t e(0); e < Nbc; e++) {
                     msg_bufX[bufind + e] = (Y.DF(s)(i))(p, Y.FLD(0).numx()-2*Nbc+e);
                 }
                 bufind += step_f;
@@ -395,7 +395,7 @@ void Node_Communications_1D::Send_right_X(State1D& Y, int dest) {
     }
     // Fields:   x0 "Right-Bound --> "
     for(size_t i = 0; i < Y.EMF().dim(); ++i){
-        for(int e(0); e < Nbc; e++) {
+        for(size_t e(0); e < Nbc; e++) {
             msg_bufX[bufind + e] = Y.FLD(i)(Y.FLD(0).numx()-2*Nbc+e);
         }
         bufind += step_f;
@@ -404,34 +404,34 @@ void Node_Communications_1D::Send_right_X(State1D& Y, int dest) {
     if (Input::List().hydromotion)
     {
         // Hydro-velocity:   x0 "Right-Bound --> "
-        for(int e(0); e < Nbc; e++) {
+        for(size_t e(0); e < Nbc; e++) {
             msg_bufX[bufind + e] = Y.HYDRO().density(Y.FLD(0).numx()-2*Nbc+e);
         }
         bufind += step_f;
         // Hydro-velocity:   x0 "Right-Bound --> "
-        for(int e(0); e < Nbc; e++) {
+        for(size_t e(0); e < Nbc; e++) {
             msg_bufX[bufind + e] = Y.HYDRO().vx(Y.FLD(0).numx()-2*Nbc+e);
         }
         bufind += step_f;
 
-        for(int e(0); e < Nbc; e++) {
+        for(size_t e(0); e < Nbc; e++) {
             msg_bufX[bufind + e] = Y.HYDRO().vy(Y.FLD(0).numx()-2*Nbc+e);
         }
         bufind += step_f;
 
-        for(int e(0); e < Nbc; e++) {
+        for(size_t e(0); e < Nbc; e++) {
             msg_bufX[bufind + e] = Y.HYDRO().vz(Y.FLD(0).numx()-2*Nbc+e);
         }
         bufind += step_f;
 
         // Hydro-temperature:   x0 "Right-Bound --> "
-        for(int e(0); e < Nbc; e++) {
+        for(size_t e(0); e < Nbc; e++) {
             msg_bufX[bufind + e] = Y.HYDRO().temperature(Y.FLD(0).numx()-2*Nbc+e);
         }
         bufind += step_f;
 
         // Hydro-chargefraction:   x0 "Right-Bound --> "
-        for(int e(0); e < Nbc; e++) {
+        for(size_t e(0); e < Nbc; e++) {
             msg_bufX[bufind + e] = Y.HYDRO().Z(Y.FLD(0).numx()-2*Nbc+e);
         }
         bufind += step_f;
@@ -485,10 +485,10 @@ void Node_Communications_1D::Recv_from_left_X(State1D& Y, int origin) {
     MPI_Recv(msg_bufX, msg_sizeX, MPI_DOUBLE_COMPLEX, origin, 0, MPI_COMM_WORLD, &status);
 
     // Harmonics:x0-"---> Left-Guard"
-    for(int s(0); s < Y.Species(); ++s) {
-        for(int i = 0; i < Y.DF(s).dim(); ++i){
-            for(int p(0); p < Y.SH(s,0,0).nump(); ++p) {
-                for(int e(0); e < Nbc; e++) {
+    for(size_t s(0); s < Y.Species(); ++s) {
+        for(size_t i(0); i < Y.DF(s).dim(); ++i){
+            for(size_t p(0); p < Y.SH(s,0,0).nump(); ++p) {
+                for(size_t e(0); e < Nbc; e++) {
                     (Y.DF(s)(i))(p, e) = msg_bufX[bufind + e];
                 }
                 bufind += step_f;
@@ -498,8 +498,8 @@ void Node_Communications_1D::Recv_from_left_X(State1D& Y, int origin) {
 
 
     // Fields:   x0-"---> Left-Guard"
-    for(int i = 0; i < Y.EMF().dim(); ++i){
-        for(int e(0); e < Nbc; e++) {
+    for(size_t i(0); i < Y.EMF().dim(); ++i){
+        for(size_t e(0); e < Nbc; e++) {
             Y.FLD(i)(e) = msg_bufX[bufind + e];
         }
         bufind += step_f;
@@ -508,37 +508,37 @@ void Node_Communications_1D::Recv_from_left_X(State1D& Y, int origin) {
     if (Input::List().hydromotion)
     {
         // Hydro-velocity:   x0-"---> Left-Guard"
-        for(int e(0); e < Nbc; e++) {
+        for(size_t e(0); e < Nbc; e++) {
             Y.HYDRO().density(e) = (msg_bufX[bufind + e]).real();
         }
         bufind += step_f;
 
         // Hydro-velocity:   x0-"---> Left-Guard"
-        for(int e(0); e < Nbc; e++) {
+        for(size_t e(0); e < Nbc; e++) {
             Y.HYDRO().vx(e) = (msg_bufX[bufind + e]).real();
         }
         bufind += step_f;
 
         // Hydro-velocity:   x0-"---> Left-Guard"
-        for(int e(0); e < Nbc; e++) {
+        for(size_t e(0); e < Nbc; e++) {
             Y.HYDRO().vy(e) = (msg_bufX[bufind + e]).real();
         }
         bufind += step_f;
 
         // Hydro-velocity:   x0-"---> Left-Guard"
-        for(int e(0); e < Nbc; e++) {
+        for(size_t e(0); e < Nbc; e++) {
             Y.HYDRO().vz(e) = (msg_bufX[bufind + e]).real();
         }
         bufind += step_f;
 
         // Hydro-temperature:   x0-"---> Left-Guard"
-        for(int e(0); e < Nbc; e++) {
+        for(size_t e(0); e < Nbc; e++) {
             Y.HYDRO().temperature(e) = (msg_bufX[bufind + e]).real();
         }
         bufind += step_f;
 
         // Hydro-charge fraction:   x0-"---> Left-Guard"
-        for(int e(0); e < Nbc; e++) {
+        for(size_t e(0); e < Nbc; e++) {
             Y.HYDRO().Z(e) = (msg_bufX[bufind + e]).real();
         }
         bufind += step_f;
@@ -606,10 +606,10 @@ void Node_Communications_1D::Send_left_X(State1D& Y, int dest) {
     size_t bufind(0);
 
     // Harmonics:x0 " <--- Left-Bound "
-    for(int s(0); s < Y.Species(); ++s) {
-        for(int i = 0; i < Y.DF(s).dim(); ++i){
-            for(int p(0); p < Y.SH(s,0,0).nump(); ++p) {
-                for(int e(0); e < Nbc; e++) {
+    for(size_t s(0); s < Y.Species(); ++s) {
+        for(size_t i(0); i < Y.DF(s).dim(); ++i){
+            for(size_t p(0); p < Y.SH(s,0,0).nump(); ++p) {
+                for(size_t e(0); e < Nbc; e++) {
                     msg_bufX[bufind + e] = (Y.DF(s)(i))(p, Nbc+e);
                 }
                 bufind += step_f;
@@ -617,8 +617,8 @@ void Node_Communications_1D::Send_left_X(State1D& Y, int dest) {
         }
     }
     // Fields:   x0 " <--- Left-Bound "
-    for(int i = 0; i < Y.EMF().dim(); ++i){
-        for(int e(0); e < Nbc; e++) {
+    for(size_t i(0); i < Y.EMF().dim(); ++i){
+        for(size_t e(0); e < Nbc; e++) {
             msg_bufX[bufind + e] = Y.FLD(i)(Nbc+e);
         }
         bufind += step_f;
@@ -627,36 +627,36 @@ void Node_Communications_1D::Send_left_X(State1D& Y, int dest) {
     if (Input::List().hydromotion)
     {
         // Hydro-velocity:   x0 " <--- Left-Bound "
-        for(int e(0); e < Nbc; e++) {
+        for(size_t e(0); e < Nbc; e++) {
             msg_bufX[bufind + e] = Y.HYDRO().density(Nbc+e);
         }
         bufind += step_f;
         // Hydro-velocity:   x0 " <--- Left-Bound "
-        for(int e(0); e < Nbc; e++) {
+        for(size_t e(0); e < Nbc; e++) {
             msg_bufX[bufind + e] = Y.HYDRO().vx(Nbc+e);
         }
         bufind += step_f;
 
         // Hydro-velocity:   x0 " <--- Left-Bound "
-        for(int e(0); e < Nbc; e++) {
+        for(size_t e(0); e < Nbc; e++) {
             msg_bufX[bufind + e] = Y.HYDRO().vy(Nbc+e);
         }
         bufind += step_f;
 
         // Hydro-velocity:   x0 " <--- Left-Bound "
-        for(int e(0); e < Nbc; e++) {
+        for(size_t e(0); e < Nbc; e++) {
             msg_bufX[bufind + e] = Y.HYDRO().vz(Nbc+e);
         }
         bufind += step_f;
 
         // Hydro-temperature:   x0 " <--- Left-Bound "
-        for(int e(0); e < Nbc; e++) {
+        for(size_t e(0); e < Nbc; e++) {
             msg_bufX[bufind + e] = Y.HYDRO().temperature(Nbc+e);
         }
         bufind += step_f;
 
         // Hydro-charge-fraction:   x0 " <--- Left-Bound "
-        for(int e(0); e < Nbc; e++) {
+        for(size_t e(0); e < Nbc; e++) {
             msg_bufX[bufind + e] = Y.HYDRO().Z(Nbc+e);
         }
         bufind += step_f;
@@ -704,10 +704,10 @@ void Node_Communications_1D::Recv_from_right_X(State1D& Y, int origin) {
     MPI_Recv(msg_bufX, msg_sizeX, MPI_DOUBLE_COMPLEX, origin, 1, MPI_COMM_WORLD, &status);
 
     // Harmonics:x0-"Right-Guard <--- "
-    for(int s(0); s < Y.Species(); ++s) {
-        for(int i = 0; i < Y.DF(s).dim(); ++i){
-            for(int p(0); p < Y.SH(s,0,0).nump(); ++p) {
-                for(int e(0); e < Nbc; e++) {
+    for(size_t s(0); s < Y.Species(); ++s) {
+        for(size_t i(0); i < Y.DF(s).dim(); ++i){
+            for(size_t p(0); p < Y.SH(s,0,0).nump(); ++p) {
+                for(size_t e(0); e < Nbc; e++) {
                     (Y.DF(s)(i))(p, Y.FLD(0).numx()-Nbc+e) = msg_bufX[bufind + e];
                 }
                 bufind += step_f;
@@ -715,8 +715,8 @@ void Node_Communications_1D::Recv_from_right_X(State1D& Y, int origin) {
         }
     }
     // Fields:   x0-"Right-Guard <--- "
-    for(int i = 0; i < Y.EMF().dim(); ++i){
-        for(int e(0); e < Nbc; e++) {
+    for(size_t i(0); i < Y.EMF().dim(); ++i){
+        for(size_t e(0); e < Nbc; e++) {
             Y.FLD(i)(Y.FLD(0).numx()-Nbc+e) = msg_bufX[bufind + e];
         }
         bufind += step_f;
@@ -725,37 +725,37 @@ void Node_Communications_1D::Recv_from_right_X(State1D& Y, int origin) {
     if (Input::List().hydromotion)
     {
         // Hydro-density:   x0-"Right-Guard <--- "
-        for(int e(0); e < Nbc; e++) {
+        for(size_t e(0); e < Nbc; e++) {
             Y.HYDRO().density(Y.FLD(0).numx()-Nbc+e) = (msg_bufX[bufind + e]).real();
         }
         bufind += step_f;
 
         // Hydro-velocity:   x0-"Right-Guard <--- "
-        for(int e(0); e < Nbc; e++) {
+        for(size_t e(0); e < Nbc; e++) {
             Y.HYDRO().vx(Y.FLD(0).numx()-Nbc+e) = (msg_bufX[bufind + e]).real();
         }
         bufind += step_f;
 
         // Hydro-velocity:   x0-"Right-Guard <--- "
-        for(int e(0); e < Nbc; e++) {
+        for(size_t e(0); e < Nbc; e++) {
             Y.HYDRO().vy(Y.FLD(0).numx()-Nbc+e) = (msg_bufX[bufind + e]).real();
         }
         bufind += step_f;
 
         // Hydro-velocity:   x0-"Right-Guard <--- "
-        for(int e(0); e < Nbc; e++) {
+        for(size_t e(0); e < Nbc; e++) {
             Y.HYDRO().vz(Y.FLD(0).numx()-Nbc+e) = (msg_bufX[bufind + e]).real();
         }
         bufind += step_f;
 
         // Hydro-temperature:   x0-"Right-Guard <--- "
-        for(int e(0); e < Nbc; e++) {
+        for(size_t e(0); e < Nbc; e++) {
             Y.HYDRO().temperature(Y.FLD(0).numx()-Nbc+e) = (msg_bufX[bufind + e]).real();
         }
         bufind += step_f;
 
         // Hydro-charge fraction:   x0-"Right-Guard <--- "
-        for(int e(0); e < Nbc; e++) {
+        for(size_t e(0); e < Nbc; e++) {
             Y.HYDRO().Z(Y.FLD(0).numx()-Nbc+e) = (msg_bufX[bufind + e]).real();
         }
         bufind += step_f;
@@ -822,13 +822,13 @@ void Node_Communications_1D::mirror_bound_Xleft(State1D& Y) {
     size_t Nx(Y.SH(0,0,0).numx());
 
     // Mirror the harmonics
-    for(int s(0); s < Y.Species(); ++s) {
-        for(int l(0); l < Y.DF(s).l0(); ++l){
-            for(int m(0); m < ((Y.DF(s).m0() < l)? Y.DF(s).m0():l)+1; ++m){
+    for(size_t s(0); s < Y.Species(); ++s) {
+        for(size_t l(0); l < Y.DF(s).l0(); ++l){
+            for(size_t m(0); m < ((Y.DF(s).m0() < l)? Y.DF(s).m0():l)+1; ++m){
                 sign = 1-2*((l+m)%2);          //(-1)^(m+n)
 
-                for (int c(0); c < Nbc; ++c) {
-                    for(int p(0); p < Y.SH(s,0,0).nump(); ++p) {
+                for (size_t c(0); c < Nbc; ++c) {
+                    for(size_t p(0); p < Y.SH(s,0,0).nump(); ++p) {
                         Y.SH(s,l,m)(p, c) = Y.SH(s,l,m)(p, 2*Nbc-c-1);
                         Y.SH(s,l,m)(p, c) *= sign;
                     }
@@ -839,12 +839,12 @@ void Node_Communications_1D::mirror_bound_Xleft(State1D& Y) {
     }
 
     // Mirror the fields
-    for(int i(0); i < Y.EMF().dim(); ++i){
-        for (int c(0); c < Nbc; ++c)
+    for(size_t i(0); i < Y.EMF().dim(); ++i){
+        for (size_t c(0); c < Nbc; ++c)
             Y.FLD(i)(c) = Y.FLD(i)(2*Nbc-c-1);
     }
 
-    for (int c(0); c < Nbc; ++c) {
+    for (size_t c(0); c < Nbc; ++c) {
 // 			Ey
         Y.EMF().Ey()(c) *= -1.0; // left  boundary
 // 			Ez
@@ -858,7 +858,7 @@ void Node_Communications_1D::mirror_bound_Xleft(State1D& Y) {
     if (Input::List().hydromotion)
     {
         // Hydro Quantities:   x0 "Right-Bound ---> Left-Guard"
-        for(int c(0); c < Nbc; c++) {
+        for(size_t c(0); c < Nbc; c++) {
             Y.HYDRO().density(c) =  Y.HYDRO().density(2*Nbc-c-1);
             Y.HYDRO().temperature(c) =  Y.HYDRO().temperature(2*Nbc-c-1);
             Y.HYDRO().Z(c) =  Y.HYDRO().Z(2*Nbc-c-1);
@@ -892,13 +892,13 @@ void Node_Communications_1D::mirror_bound_Xright(State1D& Y) {
     size_t Nx(Y.SH(0,0,0).numx());
 
     // Mirror the harmonics
-    for(int s(0); s < Y.Species(); ++s) {
-        for(int l(0); l < Y.DF(s).l0(); ++l){
-            for(int m(0); m < ((Y.DF(s).m0() < l)? Y.DF(s).m0():l)+1; ++m){
+    for(size_t s(0); s < Y.Species(); ++s) {
+        for(size_t l(0); l < Y.DF(s).l0(); ++l){
+            for(size_t m(0); m < ((Y.DF(s).m0() < l)? Y.DF(s).m0():l)+1; ++m){
                 sign = 1-2*((l+m)%2);          //(-1)^(m+n)
 
-                for(int p(0); p < Y.SH(s,0,0).nump(); ++p) {
-                    for (int c(0); c < Nbc; ++c) {
+                for(size_t p(0); p < Y.SH(s,0,0).nump(); ++p) {
+                    for (size_t c(0); c < Nbc; ++c) {
                         Y.SH(s,l,m)(p, Nx-c-1) = Y.SH(s,l,m)(p, Nx-2*Nbc+c);
                         Y.SH(s,l,m)(p, Nx-c-1) *= sign;
                     }
@@ -909,12 +909,12 @@ void Node_Communications_1D::mirror_bound_Xright(State1D& Y) {
     }
 
     // Mirror the fields
-    for(int i(0); i < Y.EMF().dim(); ++i){
-        for (int c(0); c < Nbc; ++c)
+    for(size_t i(0); i < Y.EMF().dim(); ++i){
+        for (size_t c(0); c < Nbc; ++c)
             Y.FLD(i)(Nx-c-1) = Y.FLD(i)(Nx-2*Nbc+c);
     }
 
-    for (int c(0); c < Nbc; ++c) {
+    for (size_t c(0); c < Nbc; ++c) {
         //Ey
         Y.EMF().Ey()(Nx-c-1) *= -1.0; // right boundary
         //Ez
@@ -928,7 +928,7 @@ void Node_Communications_1D::mirror_bound_Xright(State1D& Y) {
     if (Input::List().hydromotion)
     {
         // Hydro Quantities:   x0 "Left-Bound ---> Right-Guard"
-        for(int c(0); c < Nbc; c++) {
+        for(size_t c(0); c < Nbc; c++) {
             Y.HYDRO().density(Y.EMF().Ex().numx()-Nbc+c) =  Y.HYDRO().density(Y.EMF().Ex().numx()-2*Nbc+c);
             Y.HYDRO().temperature(Y.EMF().Ex().numx()-Nbc+c) =  Y.HYDRO().temperature(Y.EMF().Ex().numx()-2*Nbc+c);
             Y.HYDRO().Z(Y.EMF().Ex().numx()-Nbc+c) =  Y.HYDRO().Z(Y.EMF().Ex().numx()-2*Nbc+c);
@@ -987,10 +987,10 @@ void Node_Communications_1D::sameNode_periodic_X(State1D& Y) {
 //--------------------------------------------------------------
 
     // Harmonics:x0 "Right-Bound ---> Left-Guard"
-    for(int s(0); s < Y.Species(); ++s) {
-        for(int i(0); i < Y.DF(s).dim(); ++i) {
-            for(int p(0); p < Y.SH(s,0,0).nump(); ++p) {
-                for(int c(0); c < Nbc; c++) {
+    for(size_t s(0); s < Y.Species(); ++s) {
+        for(size_t i(0); i < Y.DF(s).dim(); ++i) {
+            for(size_t p(0); p < Y.SH(s,0,0).nump(); ++p) {
+                for(size_t c(0); c < Nbc; c++) {
                     (Y.DF(s)(i))(p, c) = (Y.DF(s)(i))(p, Y.EMF().Ex().numx()-2*Nbc+c);
                     // std::cout << "\n 1: DF(" << i << "," << p << "," << c << ") = " << (Y.DF(s)(i))(p, Y.EMF().Ex().numx()-2*Nbc+c) << "\n";
                 }
@@ -998,8 +998,8 @@ void Node_Communications_1D::sameNode_periodic_X(State1D& Y) {
         }
     }
     // Fields:   x0 "Right-Bound ---> Left-Guard"
-    for(int i(0); i < Y.EMF().dim(); ++i) {
-        for(int c(0); c < Nbc; c++) {
+    for(size_t i(0); i < Y.EMF().dim(); ++i) {
+        for(size_t c(0); c < Nbc; c++) {
             Y.FLD(i)(c) = Y.FLD(i)(Y.EMF().Ex().numx()-2*Nbc+c);
             // std::cout << "\n 2: FLD(" << i << "," << c << ") = " << Y.FLD(i)(Y.EMF().Ex().numx()-2*Nbc+c) << "\n";
         }
@@ -1008,10 +1008,10 @@ void Node_Communications_1D::sameNode_periodic_X(State1D& Y) {
 
 
     // Harmonics:x0 "Left-Bound ---> Right-Guard"
-    for(int s(0); s < Y.Species(); ++s) {
-        for(int i(0); i < Y.DF(s).dim(); ++i) {
-            for(int p(0); p < Y.SH(s,0,0).nump(); ++p) {
-                for(int c(0); c < Nbc; c++) {
+    for(size_t s(0); s < Y.Species(); ++s) {
+        for(size_t i(0); i < Y.DF(s).dim(); ++i) {
+            for(size_t p(0); p < Y.SH(s,0,0).nump(); ++p) {
+                for(size_t c(0); c < Nbc; c++) {
                     // std::cout << "\n 3: DF(" << i << "," << p << "," << Y.EMF().Ex().numx()-Nbc+c << ") = " << (Y.DF(s)(i))(p, Y.EMF().Ex().numx()-Nbc+c) << "\n";
 
                     (Y.DF(s)(i))(p, Y.EMF().Ex().numx()-Nbc+c) = (Y.DF(s)(i))(p, Nbc+c);
@@ -1026,8 +1026,8 @@ void Node_Communications_1D::sameNode_periodic_X(State1D& Y) {
     }
 
     // Fields:   x0 "Left-Bound ---> Right-Guard"
-    for(int i(0); i < Y.EMF().dim(); ++i) {
-        for(int c(0); c < Nbc; c++) {
+    for(size_t i(0); i < Y.EMF().dim(); ++i) {
+        for(size_t c(0); c < Nbc; c++) {
             // if (i == 0)                 std::cout << "\n 4: FLD(" << i << "," << Y.EMF().Ex().numx()-Nbc+c << ") = " << Y.FLD(i)(Y.EMF().Ex().numx()-Nbc+c) << "\n";
             Y.FLD(i)(Y.EMF().Ex().numx()-Nbc+c) = Y.FLD(i)(Nbc+c);
             // if (i == 0)                 std::cout << "\n 4n: FLD(" << i << "," << Y.EMF().Ex().numx()-Nbc+c << ") = " << Y.FLD(i)(Y.EMF().Ex().numx()-Nbc+c) << "\n";
@@ -1040,7 +1040,7 @@ void Node_Communications_1D::sameNode_periodic_X(State1D& Y) {
     if (Input::List().hydromotion)
     {
         // Hydro Quantities:   x0 "Right-Bound ---> Left-Guard"
-        for(int c(0); c < Nbc; c++) {
+        for(size_t c(0); c < Nbc; c++) {
             Y.HYDRO().density(c) = Y.HYDRO().density(Y.EMF().Ex().numx()-2*Nbc+c);
             Y.HYDRO().vx(c) = Y.HYDRO().vx(Y.EMF().Ex().numx()-2*Nbc+c);
             Y.HYDRO().vy(c) = Y.HYDRO().vy(Y.EMF().Ex().numx()-2*Nbc+c);
@@ -1050,7 +1050,7 @@ void Node_Communications_1D::sameNode_periodic_X(State1D& Y) {
         }
 
         // Hydro Quantities:   x0 "Left-Bound ---> Right-Guard"
-        for(int c(0); c < Nbc; c++) {
+        for(size_t c(0); c < Nbc; c++) {
             Y.HYDRO().density(Y.EMF().Ex().numx()-Nbc+c) =  Y.HYDRO().density(Nbc+c);
             Y.HYDRO().vx(Y.EMF().Ex().numx()-Nbc+c) =  Y.HYDRO().vx(Nbc+c);
             Y.HYDRO().vy(Y.EMF().Ex().numx()-Nbc+c) =  Y.HYDRO().vy(Nbc+c);
@@ -1089,22 +1089,22 @@ void Node_Communications_1D::sameNode_mirror_X(State1D& Y) {
     size_t Nx(Y.SH(0,0,0).numx());
 
     // Mirror the harmonics
-    for(int s(0); s < Y.Species(); ++s) {
-        for(int l(0); l < Y.DF(s).l0(); ++l){
-            for(int m(0); m < ((Y.DF(s).m0() < l)? Y.DF(s).m0():l)+1; ++m){
+    for(size_t s(0); s < Y.Species(); ++s) {
+        for(size_t l(0); l < Y.DF(s).l0(); ++l){
+            for(size_t m(0); m < ((Y.DF(s).m0() < l)? Y.DF(s).m0():l)+1; ++m){
                 sign = 1-2*((l+m)%2);          //(-1)^(m+n)
 
                 // right boundary
-                for(int p(0); p < Y.SH(s,0,0).nump(); ++p) {
-                    for (int c(0); c < Nbc; ++c) {
+                for(size_t p(0); p < Y.SH(s,0,0).nump(); ++p) {
+                    for (size_t c(0); c < Nbc; ++c) {
                         Y.SH(s,l,m)(p, Nx-c-1) = Y.SH(s,l,m)(p, Nx-2*Nbc+c);
                         Y.SH(s,l,m)(p, Nx-c-1) *= sign;
                     }
                 }
 
                 // left boundary
-                for(int p(0); p < Y.SH(s,0,0).nump(); ++p) {
-                    for (int c(0); c < Nbc; ++c) {
+                for(size_t p(0); p < Y.SH(s,0,0).nump(); ++p) {
+                    for (size_t c(0); c < Nbc; ++c) {
                         Y.SH(s,l,m)(p, c) = Y.SH(s,l,m)(p, 2*Nbc-c-1);
                         Y.SH(s,l,m)(p, c) *= sign;
                     }
@@ -1115,16 +1115,16 @@ void Node_Communications_1D::sameNode_mirror_X(State1D& Y) {
     }
 
     // Mirror the fields
-    for(int i(0); i < Y.EMF().dim(); ++i){
+    for(size_t i(0); i < Y.EMF().dim(); ++i){
         // right boundary
-        for (int c(0); c < Nbc; ++c)
+        for (size_t c(0); c < Nbc; ++c)
             Y.FLD(i)(Nx-c-1) = Y.FLD(i)(Nx-2*Nbc+c);
         // left boundary
-        for (int c(0); c < Nbc; ++c)
+        for (size_t c(0); c < Nbc; ++c)
             Y.FLD(i)(c) = Y.FLD(i)(2*Nbc-c-1);
     }
 
-    for(int c(0); c < Nbc; c++) {
+    for(size_t c(0); c < Nbc; c++) {
         //Ey
         Y.EMF().Ey()(Nx-Nbc+c) *= -1.0; // right boundary
         Y.EMF().Ey()(c) *= -1.0;  // left  boundary
@@ -1142,12 +1142,12 @@ void Node_Communications_1D::sameNode_mirror_X(State1D& Y) {
     if (Input::List().hydromotion)
     {
         // Hydro Quantities:   x0 "Right-Bound ---> Left-Guard"
-        for(int c(0); c < Nbc; c++) {
+        for(size_t c(0); c < Nbc; c++) {
             Y.HYDRO().vx(c) *= -1.0;
         }
 
         // Hydro Quantities:   x0 "Left-Bound ---> Right-Guard"
-        for(int c(0); c < Nbc; c++) {
+        for(size_t c(0); c < Nbc; c++) {
             Y.HYDRO().vx(Y.EMF().Ex().numx()-Nbc+c) *= -1.0;
 
 

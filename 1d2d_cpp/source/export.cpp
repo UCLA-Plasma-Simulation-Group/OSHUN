@@ -2795,7 +2795,7 @@ void Output_Data::Output_Preprocessor::Ex(const State1D& Y, const Grid_Info& gri
 
     size_t Nbc = Input::List().BoundaryCells;
     MPI_Status status;
-    size_t st(0), bi(0);
+    
     size_t outNxLocal(grid.axis.Nx(0) - 2*Nbc);
     size_t outNxGlobal(grid.axis.Nxg(0));
 
@@ -2844,7 +2844,7 @@ void Output_Data::Output_Preprocessor::Ey(const State1D& Y, const Grid_Info& gri
 
     size_t Nbc = Input::List().BoundaryCells;
     MPI_Status status;
-    size_t st(0), bi(0);
+     
     size_t outNxLocal(grid.axis.Nx(0) - 2*Nbc);
     size_t outNxGlobal(grid.axis.Nxg(0));
 
@@ -2892,7 +2892,7 @@ void Output_Data::Output_Preprocessor::Ez(const State1D& Y, const Grid_Info& gri
 
     size_t Nbc = Input::List().BoundaryCells;
     MPI_Status status;
-    size_t st(0), bi(0);
+     
     size_t outNxLocal(grid.axis.Nx(0) - 2*Nbc);
     size_t outNxGlobal(grid.axis.Nxg(0));
 
@@ -2941,7 +2941,7 @@ void Output_Data::Output_Preprocessor::Bx(const State1D& Y, const Grid_Info& gri
 
     size_t Nbc = Input::List().BoundaryCells;
     MPI_Status status;
-    size_t st(0), bi(0);
+     
     size_t outNxLocal(grid.axis.Nx(0) - 2*Nbc);
     size_t outNxGlobal(grid.axis.Nxg(0));
 
@@ -2989,7 +2989,7 @@ void Output_Data::Output_Preprocessor::By(const State1D& Y, const Grid_Info& gri
 
     size_t Nbc = Input::List().BoundaryCells;
     MPI_Status status;
-    size_t st(0), bi(0);
+     
     size_t outNxLocal(grid.axis.Nx(0) - 2*Nbc);
     size_t outNxGlobal(grid.axis.Nxg(0));
 
@@ -3038,7 +3038,7 @@ void Output_Data::Output_Preprocessor::Bz(const State1D& Y, const Grid_Info& gri
 
     size_t Nbc = Input::List().BoundaryCells;
     MPI_Status status;
-    size_t st(0), bi(0);
+     
     size_t outNxLocal(grid.axis.Nx(0) - 2*Nbc);
     size_t outNxGlobal(grid.axis.Nxg(0));
 
@@ -3367,7 +3367,7 @@ void Output_Data::Output_Preprocessor::By(const State2D& Y, const Grid_Info& gri
 
     size_t Nbc = Input::List().BoundaryCells;
     MPI_Status status;
-    size_t st(0), bi(0);
+     
     size_t outNxLocal(grid.axis.Nx(0) - 2*Nbc), outNyLocal(grid.axis.Nx(1) - 2*Nbc);
     size_t outNxGlobal(grid.axis.Nxg(0)), outNyGlobal(grid.axis.Nxg(1));
 
@@ -3505,7 +3505,7 @@ void Output_Data::Output_Preprocessor::px(const State1D& Y, const Grid_Info& gri
     // std::cout << "0 \n";
     size_t Nbc = Input::List().BoundaryCells;
     MPI_Status status;
-    size_t st(0), bi(0);
+     
     size_t outNxLocal(grid.axis.Nx(0) - 2*Nbc);
     size_t outNxGlobal(grid.axis.Nxg(0));
 
@@ -3567,7 +3567,7 @@ void Output_Data::Output_Preprocessor::py(const State1D& Y, const Grid_Info& gri
     // std::cout << "0 \n";
     size_t Nbc = Input::List().BoundaryCells;
     MPI_Status status;
-    size_t st(0), bi(0);
+     
     size_t outNxLocal(grid.axis.Nx(0) - 2*Nbc);
     size_t outNxGlobal(grid.axis.Nxg(0));
 
@@ -5529,7 +5529,7 @@ void Output_Data::Output_Preprocessor::n(const State1D& Y, const Grid_Info& grid
 
     size_t Nbc = Input::List().BoundaryCells;
     MPI_Status status;
-    size_t st(0), bi(0);
+     
     size_t outNxLocal(grid.axis.Nx(0) - 2*Nbc);
     size_t outNxGlobal(grid.axis.Nxg(0));
 
@@ -5776,7 +5776,7 @@ void Output_Data::Output_Preprocessor::T(const State1D& Y, const Grid_Info& grid
 
     size_t Nbc = Input::List().BoundaryCells;
     MPI_Status status;
-    // size_t st(0), bi(0);
+    //  
     size_t outNxLocal(grid.axis.Nx(0) - 2*Nbc);
     size_t outNxGlobal(grid.axis.Nxg(0));
 
@@ -5863,7 +5863,7 @@ void Output_Data::Output_Preprocessor::Jx(const State1D& Y, const Grid_Info& gri
 
     size_t Nbc = Input::List().BoundaryCells;
     MPI_Status status;
-    // size_t st(0), bi(0);
+    //  
     size_t outNxLocal(grid.axis.Nx(0) - 2*Nbc);
     size_t outNxGlobal(grid.axis.Nxg(0));
 
@@ -5921,7 +5921,7 @@ void Output_Data::Output_Preprocessor::Jy(const State1D& Y, const Grid_Info& gri
 
     size_t Nbc = Input::List().BoundaryCells;
     MPI_Status status;
-    // size_t st(0), bi(0);
+    //  
     size_t outNxLocal(grid.axis.Nx(0) - 2*Nbc);
     size_t outNxGlobal(grid.axis.Nxg(0));
 
@@ -5978,7 +5978,7 @@ void Output_Data::Output_Preprocessor::Jz(const State1D& Y, const Grid_Info& gri
 
     size_t Nbc = Input::List().BoundaryCells;
     MPI_Status status;
-    // size_t st(0), bi(0);
+    //  
     size_t outNxLocal(grid.axis.Nx(0) - 2*Nbc);
     size_t outNxGlobal(grid.axis.Nxg(0));
 
@@ -6349,7 +6349,7 @@ void Output_Data::Output_Preprocessor::vNx(const State1D& Y, const Grid_Info& gr
 
     size_t Nbc = Input::List().BoundaryCells;
     MPI_Status status;
-    // size_t st(0), bi(0);
+    //  
     size_t outNxLocal(grid.axis.Nx(0) - 2*Nbc);
     size_t outNxGlobal(grid.axis.Nxg(0));
 
@@ -7374,7 +7374,7 @@ void Output_Data::Output_Preprocessor::Ux(const State1D& Y, const Grid_Info& gri
 
     size_t Nbc = Input::List().BoundaryCells;
     MPI_Status status;
-    // size_t st(0), bi(0);
+    //  
     size_t outNxLocal(grid.axis.Nx(0) - 2*Nbc);
     size_t outNxGlobal(grid.axis.Nxg(0));
 
@@ -7422,7 +7422,7 @@ void Output_Data::Output_Preprocessor::Uy(const State1D& Y, const Grid_Info& gri
 
     size_t Nbc = Input::List().BoundaryCells;
     MPI_Status status;
-    // size_t st(0), bi(0);
+    //  
     size_t outNxLocal(grid.axis.Nx(0) - 2*Nbc);
     size_t outNxGlobal(grid.axis.Nxg(0));
 
@@ -7470,7 +7470,7 @@ void Output_Data::Output_Preprocessor::Uz(const State1D& Y, const Grid_Info& gri
 
     size_t Nbc = Input::List().BoundaryCells;
     MPI_Status status;
-    // size_t st(0), bi(0);
+    //  
     size_t outNxLocal(grid.axis.Nx(0) - 2*Nbc);
     size_t outNxGlobal(grid.axis.Nxg(0));
 
@@ -7571,7 +7571,7 @@ void Output_Data::Output_Preprocessor::ni(const State1D& Y, const Grid_Info& gri
 
     size_t Nbc = Input::List().BoundaryCells;
     MPI_Status status;
-    // size_t st(0), bi(0);
+    //  
     size_t outNxLocal(grid.axis.Nx(0) - 2*Nbc);
     size_t outNxGlobal(grid.axis.Nxg(0));
 
@@ -7622,7 +7622,7 @@ void Output_Data::Output_Preprocessor::Ti(const State1D& Y, const Grid_Info& gri
 
     size_t Nbc = Input::List().BoundaryCells;
     MPI_Status status;
-    // size_t st(0), bi(0);
+    //  
     size_t outNxLocal(grid.axis.Nx(0) - 2*Nbc);
     size_t outNxGlobal(grid.axis.Nxg(0));
 
