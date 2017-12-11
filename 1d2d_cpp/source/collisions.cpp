@@ -121,14 +121,11 @@ void self_f00_implicit_step::update_C_Rosenbluth(valarray<double> &fin) {
     for (size_t n(1); n < C_RB.size(); ++n) {
 //        C_RB[n]  = p2dp[n-1] * fin[n-1] + p2dpm1[n-1] * fin[n - 2];
         C_RB[n]  = vr[n - 1] * vr[n - 1] * dvr[n - 1] * fin[n - 1];
-
-
         C_RB[n] += C_RB[n - 1];
 
-
         I4_Lnee  += p4dp[n - 1] * fin[n - 1];
-
     }
+
     C_RB *= 4.0 * M_PI;
     I4_Lnee *= 4.0 * M_PI;
 }
@@ -628,7 +625,8 @@ self_f00_explicit_step::self_f00_explicit_step(const valarray<double>& dp)
         U3[i] = pow(vr[i],3);
     }
     // Determine Qn
-    Qn[0] = 1.0 / ((vr[0]*vr[0]*vr[1])/2.0);
+    // Qn[0] = 1.0 / ((vr[0]*vr[0]*vr[1])/2.0);
+    Qn[0] = 1.0 / (vr[0]*vr[0]*(vr[1]-vr[0]));
     for (size_t i(1); i < Qn.size()-1; ++i) 
     {
         Qn[i] = 1.0 / (vr[i]*vr[i]*(vr[i+1]-vr[i-1])/2.0);
