@@ -146,6 +146,10 @@ void VlasovFunctor1D_explicitE::operator()(const State1D& Yin, State1D& Yslope){
 
             JX[s](Yin.DF(s),Yslope.EMF().Ex(),Yslope.EMF().Ey(),Yslope.EMF().Ez());
 
+            AM[s](Yin.EMF(),Yslope.EMF());
+
+            FA[s](Yin.EMF(),Yslope.EMF());
+
             
         }
 
@@ -217,6 +221,10 @@ void VlasovFunctor2D_explicitE::operator()(const State2D& Yin, State2D& Yslope){
             BF[s](Yin.DF(s),Yin.EMF().Bx(),Yin.EMF().By(),Yin.EMF().Bz(),Yslope.DF(s));
 
             JX[s](Yin.DF(s),Yslope.EMF().Ex(),Yslope.EMF().Ey(),Yslope.EMF().Ez());
+
+            AM[s](Yin.EMF(),Yslope.EMF());
+
+            FA[s](Yin.EMF(),Yslope.EMF());
 
             
         }
