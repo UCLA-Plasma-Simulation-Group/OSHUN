@@ -7236,10 +7236,7 @@ void Output_Data::Output_Preprocessor::Ux(const State1D& Y, const Grid_Info& gri
         }
     }
 
-    vector<string> axisnames;
-    axisnames.push_back("x")
-
-    if (PE.RANK() == 0) expo.Export_h5("Ux", xaxis, axisnames, UxGlobal, tout, 0);
+    if (PE.RANK() == 0) expo.Export_h5("Ux", xaxis, UxGlobal, tout, 0);
 
 }
 //--------------------------------------------------------------
