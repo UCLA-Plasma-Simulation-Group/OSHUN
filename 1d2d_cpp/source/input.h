@@ -59,8 +59,6 @@ namespace Input{
         int flm_collisions;
         int flm_acc;
         bool ee_bool,ei_bool;
-        
-        
 
         int BoundaryCells;
         
@@ -93,7 +91,7 @@ namespace Input{
                 
         bool o_Ux, o_Uy, o_Uz, o_Z, o_ni, o_Ti;
         bool only_output;
-        // size_t numpx;//, nump1, nump2, nump3;
+        
 
 //          Electron-ion collisions
         double lnLambda_ei, lnLambda_ee, density_np;
@@ -122,11 +120,6 @@ namespace Input{
         double particlecharge, particlemass;
         std::vector<double> par_xpos, par_px, par_py, par_pz;
 
-
-                
-
-
-        
 // ----------------------------------------------------------------------
 // ----------------------------------------------------------------------
         /// Initialization

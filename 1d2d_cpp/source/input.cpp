@@ -142,48 +142,7 @@ Input::Input_List::Input_List():
     bx_profile_str("cst{0.0}"),
     by_profile_str("cst{0.0}"),
     bz_profile_str("cst{0.0}")
-    // ex_wave_profile_str("cst{0.0}"),
-    // ey_wave_profile_str("cst{0.0}"),
-    // ez_wave_profile_str("cst{0.0}"),
-    // bx_wave_profile_str("cst{0.0}"),
-    // by_wave_profile_str("cst{0.0}"),
-    // bz_wave_profile_str("cst{0.0}"),
-    // wave_time_envelope_str("cst{0.0}")
-
-// ----------------------------------------------------------------------
-// ----------------------------------------------------------------------
-        // std::vector< double > pmax;
-// ----------------------------------------------------------------------
-// ----------------------------------------------------------------------
-        /// Initialization
-
-        // std::vector<std::string> dens_profile_str;
-        // std::vector<std::string> temp_profile_str;
-        // std::vector<std::string> f10x_profile_str;
-        // std::vector<std::string> f20x_profile_str;
-        // std::vector<std::string> f_pedestal;
-
-        // std::vector<double> qs;
-        // std::vector<double> mass;
-        // std::vector<size_t> ls;
-        // std::vector<size_t> ms;
-        // std::vector<size_t> ps;
-        // std::vector<double> pth;
-
-        // std::vector<size_t> Npx;
-        // std::vector<size_t> Npy;
-        // std::vector<size_t> Npz;
-
-
-        // std::vector<size_t> NxGlobal;
-        // std::vector<size_t> NxLocalnobnd;
-        // std::vector<size_t> NxLocal;
-
-        // std::vector<double> xminGlobal,
-        // std::vector<double> xmaxGlobal,
-        // std::vector<double> xminLocal,
-        // std::vector<double> xmaxLocal,
-        // std::vector<double> globdx
+    
          {
 //--------------------------------------------------------------
 //  The constructor for the input_list structure
@@ -213,6 +172,14 @@ Input::Input_List::Input_List():
 
             }
 
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            /// Restart
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            
             if (deckstring == "if_restart") {
                 deckfile >> deckequalssign;
                 if(deckequalssign != "=") {
@@ -253,6 +220,14 @@ Input::Input_List::Input_List():
 
             }
 
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            /// Parallelism
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            
             if (deckstring == "MPI_Processes_Y") {
                 deckfile >> deckequalssign;
                 if(deckequalssign != "=") {
@@ -272,6 +247,15 @@ Input::Input_List::Input_List():
                 deckfile >> ompthreads;
             }
 
+
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            /// Velocity Grid
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            
             if (deckstring == "numsp") {
                 deckfile >> deckequalssign;
                 if(deckequalssign != "=") {
@@ -344,33 +328,15 @@ Input::Input_List::Input_List():
                     deckfile >> deckreal;
                 }
             }
-            if (deckstring == "charge") {
-                deckfile >> deckequalssign;
-                if(deckequalssign != "=") {
-                    std::cout << "Error reading " << deckstring << std::endl;
-                    exit(1);
-                }
-
-                for (size_t s(0);s<numsp;++s)
-                {
-                    deckfile >> deckreal;
-                    qs.push_back(-1.0*deckreal);
-                    // std::cout<< "q = " << deckreal << "\n";
-                }
-            }
-            if (deckstring == "mass") {
-                deckfile >> deckequalssign;
-                if(deckequalssign != "=") {
-                    std::cout << "Error reading " << deckstring << std::endl;
-                    exit(1);
-                }
-                for (size_t s(0);s<numsp;++s)
-                {
-                    deckfile >> deckreal;
-                    mass.push_back(deckreal);
-                    // std::cout<< "mass = " << deckreal << "\n";
-                }
-            }
+            
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            /// Spatial Grid
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            
             if (deckstring == "Nx") {
                 deckfile >> deckequalssign;
                 if(deckequalssign != "=") {
@@ -441,14 +407,15 @@ Input::Input_List::Input_List():
                     ymax = 1.;
                 }
             }
-            if (deckstring == "max_timestep") {
-                deckfile >> deckequalssign;
-                if(deckequalssign != "=") {
-                    std::cout << "Error reading " << deckstring << std::endl;
-                    exit(1);
-                }
-                deckfile >> dt;
-            }
+
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            /// Filter (inactive!)
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            
             if (deckstring == "filter_distribution") {
                 deckfile >> deckequalssign;
                 if(deckequalssign != "=") {
@@ -475,33 +442,14 @@ Input::Input_List::Input_List():
                 deckfile >> filter_pmax;
             }
 
-            if (deckstring == "hydro") {
-                deckfile >> deckequalssign;
-                if(deckequalssign != "=") {
-                    std::cout << "Error reading " << deckstring << std::endl;
-                    exit(1);
-                }
-                deckfile >> deckstringbool;
-                hydromotion = (deckstringbool[0] == 't' || deckstringbool[0] == 'T');
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            /// Particle Tracker
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
 
-            }
-            if (deckstring == "hydroatomicmass") {
-                deckfile >> deckequalssign;
-                if(deckequalssign != "=") {
-                    std::cout << "Error reading " << deckstring << std::endl;
-                    exit(1);
-                }
-                deckfile >> hydromass;
-                hydromass *= 1836;
-            }
-            if (deckstring == "hydrocharge") {
-                deckfile >> deckequalssign;
-                if(deckequalssign != "=") {
-                    std::cout << "Error reading " << deckstring << std::endl;
-                    exit(1);
-                }
-                deckfile >> hydrocharge;
-            }
 
             if (deckstring == "track_particles") {
                 deckfile >> deckequalssign;
@@ -584,6 +532,27 @@ Input::Input_List::Input_List():
                 }
                 deckfile >> particlemass;
             }
+
+
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            /// Switches
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+
+            if (deckstring == "hydro") {
+                deckfile >> deckequalssign;
+                if(deckequalssign != "=") {
+                    std::cout << "Error reading " << deckstring << std::endl;
+                    exit(1);
+                }
+                deckfile >> deckstringbool;
+                hydromotion = (deckstringbool[0] == 't' || deckstringbool[0] == 'T');
+
+            }
+
             if (deckstring == "ext_fields") {
                 deckfile >> deckequalssign;
                 if(deckequalssign != "=") {
@@ -749,6 +718,22 @@ Input::Input_List::Input_List():
             }
 
 
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            /// Clock
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            
+            if (deckstring == "max_timestep") {
+                deckfile >> deckequalssign;
+                if(deckequalssign != "=") {
+                    std::cout << "Error reading " << deckstring << std::endl;
+                    exit(1);
+                }
+                deckfile >> dt;
+            }
 
             if (deckstring == "t_stop") {
                 deckfile >> deckequalssign;
@@ -765,10 +750,7 @@ Input::Input_List::Input_List():
                     exit(1);
                 }
                 deckfile >> n_outsteps;
-                // if (fmod(t_stop,n_outsteps) != 0){
-                //     std::cout << "\n Need n_outsteps to be a n integer divisor of t_stop i.e. remainder (t_stop / n_outsteps) = 0 \n";
-                //     exit(1);
-                // }
+                
             }
 
             if (deckstring == "n_distoutsteps") {
@@ -778,10 +760,7 @@ Input::Input_List::Input_List():
                     exit(1);
                 }
                 deckfile >> n_distoutsteps;
-                // if (fmod(t_stop,n_distoutsteps) != 0){
-                //     std::cout << "\n Need n_distoutsteps to be a n integer divisor of t_stop i.e. remainder (t_stop / n_distoutsteps) = 0 \n";
-                //     exit(1);
-                // }
+                
             }
             if (deckstring == "n_bigdistoutsteps") {
                 deckfile >> deckequalssign;
@@ -790,12 +769,16 @@ Input::Input_List::Input_List():
                     exit(1);
                 }
                 deckfile >> n_bigdistoutsteps;
-                // if (fmod(t_stop,n_distoutsteps) != 0){
-                //     std::cout << "\n Need n_distoutsteps to be a n integer divisor of t_stop i.e. remainder (t_stop / n_distoutsteps) = 0 \n";
-                //     exit(1);
-                // }
+                
             }
 
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            /// Boundaries
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
             if (deckstring == "bndX") {
                 deckfile >> deckequalssign;
                 if(deckequalssign != "=") {
@@ -814,6 +797,13 @@ Input::Input_List::Input_List():
                 deckfile >> bndY;
             }
 
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            /// Output Bools
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
 
             if (deckstring == "o_EHist") {
                 deckfile >> deckequalssign;
@@ -1421,15 +1411,15 @@ Input::Input_List::Input_List():
                     // std::cout<< "pmax = " << deckreal << "\n";
                 }
             }
-            if (deckstring == "only_output") {
-                deckfile >> deckequalssign;
-                if(deckequalssign != "=") {
-                    std::cout << "Error reading " << deckstring << std::endl;
-                    exit(1);
-                }
-                deckfile >> deckstringbool;
-                only_output = (deckstringbool[0] == 't' || deckstringbool[0] == 'T');
-            }
+
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            /// Units bools
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
             if (deckstring == "lnLambda_ei") {
                 deckfile >> deckequalssign;
                 if(deckequalssign != "=") {
@@ -1446,14 +1436,58 @@ Input::Input_List::Input_List():
                 }
                 deckfile >> lnLambda_ee;
             }
-            // if (deckstring == "Zeta") {
-            //     deckfile >> deckequalssign;
-            //     if(deckequalssign != "=") {
-            //         std::cout << "Error reading " << deckstring << std::endl;
-            //         exit(1);
-            //     }
-            //     deckfile >> Zeta;
-            // }
+            if (deckstring == "charge") {
+                deckfile >> deckequalssign;
+                if(deckequalssign != "=") {
+                    std::cout << "Error reading " << deckstring << std::endl;
+                    exit(1);
+                }
+
+                for (size_t s(0);s<numsp;++s)
+                {
+                    deckfile >> deckreal;
+                    qs.push_back(-1.0*deckreal);
+                    // std::cout<< "q = " << deckreal << "\n";
+                }
+            }
+            if (deckstring == "mass") {
+                deckfile >> deckequalssign;
+                if(deckequalssign != "=") {
+                    std::cout << "Error reading " << deckstring << std::endl;
+                    exit(1);
+                }
+                for (size_t s(0);s<numsp;++s)
+                {
+                    deckfile >> deckreal;
+                    mass.push_back(deckreal);
+                    // std::cout<< "mass = " << deckreal << "\n";
+                }
+            }
+            if (deckstring == "pth_ref") {
+                deckfile >> deckequalssign;
+                if(deckequalssign != "=") {
+                    std::cout << "Error reading " << deckstring << std::endl;
+                    exit(1);
+                }
+                deckfile >> pth_ref;
+            }
+            if (deckstring == "hydroatomicmass") {
+                deckfile >> deckequalssign;
+                if(deckequalssign != "=") {
+                    std::cout << "Error reading " << deckstring << std::endl;
+                    exit(1);
+                }
+                deckfile >> hydromass;
+                hydromass *= 1836;
+            }
+            if (deckstring == "hydrocharge") {
+                deckfile >> deckequalssign;
+                if(deckequalssign != "=") {
+                    std::cout << "Error reading " << deckstring << std::endl;
+                    exit(1);
+                }
+                deckfile >> hydrocharge;
+            }
             if (deckstring == "density_np") {
                 deckfile >> deckequalssign;
                 if(deckequalssign != "=") {
@@ -1488,6 +1522,13 @@ Input::Input_List::Input_List():
                 deckfile >> deckstringbool;
                 init_f2 = (deckstringbool[0] == 't' || deckstringbool[0] == 'T');
             }
+
+
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            /// Inverse Bremsstrahlung
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
             if (deckstring == "polarization_direction") {
                 deckfile >> deckequalssign;
                 if(deckequalssign != "=") {
@@ -1522,14 +1563,33 @@ Input::Input_List::Input_List():
                 }
                 deckfile >> lambda_0;
             }
-            if (deckstring == "pth_ref") {
+
+
+            if (deckstring == "I(x,y)") {
                 deckfile >> deckequalssign;
                 if(deckequalssign != "=") {
                     std::cout << "Error reading " << deckstring << std::endl;
                     exit(1);
                 }
-                deckfile >> pth_ref;
+                deckfile >> deckstring;
+                intensity_profile_str = deckstring;
             }
+            if (deckstring == "I(t)") {
+                deckfile >> deckequalssign;
+                if(deckequalssign != "=") {
+                    std::cout << "Error reading " << deckstring << std::endl;
+                    exit(1);
+                }
+                deckfile >> deckstring;
+                intensity_time_profile_str = deckstring;
+            }
+            
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            /// Plasma Profiles
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+
             if (deckstring == "n(x,y)") {
                 deckfile >> deckequalssign;
                 if(deckequalssign != "=") {
@@ -1626,24 +1686,12 @@ Input::Input_List::Input_List():
                 deckfile >> deckstring;
                 hydro_Z_profile_str = deckstring;
             }
-            if (deckstring == "I(x,y)") {
-                deckfile >> deckequalssign;
-                if(deckequalssign != "=") {
-                    std::cout << "Error reading " << deckstring << std::endl;
-                    exit(1);
-                }
-                deckfile >> deckstring;
-                intensity_profile_str = deckstring;
-            }
-            if (deckstring == "I(t)") {
-                deckfile >> deckequalssign;
-                if(deckequalssign != "=") {
-                    std::cout << "Error reading " << deckstring << std::endl;
-                    exit(1);
-                }
-                deckfile >> deckstring;
-                intensity_time_profile_str = deckstring;
-            }
+
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            /// Wave Driver
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
+            //// ---- //////// ---- //////// ---- //////// ---- //////// ---- //////// ---- ////
             if (deckstring == "Ex(x,y)") {
                 deckfile >> deckequalssign;
                 if(deckequalssign != "=") {
@@ -1878,23 +1926,23 @@ Input::Input_List::Input_List():
         oTags.push_back("Time");
         oTags.push_back("Space");
         
-        oTags.push_back("px-x");
-        oTags.push_back("py-x");
-        oTags.push_back("f0-x");
-        oTags.push_back("f10-x");
-        oTags.push_back("f11-x");
-        oTags.push_back("f20-x");
-        oTags.push_back("fl0-x");
-        oTags.push_back("pxpy-x");
+        oTags.push_back("px");
+        oTags.push_back("py");
+        oTags.push_back("f0");
+        oTags.push_back("f10");
+        oTags.push_back("f11");
+        oTags.push_back("f20");
+        oTags.push_back("fl0");
+        oTags.push_back("pxpy");
 
-        oTags.push_back("px-xy");
-        oTags.push_back("py-xy");
-        oTags.push_back("f0-xy");
-        oTags.push_back("f10-xy");
-        oTags.push_back("f11-xy");
-        oTags.push_back("f20-xy");
-        oTags.push_back("fl0-xy");
-        oTags.push_back("pxpy-xy");
+        oTags.push_back("px");
+        oTags.push_back("py");
+        oTags.push_back("f0");
+        oTags.push_back("f10");
+        oTags.push_back("f11");
+        oTags.push_back("f20");
+        oTags.push_back("fl0");
+        oTags.push_back("pxpy");
 
 
         oTags.push_back("Ex");
@@ -1925,32 +1973,6 @@ Input::Input_List::Input_List():
         oTags.push_back("prtpx");
         oTags.push_back("prtpy");
         oTags.push_back("prtpz");
-
-
-        oTags.push_back("Ex-2d");
-        oTags.push_back("Ey-2d");
-        oTags.push_back("Ez-2d");
-        oTags.push_back("Bx-2d");
-        oTags.push_back("By-2d");
-        oTags.push_back("Bz-2d");
-        oTags.push_back("n-2d");
-        oTags.push_back("T_eV-2d");
-        oTags.push_back("T-2d");
-        oTags.push_back("Jx-2d");
-        oTags.push_back("Jy-2d");
-        oTags.push_back("Jz-2d");
-        oTags.push_back("Qx-2d");
-        oTags.push_back("Qy-2d");
-        oTags.push_back("Qz-2d");
-        oTags.push_back("vNx-2d");
-        oTags.push_back("vNy-2d");
-        oTags.push_back("vNz-2d");
-        oTags.push_back("Ux-2d");
-        oTags.push_back("Uy-2d");
-        oTags.push_back("Uz-2d");
-        oTags.push_back("Z-2d");
-        oTags.push_back("ni-2d");
-        oTags.push_back("Ti-2d");
 
         for (size_t i(0); i<numps.size();++i)
         {

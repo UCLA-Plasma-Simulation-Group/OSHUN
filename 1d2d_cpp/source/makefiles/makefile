@@ -9,11 +9,11 @@ COMPILER = g++-7
 OPTFLAGS1 = -O3
 OPTFLAGSt = -O2 -no-vec
 OPTFLAGS2 = -O1
-DBGFLAGS = -v -O0 -Wall -Wuninitialized -Wextra -Wpedantic -pg 3 -ftree-vectorize 
+DBGFLAGS = -v -O0 -Wall -Wuninitialized -Wextra -Wpedantic
 # -O3 -ffast-math -ftree-loop-distribution -fno-signed-zeros -ftree-loop-ivcanon -ftree-vect-loop-version
 #-fopt-info-vec-optimized  
 # INTEL compilers
-#OPTFLAGS1 = -O3
+#DBGFLAGS = -O3
 #DBGFLAGS = -g -O0 -Wall
 
 # HDF5 libraries
@@ -28,14 +28,14 @@ TMP_DIR = ../bin/tmp
 
 OBJECTS = input.o state.o formulary.o parser.o setup.o vlasov.o nmethods.o functors.o collisions.o fluid.o particletracker.o implicitE.o parallel.o export.o main.o
 
-EXEC = oshun1d.e
+EXEC = oshun.e
 
 BUILDOBJECTS = ${addprefix ${TMP_DIR}/,${OBJECTS}}
 
 BUILDEXEC = ${addprefix ${EXEC_DIR}/,${EXEC}}
 
 ${BUILDEXEC} : ${BUILDOBJECTS}
-	-${COMPILER} ${CPPFLAGS} ${OPTFLAGS1} ${INCLUDE_DIRS} ${LDFLAGS} $(H5LIB) $(MPILIB) -o ${BUILDEXEC}  \
+	-${COMPILER} ${CPPFLAGS} ${DBGFLAGS} ${INCLUDE_DIRS} ${LDFLAGS} $(H5LIB) $(MPILIB) -o ${BUILDEXEC}  \
 	${BUILDOBJECTS} 
 
 clean ::
@@ -51,44 +51,44 @@ ${TMP_DIR}/parser.o: parser.cpp
 	$(COMPILER) ${CPPFLAGS} $(OPTFLAGS2) $(INCLUDE_DIRS) -c -o $@ $<		
 
 ${TMP_DIR}/input.o: input.cpp
-	$(COMPILER) ${CPPFLAGS} $(OPTFLAGS1) $(INCLUDE_DIRS) -c -o $@ $<
+	$(COMPILER) ${CPPFLAGS} $(DBGFLAGS) $(INCLUDE_DIRS) -c -o $@ $<
 
 ${TMP_DIR}/state.o: state.cpp
-	$(COMPILER) ${CPPFLAGS} $(OPTFLAGS1) $(INCLUDE_DIRS) -c -o $@ $<	
+	$(COMPILER) ${CPPFLAGS} $(DBGFLAGS) $(INCLUDE_DIRS) -c -o $@ $<	
 
 ${TMP_DIR}/formulary.o: formulary.cpp
-	$(COMPILER) ${CPPFLAGS} $(OPTFLAGS1) $(INCLUDE_DIRS) -c -o $@ $<	
+	$(COMPILER) ${CPPFLAGS} $(DBGFLAGS) $(INCLUDE_DIRS) -c -o $@ $<	
 
 ${TMP_DIR}/setup.o: setup.cpp
-	$(COMPILER) ${CPPFLAGS} $(OPTFLAGS1) $(INCLUDE_DIRS) -c -o $@ $<	
+	$(COMPILER) ${CPPFLAGS} $(DBGFLAGS) $(INCLUDE_DIRS) -c -o $@ $<	
 
 ${TMP_DIR}/vlasov.o: vlasov.cpp
-	$(COMPILER) ${CPPFLAGS} $(OPTFLAGS1) $(INCLUDE_DIRS) -c -o $@ $<	
+	$(COMPILER) ${CPPFLAGS} $(DBGFLAGS) $(INCLUDE_DIRS) -c -o $@ $<	
 
 ${TMP_DIR}/nmethods.o: nmethods.cpp
-	$(COMPILER) ${CPPFLAGS} $(OPTFLAGS1) $(INCLUDE_DIRS) -c -o $@ $<
+	$(COMPILER) ${CPPFLAGS} $(DBGFLAGS) $(INCLUDE_DIRS) -c -o $@ $<
 
 ${TMP_DIR}/functors.o: functors.cpp
-	$(COMPILER) ${CPPFLAGS} $(OPTFLAGS1) $(INCLUDE_DIRS) -c -o $@ $<
+	$(COMPILER) ${CPPFLAGS} $(DBGFLAGS) $(INCLUDE_DIRS) -c -o $@ $<
 
 ${TMP_DIR}/collisions.o: collisions.cpp
-	$(COMPILER) ${CPPFLAGS} $(OPTFLAGS1) $(INCLUDE_DIRS) -c -o $@ $<
+	$(COMPILER) ${CPPFLAGS} $(DBGFLAGS) $(INCLUDE_DIRS) -c -o $@ $<
 
 ${TMP_DIR}/fluid.o: fluid.cpp
-	$(COMPILER) ${CPPFLAGS} $(OPTFLAGS1) $(INCLUDE_DIRS) -c -o $@ $<
+	$(COMPILER) ${CPPFLAGS} $(DBGFLAGS) $(INCLUDE_DIRS) -c -o $@ $<
 
 ${TMP_DIR}/particletracker.o: particletracker.cpp
-	$(COMPILER) ${CPPFLAGS} $(OPTFLAGS1) $(INCLUDE_DIRS) -c -o $@ $<
+	$(COMPILER) ${CPPFLAGS} $(DBGFLAGS) $(INCLUDE_DIRS) -c -o $@ $<
 
 ${TMP_DIR}/implicitE.o: implicitE.cpp
-	$(COMPILER) ${CPPFLAGS} $(OPTFLAGS1) $(INCLUDE_DIRS) -c -o $@ $<
+	$(COMPILER) ${CPPFLAGS} $(DBGFLAGS) $(INCLUDE_DIRS) -c -o $@ $<
 
 ${TMP_DIR}/parallel.o: parallel.cpp
-	$(COMPILER) ${CPPFLAGS} $(OPTFLAGS1) $(INCLUDE_DIRS) -c -o $@ $<
+	$(COMPILER) ${CPPFLAGS} $(DBGFLAGS) $(INCLUDE_DIRS) -c -o $@ $<
 
 ${TMP_DIR}/export.o: export.cpp
-	$(COMPILER) ${CPPFLAGS} $(OPTFLAGS1) $(INCLUDE_DIRS) -c -o $@ $<
+	$(COMPILER) ${CPPFLAGS} $(DBGFLAGS) $(INCLUDE_DIRS) -c -o $@ $<
 
 ${TMP_DIR}/main.o: main.cpp
-	$(COMPILER) ${CPPFLAGS} $(OPTFLAGS1) $(INCLUDE_DIRS) -c -o $@ $<		
+	$(COMPILER) ${CPPFLAGS} $(DBGFLAGS) $(INCLUDE_DIRS) -c -o $@ $<		
 	#

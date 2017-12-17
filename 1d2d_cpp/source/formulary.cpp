@@ -298,7 +298,7 @@ double Formulary::vth(double Te, string uT){
     Te /= Units("Energy", uT).d;
     return vth(Te);
 }
-//   Electron-ion self-collision time: NRL Formulary 2009, p.37
+//   Electron-ion collision time: NRL Formulary 2009, p.37
 double Formulary::Tau_i(double ne, double Te, double Zeta){
     return 2.09e+7*(pow(sqrt(Te/Zeta*Units("Energy","eV").d),3)/
             (ne*Units("Density","cgs").d*LOGei(ne,Te,Zeta))) /sqrt(me_over_mp);

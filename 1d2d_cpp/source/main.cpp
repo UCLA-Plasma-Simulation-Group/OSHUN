@@ -38,9 +38,10 @@
 // My libraries
 #include "lib-array.h"
 #include "lib-algorithms.h"
-#include "H5Cpp.h"
+
 #include "external/exprtk.hpp"
 #include "external/spline.h"
+#include "external/highfive/H5DataSet.hpp"
 
 // Misc Declerations
 #include "input.h"
