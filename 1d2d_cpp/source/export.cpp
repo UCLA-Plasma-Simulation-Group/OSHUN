@@ -4162,7 +4162,6 @@ void Output_Data::Output_Preprocessor::pypz(const State2D& Y, const Grid_Info& g
 
     for(int s(0); s < Y.Species(); ++s) 
     {
-
         int msg_sz(outNxLocal*outNyLocal*grid.axis.Npx(s)*grid.axis.Npy(s));
         Array4D<double> dataGlobal(grid.axis.Npx(s),grid.axis.Npy(s),outNxGlobal,outNyGlobal); 
         double pbuf[grid.axis.Npx(s)*grid.axis.Npy(s)*outNxLocal*outNyLocal];
@@ -4622,11 +4621,10 @@ void Output_Data::Output_Preprocessor::f0(const State1D& Y, const Grid_Info& gri
 
     for(int s(0); s < Y.Species(); ++s) 
     {
-
         int msg_sz(2*outNxLocal*f_x.Np(s));
         Array3D<double> f0x1Global(outNxGlobal,f_x.Np(s),2); 
 
-        vector<double> paxis(grid.axis.Np(s));
+        vector<double> paxis(valtovec(grid.axis.p(s)));
 
         double f0xbuf[msg_sz];
 
@@ -4640,10 +4638,6 @@ void Output_Data::Output_Preprocessor::f0(const State1D& Y, const Grid_Info& gri
 
                 f0xbuf[2*j+1+ 2*i*f_x.Np(s)]=data2D(j,1);
             }
-        }
-
-        for (size_t j(0); j < grid.axis.Np(s); ++j) {
-            paxis[j] = grid.axis.p(s)[j];
         }
 
         if (PE.MPI_Processes() > 1) {
@@ -4710,7 +4704,7 @@ void Output_Data::Output_Preprocessor::f10(const State1D& Y, const Grid_Info& gr
 
         int msg_sz(2*outNxLocal*f_x.Np(s));
         Array3D<double> f0x1Global(outNxGlobal,f_x.Np(s),2); //, yglob_axis.dim());
-        vector<double> paxis(grid.axis.Np(s));
+        vector<double> paxis(valtovec(grid.axis.p(s)));
 
         double f0xbuf[msg_sz];
 
@@ -4724,11 +4718,6 @@ void Output_Data::Output_Preprocessor::f10(const State1D& Y, const Grid_Info& gr
 
                 f0xbuf[2*j+1+ 2*i*f_x.Np(s)]=data2D(j,1);
             }
-        }
-
-
-        for (size_t j(0); j < grid.axis.Np(s); ++j) {
-            paxis[j] = grid.axis.p(s)[j];
         }
 
         if (PE.MPI_Processes() > 1) {
@@ -4793,7 +4782,7 @@ void Output_Data::Output_Preprocessor::f11(const State1D& Y, const Grid_Info& gr
 
         int msg_sz(2*outNxLocal*f_x.Np(s));
         Array3D<double> f0x1Global(outNxGlobal,f_x.Np(s),2); 
-        vector<double> paxis(grid.axis.Np(s));
+        vector<double> paxis(valtovec(grid.axis.p(s)));
 
         double f0xbuf[msg_sz];
 
@@ -4807,11 +4796,6 @@ void Output_Data::Output_Preprocessor::f11(const State1D& Y, const Grid_Info& gr
 
                 f0xbuf[2*j+1+ 2*i*f_x.Np(s)]=data2D(j,1);
             }
-        }
-
-
-        for (size_t j(0); j < grid.axis.Np(s); ++j) {
-            paxis[j] = grid.axis.p(s)[j];
         }
 
         if (PE.MPI_Processes() > 1) {
@@ -4878,7 +4862,7 @@ void Output_Data::Output_Preprocessor::f20(const State1D& Y, const Grid_Info& gr
         {
             int msg_sz(2*outNxLocal*f_x.Np(s));
             Array3D<double> f0x1Global(outNxGlobal,f_x.Np(s),2); //, yglob_axis.dim());
-            vector<double> paxis(grid.axis.Np(s));
+            vector<double> paxis(valtovec(grid.axis.p(s)));
             double f0xbuf[msg_sz];
 
             for (size_t i(0); i < outNxLocal; ++i) {
@@ -4890,11 +4874,6 @@ void Output_Data::Output_Preprocessor::f20(const State1D& Y, const Grid_Info& gr
                     f0xbuf[2*j+1+ 2*i*f_x.Np(s)]=data2D(j,1);
                 }
 
-            }
-
-            for (size_t j(0); j < grid.axis.Np(s); ++j) 
-            {
-                paxis[j] = grid.axis.p(s)[j];
             }
 
             if (PE.MPI_Processes() > 1) {
@@ -4960,7 +4939,7 @@ void Output_Data::Output_Preprocessor::fl0(const State1D& Y, const Grid_Info& gr
 
         int msg_sz(2*outNxLocal*f_x.Np(s));
         Array3D<double> f0x1Global(outNxGlobal,f_x.Np(s),2);
-        vector<double> paxis(grid.axis.Np(s));
+        vector<double> paxis(valtovec(grid.axis.p(s)));
 
         double f0xbuf[msg_sz];
 
@@ -4973,11 +4952,6 @@ void Output_Data::Output_Preprocessor::fl0(const State1D& Y, const Grid_Info& gr
                 f0xbuf[2*j+   2*i*f_x.Np(s)]=data2D(j,0);
                 f0xbuf[2*j+1+ 2*i*f_x.Np(s)]=data2D(j,1);
             }
-        }
-
-        for (size_t j(0); j < grid.axis.Np(s); ++j) 
-        {
-            paxis[j] = grid.axis.p(s)[j];
         }
 
         if (PE.MPI_Processes() > 1) {
@@ -5043,7 +5017,7 @@ void Output_Data::Output_Preprocessor::f0(const State2D& Y, const Grid_Info& gri
 
     for(int s(0); s < Y.Species(); ++s) {
         int msg_sz(2*outNxLocal*outNyLocal*f_x.Np(s));
-        Array4D<double> global(f_x.Np(s),outNxGlobal,outNyGlobal,2); //, yglob_axis.dim());
+        Array4D<double> global(outNxGlobal,outNyGlobal,f_x.Np(s),2); //, yglob_axis.dim());
         double buf[msg_sz];
         vector<double> paxis(valtovec(grid.axis.p(s)));
 
@@ -5073,8 +5047,8 @@ void Output_Data::Output_Preprocessor::f0(const State2D& Y, const Grid_Info& gri
                     for (size_t ix(0); ix < outNxLocal; ++ix) {
                         for (size_t iy(0); iy < outNyLocal; ++iy) {
                             for (size_t j(0); j < f_x.Np(s); ++j) {
-                                global(j, ix, iy, 0) = buf[i];
-                                global(j, ix, iy, 1) = buf[i+1];
+                                global(ix, iy, j, 0) = buf[i];
+                                global(ix, iy, j, 1) = buf[i+1];
                                 i+=2;
                             }
                         }
@@ -5088,8 +5062,8 @@ void Output_Data::Output_Preprocessor::f0(const State2D& Y, const Grid_Info& gri
                         for (size_t ix(0); ix < outNxLocal; ++ix) {
                             for (size_t iy(0); iy < outNyLocal; ++iy) {
                                 for (size_t j(0); j < f_x.Np(s); ++j) {
-                                    global(j, ix + outNxLocal * rankx, iy + outNyLocal * ranky, 0) = buf[i];
-                                    global(j, ix + outNxLocal * rankx, iy + outNyLocal * ranky, 1) = buf[i+1];
+                                    global(ix + outNxLocal * rankx, iy + outNyLocal * ranky, j, 0) = buf[i];
+                                    global(ix + outNxLocal * rankx, iy + outNyLocal * ranky, j, 1) = buf[i+1];
                                     i+=2;
                                 }
                             }
@@ -5102,8 +5076,8 @@ void Output_Data::Output_Preprocessor::f0(const State2D& Y, const Grid_Info& gri
                 for (size_t ix(0); ix < outNxLocal; ++ix) {
                     for (size_t iy(0); iy < outNyLocal; ++iy) {
                         for (size_t j(0); j < f_x.Np(s); ++j) {
-                            global(j, ix, iy, 0) = buf[i];
-                            global(j, ix, iy, 1) = buf[i+1];
+                            global(ix, iy, j, 0) = buf[i];
+                            global(ix, iy, j, 1) = buf[i+1];
                             i+=2;
                         }
                     }
@@ -5137,7 +5111,7 @@ void Output_Data::Output_Preprocessor::f0(const State2D& Y, const Grid_Info& gri
 
         for(int s(0); s < Y.Species(); ++s) {
             int msg_sz(2*outNxLocal*outNyLocal*f_x.Np(s));
-            Array4D<double> global(f_x.Np(s),outNxGlobal,outNyGlobal,2);
+            Array4D<double> global(outNxGlobal,outNyGlobal,f_x.Np(s),2);
             vector<double> paxis(valtovec(grid.axis.p(s)));
 
             double buf[msg_sz];
@@ -5164,8 +5138,8 @@ void Output_Data::Output_Preprocessor::f0(const State2D& Y, const Grid_Info& gri
                         for (size_t ix(0); ix < outNxLocal; ++ix) {
                             for (size_t iy(0); iy < outNyLocal; ++iy) {
                                 for (size_t j(0); j < f_x.Np(s); ++j) {
-                                    global(j, ix, iy, 0) = buf[i];
-                                    global(j, ix, iy, 1) = buf[i+1];
+                                    global(ix, iy, j, 0) = buf[i];
+                                    global(ix, iy, j, 1) = buf[i+1];
                                     i+=2;
                                 }
                             }
@@ -5179,8 +5153,8 @@ void Output_Data::Output_Preprocessor::f0(const State2D& Y, const Grid_Info& gri
                             for (size_t ix(0); ix < outNxLocal; ++ix) {
                                 for (size_t iy(0); iy < outNyLocal; ++iy) {
                                     for (size_t j(0); j < f_x.Np(s); ++j) {
-                                        global(j, ix + outNxLocal * rankx, iy + outNyLocal * ranky, 0) = buf[i];
-                                        global(j, ix + outNxLocal * rankx, iy + outNyLocal * ranky, 1) = buf[i+1];
+                                        global(ix + outNxLocal * rankx, iy + outNyLocal * ranky, j, 0) = buf[i];
+                                        global(ix + outNxLocal * rankx, iy + outNyLocal * ranky, j, 1) = buf[i+1];
                                         i+=2;
                                     }
                                 }
@@ -5193,8 +5167,8 @@ void Output_Data::Output_Preprocessor::f0(const State2D& Y, const Grid_Info& gri
                     for (size_t ix(0); ix < outNxLocal; ++ix) {
                         for (size_t iy(0); iy < outNyLocal; ++iy) {
                             for (size_t j(0); j < f_x.Np(s); ++j) {
-                                global(j, ix, iy, 0) = buf[i];
-                                global(j, ix, iy, 1) = buf[i+1];
+                                global(ix, iy, j, 0) = buf[i];
+                                global(ix, iy, j, 1) = buf[i+1];
                                 i+=2;
                             }
                         }
@@ -5227,7 +5201,7 @@ void Output_Data::Output_Preprocessor::f11(const State2D& Y, const Grid_Info& gr
 
     for(int s(0); s < Y.Species(); ++s) {
         int msg_sz(2*outNxLocal*outNyLocal*f_x.Np(s));
-        Array4D<double> global(f_x.Np(s),outNxGlobal,outNyGlobal,2);
+        Array4D<double> global(outNxGlobal,outNyGlobal,f_x.Np(s),2);
         double buf[msg_sz];
         vector<double> paxis(valtovec(grid.axis.p(s)));
 
@@ -5257,8 +5231,8 @@ void Output_Data::Output_Preprocessor::f11(const State2D& Y, const Grid_Info& gr
                     for (size_t ix(0); ix < outNxLocal; ++ix) {
                         for (size_t iy(0); iy < outNyLocal; ++iy) {
                             for (size_t j(0); j < f_x.Np(s); ++j) {
-                                global(j, ix, iy, 0) = buf[i];
-                                global(j, ix, iy, 1) = buf[i+1];
+                                global(ix, iy, j, 0) = buf[i];
+                                global(ix, iy, j, 1) = buf[i+1];
                                 i+=2;
                             }
                         }
@@ -5272,8 +5246,8 @@ void Output_Data::Output_Preprocessor::f11(const State2D& Y, const Grid_Info& gr
                         for (size_t ix(0); ix < outNxLocal; ++ix) {
                             for (size_t iy(0); iy < outNyLocal; ++iy) {
                                 for (size_t j(0); j < f_x.Np(s); ++j) {
-                                    global(j, ix + outNxLocal * rankx, iy + outNyLocal * ranky, 0) = buf[i];
-                                    global(j, ix + outNxLocal * rankx, iy + outNyLocal * ranky, 1) = buf[i+1];
+                                    global(ix + outNxLocal * rankx, iy + outNyLocal * ranky, j, 0) = buf[i];
+                                    global(ix + outNxLocal * rankx, iy + outNyLocal * ranky, j, 1) = buf[i+1];
                                     i+=2;
                                 }
                             }
@@ -5286,8 +5260,8 @@ void Output_Data::Output_Preprocessor::f11(const State2D& Y, const Grid_Info& gr
                 for (size_t ix(0); ix < outNxLocal; ++ix) {
                     for (size_t iy(0); iy < outNyLocal; ++iy) {
                         for (size_t j(0); j < f_x.Np(s); ++j) {
-                            global(j, ix, iy, 0) = buf[i];
-                            global(j, ix, iy, 1) = buf[i+1];
+                            global(ix, iy, j, 0) = buf[i];
+                            global(ix, iy, j, 1) = buf[i+1];
                             i+=2;
                         }
                     }
@@ -5323,7 +5297,7 @@ void Output_Data::Output_Preprocessor::f20(const State2D& Y, const Grid_Info& gr
 
     for(int s(0); s < Y.Species(); ++s) {
         int msg_sz(2*outNxLocal*outNyLocal*f_x.Np(s));
-        Array4D<double> global(f_x.Np(s),outNxGlobal,outNyGlobal,2); //, yglob_axis.dim());
+        Array4D<double> global(outNxGlobal,outNyGlobal,f_x.Np(s),2); //, yglob_axis.dim());
         double buf[msg_sz];
         vector<double> paxis(valtovec(grid.axis.p(s)));
 
@@ -5354,8 +5328,8 @@ void Output_Data::Output_Preprocessor::f20(const State2D& Y, const Grid_Info& gr
                     for (size_t ix(0); ix < outNxLocal; ++ix) {
                         for (size_t iy(0); iy < outNyLocal; ++iy) {
                             for (size_t j(0); j < f_x.Np(s); ++j) {
-                                global(j, ix, iy, 0) = buf[i];
-                                global(j, ix, iy, 1) = buf[i+1];
+                                global(ix, iy, j, 0) = buf[i];
+                                global(ix, iy, j, 1) = buf[i+1];
                                 i+=2;
                             }
                         }
@@ -5369,8 +5343,8 @@ void Output_Data::Output_Preprocessor::f20(const State2D& Y, const Grid_Info& gr
                         for (size_t ix(0); ix < outNxLocal; ++ix) {
                             for (size_t iy(0); iy < outNyLocal; ++iy) {
                                 for (size_t j(0); j < f_x.Np(s); ++j) {
-                                    global(j, ix + outNxLocal * rankx, iy + outNyLocal * ranky, 0) = buf[i];
-                                    global(j, ix + outNxLocal * rankx, iy + outNyLocal * ranky, 1) = buf[i+1];
+                                    global(ix + outNxLocal * rankx, iy + outNyLocal * ranky, j, 0) = buf[i];
+                                    global(ix + outNxLocal * rankx, iy + outNyLocal * ranky, j, 1) = buf[i+1];
                                     i+=2;
                                 }
                             }
@@ -5383,8 +5357,8 @@ void Output_Data::Output_Preprocessor::f20(const State2D& Y, const Grid_Info& gr
                 for (size_t ix(0); ix < outNxLocal; ++ix) {
                     for (size_t iy(0); iy < outNyLocal; ++iy) {
                         for (size_t j(0); j < f_x.Np(s); ++j) {
-                            global(j, ix, iy, 0) = buf[i];
-                            global(j, ix, iy, 1) = buf[i+1];
+                            global(ix, iy, j, 0) = buf[i];
+                            global(ix, iy, j, 1) = buf[i+1];
                             i+=2;
                         }
                     }
@@ -5420,7 +5394,7 @@ void Output_Data::Output_Preprocessor::fl0(const State2D& Y, const Grid_Info& gr
 
     for(int s(0); s < Y.Species(); ++s) {
         int msg_sz(2*outNxLocal*outNyLocal*f_x.Np(s));
-        Array4D<double> global(f_x.Np(s),outNxGlobal,outNyGlobal,2); //, yglob_axis.dim());
+        Array4D<double> global(outNxGlobal,outNyGlobal,f_x.Np(s),2); //, yglob_axis.dim());
         double buf[msg_sz];
         vector<double> paxis(valtovec(grid.axis.p(s)));
 
@@ -5450,8 +5424,8 @@ void Output_Data::Output_Preprocessor::fl0(const State2D& Y, const Grid_Info& gr
                     for (size_t ix(0); ix < outNxLocal; ++ix) {
                         for (size_t iy(0); iy < outNyLocal; ++iy) {
                             for (size_t j(0); j < f_x.Np(s); ++j) {
-                                global(j, ix, iy, 0) = buf[i];
-                                global(j, ix, iy, 1) = buf[i+1];
+                                global(ix, iy, j, 0) = buf[i];
+                                global(ix, iy, j, 1) = buf[i+1];
                                 i+=2;
                             }
                         }
@@ -5465,8 +5439,8 @@ void Output_Data::Output_Preprocessor::fl0(const State2D& Y, const Grid_Info& gr
                         for (size_t ix(0); ix < outNxLocal; ++ix) {
                             for (size_t iy(0); iy < outNyLocal; ++iy) {
                                 for (size_t j(0); j < f_x.Np(s); ++j) {
-                                    global(j, ix + outNxLocal * rankx, iy + outNyLocal * ranky, 0) = buf[i];
-                                    global(j, ix + outNxLocal * rankx, iy + outNyLocal * ranky, 1) = buf[i+1];
+                                    global(ix + outNxLocal * rankx, iy + outNyLocal * ranky, j, 0) = buf[i];
+                                    global(ix + outNxLocal * rankx, iy + outNyLocal * ranky, j, 1) = buf[i+1];
                                     i+=2;
                                 }
                             }
@@ -5479,8 +5453,8 @@ void Output_Data::Output_Preprocessor::fl0(const State2D& Y, const Grid_Info& gr
                 for (size_t ix(0); ix < outNxLocal; ++ix) {
                     for (size_t iy(0); iy < outNyLocal; ++iy) {
                         for (size_t j(0); j < f_x.Np(s); ++j) {
-                            global(j, ix, iy, 0) = buf[i];
-                            global(j, ix, iy, 1) = buf[i+1];
+                            global(ix, iy, j, 0) = buf[i];
+                            global(ix, iy, j, 1) = buf[i+1];
                             i+=2;
                         }
                     }

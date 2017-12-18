@@ -1787,7 +1787,4 @@ vector<self_collisions> collisions_2D::self(){
     return self_coll;
 
 }
-
-
-
 //*******************************************************************

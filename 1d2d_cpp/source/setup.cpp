@@ -476,8 +476,8 @@ void Setup_Y:: init_f0(size_t s, SHarmonic1D& h, const valarray<double>& p, cons
             // std::cout << "f0[" << p[k] << "] = " << exp(-1.0*pow((p[k])/alpha/sqrt(2.0*temperature[j]*mass),m)) << "\n";
             // 
             // Maxwell-Jutner distribution
-            if (Input::List().relativity) 
-                h(k,j) = coefftemp_relativistic*exp(-sqrt(1.0+p[k]*p[k])/temperature[j]);
+            // if (Input::List().relativity) 
+            //     h(k,j) = coefftemp_relativistic*exp(-sqrt(1.0+p[k]*p[k])/temperature[j]);
 
             // std::cout << "\n\n h(" << k << "," << j << ") = " << h(k,j) << "\n\n";
         }

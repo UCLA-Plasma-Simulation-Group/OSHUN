@@ -496,5 +496,4 @@ void Hydro_Advection_1D::operator()(const DistFunc1D& Din, const Hydro1D& hydro,
              G(0,i) = ( f(1,i) - f00) * g_r;
         }
     }
-
 //--------------------------------------------------------------
