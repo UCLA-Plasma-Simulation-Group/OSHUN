@@ -3195,7 +3195,7 @@ Spatial_Advection::Spatial_Advection(size_t Nl, size_t Nm,
             // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
             //      m = 0, l = 0
             // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-            fd1 = Din(0,0);                         fd1 = fd1.Dx();
+            fd1 = Din(0,0);                         fd1 = fd1.Dx(Input::List().dbydx_order);
             vtemp *= A1(0,0);                       Dh(1,0) += fd1.mpaxis(vtemp);
             vtemp /= A1(0,0);
         
@@ -3206,13 +3206,13 @@ Spatial_Advection::Spatial_Advection(size_t Nl, size_t Nm,
             vtemp *= B1[0];
             for (size_t il = 1; il < l0; ++il)
             {
-                fd1 = Din(il,1);                fd1 = fd1.Dy();
+                fd1 = Din(il,1);                fd1 = fd1.Dy(Input::List().dbydy_order);;
                 vtemp *= B2[il]/B1[il-1];       fd2 = fd1;      fd1 = fd1.mpaxis(vtemp);    Dh(il-1,0) += fd1.Re();
                 vtemp *= B1[il]/B2[il];                         fd2 = fd2.mpaxis(vtemp);    Dh(il+1,0) += fd2.Re();
 
                 // std::cout << "\n Checkpoint (" << il  << ")\n";   Dh.checknan(); std::cout << ".. passed \n";
             }
-            fd1 = Din(l0,1);                            fd1 = fd1.Dy();
+            fd1 = Din(l0,1);                            fd1 = fd1.Dy(Input::List().dbydy_order);;
             vtemp *= B2[l0]/B1[l0-1];                   fd1 = fd1.mpaxis(vtemp);    Dh(l0-1,0) += fd1.Re();
 
             vtemp *= 1.0/B2[l0];
@@ -3234,7 +3234,7 @@ Spatial_Advection::Spatial_Advection(size_t Nl, size_t Nm,
 
             // std::cout << "\n (l,m) = " << l << ", " << m << " \n";
 
-            fd1 = Din(l,m);     fd1 = fd1.Dx();  
+            fd1 = Din(l,m);     fd1 = fd1.Dx(Input::List().dbydx_order);  
 
             if (l == m)         // Diagonal, no l - 1
             {
@@ -3261,7 +3261,7 @@ Spatial_Advection::Spatial_Advection(size_t Nl, size_t Nm,
             l = nwsediag_il[id];
             m = nwsediag_im[id];
 
-            fd1 = Din(l,m);     fd1 = fd1.Dy();
+            fd1 = Din(l,m);     fd1 = fd1.Dy(Input::List().dbydy_order);;
 
             if (m == 0)         // Top or Left, no l - 1, m - 1
             {
@@ -3288,7 +3288,7 @@ Spatial_Advection::Spatial_Advection(size_t Nl, size_t Nm,
             l = neswdiag_il[id];
             m = neswdiag_im[id];
 
-            fd1 = Din(l,m);     fd1 = fd1.Dy();
+            fd1 = Din(l,m);     fd1 = fd1.Dy(Input::List().dbydy_order);;
 
             if (m == 0)         // Left wall, no l + 1, m - 1
             {
@@ -3342,7 +3342,7 @@ Spatial_Advection::Spatial_Advection(size_t Nl, size_t Nm,
 
                 // std::cout << "\n (l,m) = " << l << ", " << m << " \n";
 
-                fd1 = Din(l,m);     fd1 = fd1.Dx();  
+                fd1 = Din(l,m);     fd1 = fd1.Dx(Input::List().dbydx_order);  
 
                 if (l == m)         // Diagonal, no l - 1
                 {
@@ -3368,7 +3368,7 @@ Spatial_Advection::Spatial_Advection(size_t Nl, size_t Nm,
                 l = nwsediag_il[id];
                 m = nwsediag_im[id];
 
-                fd1 = Din(l,m);     fd1 = fd1.Dy();
+                fd1 = Din(l,m);     fd1 = fd1.Dy(Input::List().dbydy_order);;
 
                 if (m == 0)         // Top or Left, no l - 1, m - 1
                 {
@@ -3394,7 +3394,7 @@ Spatial_Advection::Spatial_Advection(size_t Nl, size_t Nm,
                 l = neswdiag_il[id];
                 m = neswdiag_im[id];
 
-                fd1 = Din(l,m);     fd1 = fd1.Dy();
+                fd1 = Din(l,m);     fd1 = fd1.Dy(Input::List().dbydy_order);;
 
                 if (m == 0)         // Left wall, no l + 1, m - 1
                 {
@@ -3442,7 +3442,7 @@ void Spatial_Advection::operator()(const DistFunc1D& Din, DistFunc1D& Dh)
         
         if (this_thread == 0)
         {
-            fd1 = Din(0,0);                         fd1 = fd1.Dx();
+            fd1 = Din(0,0);                         fd1 = fd1.Dx(Input::List().dbydx_order);
             vtemp *= A1(0,0);                       Dh(1,0) += fd1.mpaxis(vtemp);
             vtemp /= A1(0,0);
         }
@@ -3454,7 +3454,7 @@ void Spatial_Advection::operator()(const DistFunc1D& Din, DistFunc1D& Dh)
         {   
             l = dist_il[id];    m = dist_im[id];
             
-            fd1 = Din(l,m);     fd1 = fd1.Dx();
+            fd1 = Din(l,m);     fd1 = fd1.Dx(Input::List().dbydx_order);
 
             if (l == m)         // Diagonal, no l - 1
             {
@@ -3490,7 +3490,7 @@ void Spatial_Advection::operator()(const DistFunc1D& Din, DistFunc1D& Dh)
         {   
             l = dist_il[id];    m = dist_im[id];
 
-            fd1 = Din(l,m);     fd1 = fd1.Dx();
+            fd1 = Din(l,m);     fd1 = fd1.Dx(Input::List().dbydx_order);
 
             if (l == m)         // Diagonal, no l - 1
             {
@@ -3542,7 +3542,7 @@ void Spatial_Advection::es1d(const DistFunc1D& Din, DistFunc1D& Dh) {
         //  -------------------------------------------------------- //
         if (this_thread == 0)
         {
-            fd1 = Din(0,0);                         fd1 = fd1.Dx();
+            fd1 = Din(0,0);                         fd1 = fd1.Dx(Input::List().dbydx_order);
             vtemp *= A1(0,0);                       Dh(1,0) += fd1.mpaxis(vtemp);
             vtemp /= A1(0,0);
 
@@ -3551,7 +3551,7 @@ void Spatial_Advection::es1d(const DistFunc1D& Din, DistFunc1D& Dh) {
 
         if (this_thread == Input::List().ompthreads - 1)    
         {    
-            fd1 = Din(l0,0);                        fd1 = fd1.Dx();
+            fd1 = Din(l0,0);                        fd1 = fd1.Dx(Input::List().dbydx_order);
             vtemp *= A2(l0,0);                      Dh(l0-1,0) += fd1.mpaxis(vtemp);
             vtemp /= A2(l0,0);
 
@@ -3567,7 +3567,7 @@ void Spatial_Advection::es1d(const DistFunc1D& Din, DistFunc1D& Dh) {
         for (size_t l = f_start_thread; l < f_end_thread; ++l)
         {
             fd1 = Din(l,0);  //std::cout << "\n \n before dx, l = " << l << " \n";          
-            fd1 = fd1.Dx();  //std::cout << " \n after dx\n";
+            fd1 = fd1.Dx(Input::List().dbydx_order);  //std::cout << " \n after dx\n";
 
             vtemp *= A2(l,0)/A1(l-1,0);    fd2 = fd1;  Dh(l-1,0) += fd1.mpaxis(vtemp);
             vtemp *= A1(l,0)/A2(l  ,0);                Dh(l+1,0) += fd2.mpaxis(vtemp);
@@ -3589,7 +3589,7 @@ void Spatial_Advection::es1d(const DistFunc1D& Din, DistFunc1D& Dh) {
         for (size_t l = f_end[threadboundaries]; l < f_start[threadboundaries+1]; ++l)
         {   
             fd1 = Din(l,0);  //std::cout << "\n \n before dx, l = " << l << " \n";          
-            fd1 = fd1.Dx(); //std::cout << " \n after dx\n";
+            fd1 = fd1.Dx(Input::List().dbydx_order); //std::cout << " \n after dx\n";
 
             vtemp *= A2(l,0)/A1(l-1,0);    fd2 = fd1;  Dh(l-1,0) += fd1.mpaxis(vtemp);
             vtemp *= A1(l,0)/A2(l  ,0);                Dh(l+1,0) += fd2.mpaxis(vtemp);
@@ -3613,11 +3613,11 @@ void Spatial_Advection::f1only(const DistFunc1D& Din, DistFunc1D& Dh) {
     SHarmonic1D fd1(vr.size(),Din(0,0).numx()),fd2(vr.size(),Din(0,0).numx());
 
     fd1 = Din(0,0);
-    fd1 = fd1.Dx();     vtemp *= A00;
+    fd1 = fd1.Dx(Input::List().dbydx_order);     vtemp *= A00;
     Dh(1,0) += (fd1.mpaxis(vtemp));
 
     fd1 = Din(1,0);
-    fd1 = fd1.Dx();     vtemp *= A10/A00;
+    fd1 = fd1.Dx(Input::List().dbydx_order);     vtemp *= A10/A00;
     Dh(0,0) += (fd1.mpaxis(vtemp));
 
 }
@@ -3633,23 +3633,23 @@ void Spatial_Advection::f1only(const DistFunc2D& Din, DistFunc2D& Dh) {
     SHarmonic2D fd1(Din(0,0));
 
     fd1 = Din(0,0);
-    fd1 = fd1.Dx();     vtemp *= A00;
+    fd1 = fd1.Dx(Input::List().dbydx_order);     vtemp *= A00;
     Dh(1,0) += (fd1.mpaxis(vtemp));
 
     fd1 = Din(1,0);
-    fd1 = fd1.Dx();     vtemp *= A10/A00;
+    fd1 = fd1.Dx(Input::List().dbydx_order);     vtemp *= A10/A00;
     Dh(0,0) += (fd1.mpaxis(vtemp));
 
     //  - - - - - - - - - - - - - - - - - - - - - - - - - - -
     //       m = 0, advection in y
     //  - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    fd1 = Din(0,0);                 fd1 = fd1.Dy();
+    fd1 = Din(0,0);                 fd1 = fd1.Dy(Input::List().dbydy_order);;
     vtemp *= C1[0]/A10;             Dh(1,1) += fd1.mpaxis(vtemp);
 
     //  - - - - - - - - - - - - - - - - - - - - - - - - - - -
     //       m = 1, advection in y
     //  - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    fd1 = Din(1,1);        fd1 = fd1.Dy();
+    fd1 = Din(1,1);        fd1 = fd1.Dy(Input::List().dbydy_order);;
     
     vtemp *= B2[1]/C1[0];  fd1 = fd1.mpaxis(vtemp);  Dh(0,0) += fd1.Re();
 
@@ -3681,12 +3681,12 @@ void Faraday::operator()(EMF1D& EMFin, EMF1D& EMFh) {
 //      dBy/dt +=   dEz/dx       
     // tmpE                 = EMFin.Ez();
     tmpE                *= idx;
-    EMFh.By()           += tmpE.Dx();
+    EMFh.By()           += tmpE.Dx(Input::List().dbydx_order);
     
 //      dBz/dt += - dEy/dx       
     tmpE                 = EMFin.Ey();
     tmpE                *= (-1.0) * idx;
-    EMFh.Bz()           += tmpE.Dx();
+    EMFh.Bz()           += tmpE.Dx(Input::List().dbydx_order);
 
 }
 //--------------------------------------------------------------
@@ -3700,23 +3700,23 @@ void Faraday::operator()(EMF2D& EMFin, EMF2D& EMFh) {
 //      dBx/dt += - dEz/dy  
     // tmpE          = EMFin.Ez(); 
     tmpE         *= (-1.0) * idy;
-    EMFh.Bx()    += tmpE.Dy();
+    EMFh.Bx()    += tmpE.Dy(Input::List().dbydy_order);;
 
 //      dBy/dt +=   dEz/dx       
     tmpE                 = EMFin.Ez(); 
     tmpE                *= idx;
-    EMFh.By()           += tmpE.Dx();
+    EMFh.By()           += tmpE.Dx(Input::List().dbydx_order);
         // EMFh.By()(numx-1)    = 0.0;        
 
 //      dBz/dt +=   dEx/dy       
     tmpE          = EMFin.Ex(); 
     tmpE         *= idy;
-    EMFh.Bz()    += tmpE.Dy();    
+    EMFh.Bz()    += tmpE.Dy(Input::List().dbydy_order);;    
 
 //      dBz/dt += - dEy/dx       
     tmpE                 = EMFin.Ey(); 
     tmpE                *= (-1.0) * idx;
-    EMFh.Bz()           += tmpE.Dx();  
+    EMFh.Bz()           += tmpE.Dx(Input::List().dbydx_order);  
 
 }
 //--------------------------------------------------------------
@@ -3747,12 +3747,12 @@ void Ampere::operator()(EMF1D& EMFin, EMF1D& EMFh) {
 //      dEy/dt +=  - dBz/dx       
     // tmpB                 = EMFin.Bz();
     tmpB                *= (-1.0) * idx;
-    EMFh.Ey()           += tmpB.Dx();
+    EMFh.Ey()           += tmpB.Dx(Input::List().dbydx_order);
 
 //      dEz/dt += dBy/dx       
     tmpB                 = EMFin.By();
     tmpB                *=  idx;
-    EMFh.Ez()           += tmpB.Dx();    
+    EMFh.Ez()           += tmpB.Dx(Input::List().dbydx_order);    
 
 }
 //--------------------------------------------------------------
@@ -3765,22 +3765,22 @@ void Ampere::operator()(EMF2D& EMFin, EMF2D& EMFh) {
 //      dEx/dt +=   dBz/dy       
     // tmpB                 = EMFin.Bz(); 
     tmpB                *= idy;
-    EMFh.Ex()           += tmpB.Dy();
+    EMFh.Ex()           += tmpB.Dy(Input::List().dbydy_order);;
 
 //      dEy/dt +=  - dBz/dx       
     tmpB                 = EMFin.Bz(); 
     tmpB                *= (-1.0) * idx;
-    EMFh.Ey()           += tmpB.Dx();
+    EMFh.Ey()           += tmpB.Dx(Input::List().dbydx_order);
 
 //      dEz/dt +=  - dBx/dy       
     tmpB                 = EMFin.Bx(); 
     tmpB                *= (-1.0) * idy;
-    EMFh.Ez()           += tmpB.Dy();    
+    EMFh.Ez()           += tmpB.Dy(Input::List().dbydy_order);;    
 
 //      dEz/dt += dBy/dx       
     tmpB                 = EMFin.By(); 
     tmpB                *=  idx;
-    EMFh.Ez()           += tmpB.Dx();   
+    EMFh.Ez()           += tmpB.Dx(Input::List().dbydx_order);   
         // EMFh.Ez()(numx-1)    = 0.0;
 
 }

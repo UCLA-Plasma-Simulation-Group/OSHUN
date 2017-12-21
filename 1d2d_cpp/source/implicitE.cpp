@@ -544,12 +544,12 @@
 //      Jy = -dBz/dx       
         tmpJi    = emf.Bz(); 
         tmpJi   *= (-1.0) * idx;
-        JN.Jy_1D()  = tmpJi.Dx();  
+        JN.Jy_1D()  = tmpJi.Dx(Input::List().dbydx_order);  
 
 //      Jz += dBy/dx       
         tmpJi    = emf.By(); 
         tmpJi   *=  idx;
-        JN.Jz_1D() += tmpJi.Dx();   
+        JN.Jz_1D() += tmpJi.Dx(Input::List().dbydx_order);   
     }
 //--------------------------------------------------------------
 
@@ -763,22 +763,22 @@
 //      Jx =  dBz/dy       
         // tmpJi    = emf.Bz(); //(same as assignment above)
         tmpJi   *= idy;
-        JN.Jx_2D()  = tmpJi.Dy();
+        JN.Jx_2D()  = tmpJi.Dy(Input::List().dbydy_order);
 
 //      Jy = -dBz/dx       
         tmpJi    = emf.Bz(); 
         tmpJi   *= (-1.0) * idx;
-        JN.Jy_2D()  = tmpJi.Dx();  
+        JN.Jy_2D()  = tmpJi.Dx(Input::List().dbydx_order);  
 
 //      Jz = -dBx/dy       
         tmpJi    = emf.Bx(); 
         tmpJi   *= (-1.0) * idy;
-        JN.Jz_2D()  = tmpJi.Dy();    
+        JN.Jz_2D()  = tmpJi.Dy(Input::List().dbydy_order);    
 
 //      Jz += dBy/dx       
         tmpJi    = emf.By(); 
         tmpJi   *=  idx;
-        JN.Jz_2D() += tmpJi.Dx();   
+        JN.Jz_2D() += tmpJi.Dx(Input::List().dbydx_order);   
     }
 //--------------------------------------------------------------
 

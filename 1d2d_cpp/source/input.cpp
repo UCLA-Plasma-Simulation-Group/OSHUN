@@ -48,7 +48,9 @@ Input::Input_List::Input_List():
     dt(1.0),
     filterdistribution(0),filter_dp(0.0001),filter_pmax(0.0002),
     if_tridiagonal(1),
-    implicit_E(1),relativity(0),
+    implicit_E(1),
+    dbydx_order(2),dbydy_order(2),
+    relativity(0),
     implicit_B(0),
     collisions(1),
     f00_implicitorexplicit(2),
@@ -628,6 +630,22 @@ Input::Input_List::Input_List():
                 }
                 deckfile >> deckstringbool;
                 implicit_E = (deckstringbool[0] == 't' || deckstringbool[0] == 'T');
+            }
+            if (deckstring == "dbydx_order") {
+                deckfile >> deckequalssign;
+                if(deckequalssign != "=") {
+                    std::cout << "Error reading " << deckstring << std::endl;
+                    exit(1);
+                }
+                deckfile >> dbydx_order;
+            }
+            if (deckstring == "dbydy_order") {
+                deckfile >> deckequalssign;
+                if(deckequalssign != "=") {
+                    std::cout << "Error reading " << deckstring << std::endl;
+                    exit(1);
+                }
+                deckfile >> dbydy_order;
             }
             // if (deckstring == "relativistic_Vlasov") {
             //     deckfile >> deckequalssign;
@@ -2032,7 +2050,7 @@ Input::Input_List::Input_List():
         }
 
         // Determination of the local computational domain (i.e. the x-axis and the y-axis)
-        BoundaryCells = 4;
+        BoundaryCells = 12;
 
         /// Do X discretization
         for (size_t i(0); i < NxGlobal.size(); ++i){

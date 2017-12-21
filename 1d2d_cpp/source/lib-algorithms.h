@@ -988,8 +988,8 @@ namespace Algorithms {
         (*F_space)(Y0,Yh);      Yh *= xsi*h;                              //  x  = h * F_space(Y0)
         Y0 += Yh;
 
-        (*F_field)(Y0,Yh);      Yh *= xsi*h;                              //  x  = h * F_space(Y0)
-        Y0 += Yh;
+        // (*F_field)(Y0,Yh);      Yh *= xsi*h;                              //  x  = h * F_space(Y0)
+        // Y0 += Yh;
 
         (*F_momentum)(Y0,Yh);   Yh *= (1.0-2.0*lambda)*0.5*h;            //  p  = h * F_momentum(Y0)
         Y0 += Yh;                                   //  Y0 = Y0 + h*Yh
@@ -997,8 +997,8 @@ namespace Algorithms {
         (*F_space)(Y0,Yh);      Yh *= chi*h;                              //  x  = h * F_space(Y0)
         Y0 += Yh;
 
-        (*F_field)(Y0,Yh);      Yh *= chi*h;                              //  x  = h * F_space(Y0)
-        Y0 += Yh;
+        // (*F_field)(Y0,Yh);      Yh *= chi*h;                              //  x  = h * F_space(Y0)
+        // Y0 += Yh;
 
         (*F_momentum)(Y0,Yh);   Yh *= lambda*h;             //  p  = h * F_momentum(Y0)
         Y0 += Yh;                                           //  Y0 = Y0 + h*Yh
@@ -1006,8 +1006,8 @@ namespace Algorithms {
         (*F_space)(Y0,Yh);      Yh *= (1.0-2.0*(chi+xsi))*h;                              //  x  = h * F_space(Y0)
         Y0 += Yh;
 
-        (*F_field)(Y0,Yh);      Yh *= (1.0-2.0*(chi+xsi))*h;                              //  x  = h * F_space(Y0)
-        Y0 += Yh;
+        // (*F_field)(Y0,Yh);      Yh *= (1.0-2.0*(chi+xsi))*h;                              //  x  = h * F_space(Y0)
+        // Y0 += Yh;
 
         (*F_momentum)(Y0,Yh);   Yh *= lambda*h;             //  p  = h * F_momentum(Y0)
         Y0 += Yh;                                           //  Y0 = Y0 + h*Yh
@@ -1015,8 +1015,8 @@ namespace Algorithms {
         (*F_space)(Y0,Yh);      Yh *= chi*h;                              //  x  = h * F_space(Y0)
         Y0 += Yh;
 
-        (*F_field)(Y0,Yh);      Yh *= chi*h;                              //  x  = h * F_space(Y0)
-        Y0 += Yh;
+        // (*F_field)(Y0,Yh);      Yh *= chi*h;                              //  x  = h * F_space(Y0)
+        // Y0 += Yh;
 
         (*F_momentum)(Y0,Yh);   Yh *= (1.0-2.0*lambda)*0.5*h;            //  p  = h * F_momentum(Y0)
         Y0 += Yh;
@@ -1024,7 +1024,10 @@ namespace Algorithms {
         (*F_space)(Y0,Yh);      Yh *= xsi*h;                              //  x  = h * F_space(Y0)
         Y0 += Yh;
 
-        (*F_field)(Y0,Yh);      Yh *= xsi*h;                              //  x  = h * F_space(Y0)
+        // (*F_field)(Y0,Yh);      Yh *= xsi*h;                              //  x  = h * F_space(Y0)
+        // Y0 += Yh;        
+
+        (*F_field)(Y0,Yh);      Yh *= h;                              //  x  = h * F_space(Y0)
         Y0 += Yh;        
         
         Y = Y0;

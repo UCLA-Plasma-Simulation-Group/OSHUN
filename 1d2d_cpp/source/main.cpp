@@ -347,7 +347,9 @@ int main(int argc, char** argv) {
             { 
                 std::cout << "Starting Fully-Explicit, 1D OSHUN\n";
             }
+            
             Algorithms::RK4<State1D> RK(Y);
+            // Algorithms::PEFRL<State1D> MAGIC(Y);
             // --------------------------------------------------------------------------------------------------------------------------------
             // --------------------------------------------------------------------------------------------------------------------------------
             // --------------------------------------------------------------------------------------------------------------------------------
@@ -356,6 +358,18 @@ int main(int argc, char** argv) {
             VlasovFunctor1D_explicitE rkF(Input::List().ls, Input::List().ms, 
                                                             Input::List().dp,
                                           grid.axis.xmin(0), grid.axis.xmax(0), grid.axis.Nx(0));
+
+            // VlasovFunctor1D_spatialAdvection SA(Input::List().ls, Input::List().ms, 
+            //                                                 Input::List().dp,
+            //                               grid.axis.xmin(0), grid.axis.xmax(0), grid.axis.Nx(0));
+
+            // VlasovFunctor1D_fieldUpdate FU(Input::List().ls, Input::List().ms, 
+            //                                                 Input::List().dp,
+            //                               grid.axis.xmin(0), grid.axis.xmax(0), grid.axis.Nx(0));
+
+            // VlasovFunctor1D_momentumAdvection PA(Input::List().ls, Input::List().ms, 
+            //                                                 Input::List().dp,
+            //                               grid.axis.xmin(0), grid.axis.xmax(0), grid.axis.Nx(0));
 
             // --------------------------------------------------------------------------------------------------------------------------------
             for (size_t t_out(tout_start + 1); t_out < n_outsteps + 1; ++t_out) {
@@ -383,7 +397,7 @@ int main(int argc, char** argv) {
                     
                     // std::cout << " done\n";
                     // Y = LEAPs(Y, W.h(), &SA, &PA, &FU);                                                 ///  Vlasov          //
-                    // Y = MAGIC(Y, W.h(), &SA, &PA);                                                 ///  Vlasov          //
+                    // Y = MAGIC(Y, W.h(), &SA, &PA, &FU);                                                 ///  Vlasov          //
                     
                     // std::cout << "Fokker-Planck ... ";
                     if (Input::List().collisions)

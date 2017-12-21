@@ -52,7 +52,9 @@ namespace Input{
 
 //          Algorithms
         bool if_tridiagonal;
-        bool implicit_E, relativity;
+        bool implicit_E;
+        size_t dbydx_order, dbydy_order;
+        bool relativity;
         bool implicit_B;
         bool collisions;
         int f00_implicitorexplicit;
