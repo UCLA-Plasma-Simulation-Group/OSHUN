@@ -534,27 +534,23 @@ template<class T> Array2D<T>& Array2D<T>::Dd1_4th_order(){
 
     Array2D<T> temp(*this);
 
-    for (long i2(0); i2<long(d2);++i2){
+    double onesixth(2.0/12.0);
 
+    for (long i2(0); i2<long(d2);++i2)
+    {
+        temp(0,i2) = -2.0*((*this)(1,i2)-(*this)(0,i2));
+        temp(1,i2) = -1.0*((*this)(2,i2)-(*this)(0,i2));
 
-        /// Second Order
-        temp(0,i2) = 2.0*((*this)(0,i2)-(*this)(1,i2));
-        
-        temp(1,i2) = 2.0/12.0*((*this)(4,i2)-6.0*(*this)(3,i2)+18.0*(*this)(2,i2)-10.0*(*this)(1,i2)-3.0*(*this)(0,i2));
-        
-        for (long i1(1); i1<long(d1)-1;++i1){
-            temp(i1,i2) = 2.0/12.0*(-(*this)(i1+2,i2)+8.0*(*this)(i1+1,i2)-8.0*(*this)(i1-1,i2)+(*this)(i1-2,i2));
-            
-            /// Second Order
-            // temp(i1,i2) = (*this)(i1-1,i2) - (*this)(i1+1,i2);
+        for (long i1(2); i1<long(d1)-2;++i1)
+        {
+            temp(i1,i2) = -onesixth*(-(*this)(i1+2,i2)+8.0*(*this)(i1+1,i2)-8.0*(*this)(i1-1,i2)+(*this)(i1-2,i2));
         }
-
-        temp(long(d1)-2,i2) = 2.0/12.0*(3.0*(*this)(long(d1)-1,i2)+10.0*(*this)(long(d1)-2,i2)-18.0*(*this)(long(d1)-3,i2)+6.0*(*this)(long(d1)-4,i2)-(*this)(long(d1)-5,i2));
-        /// Second Order
-        temp(long(d1)-1,i2) = 2.0*((*this)(long(d1)-2,i2)-(*this)(long(d1)-1,i2));
+        
+        temp(long(d1)-2,i2) = -1.0*((*this)(long(d1)-1,i2)-(*this)(long(d1)-3,i2));
+        temp(long(d1)-1,i2) = -2.0*((*this)(long(d1)-1,i2)-(*this)(long(d1)-2,i2));
    }
 
-   *this = temp;
+   *this = temp; 
     return *this;
 
 }
@@ -567,24 +563,20 @@ template<class T> Array2D<T>& Array2D<T>::Dd1_4th_order(){
 template<class T> Array2D<T>& Array2D<T>::Dd2_4th_order(){
     Array2D<T> temp(*this);
 
-    for (long i1(0); i1<long(d1);++i1){
-   //      /// Second Order
-        temp(i1,0) = 2.0*((*this)(i1,0)-(*this)(i1,1));
-   //      // std::cout << "this(" << i1 << ")" << (*this)(i1,0) << "\n";
-   //      // std::cout << "temp(" << i1 << ")" << temp(i1,0) << "\n";
-        temp(i1,1) = 2.0/12.0*((*this)(i1,4)-6.0*(*this)(i1,3)+18.0*(*this)(i1,2)-10.0*(*this)(i1,1)-3.0*(*this)(i1,0));
+    double onesixth(2.0/12.0);
 
+    for (long i1(0); i1<long(d1);++i1)
+    {
+        temp(i1,0) = -2.0*((*this)(i1,1)-(*this)(i1,0));
+        temp(i1,1) = -1.0*((*this)(i1,2)-(*this)(i1,0));
 
         for (long i2(2); i2<long(d2)-2;++i2)
         {
-            temp(i1,i2) = 2.0/12.0*(-(*this)(i1,i2+2)+8.0*(*this)(i1,i2+1)-8.0*(*this)(i1,i2-1)+(*this)(i1,i2-2));
-   //          // std::cout << "this(" << i1 << "," << i2 << ")" << (*this)(i1,i2) << "\n";
+            temp(i1,i2) = -onesixth*(-(*this)(i1,i2+2)+8.0*(*this)(i1,i2+1)-8.0*(*this)(i1,i2-1)+(*this)(i1,i2-2));
         }
-        temp(i1,long(d2)-2) = 2.0/12.0*(3.0*(*this)(i1,long(d2)-1)+10.0*(*this)(i1,long(d2)-2)-18.0*(*this)(i1,long(d2)-3)+6.0*(*this)(i1,long(d2)-4)-(*this)(i1,long(d2)-5));
-        
-   //      /// Second Order
-        temp(i1,long(d2)-1) = 2.0*((*this)(i1,long(d2)-2)-(*this)(i1,long(d2)-1));
-   //      // std::cout << "this(" << i1 << "," << long(d2)-1 << ")" << (*this)(i1,long(d2)-1) << "\n";
+
+        temp(i1,long(d2)-2) = -1.0*((*this)(i1,long(d2)-1)-(*this)(i1,long(d2)-3));
+        temp(i1,long(d2)-1) = -2.0*((*this)(i1,long(d2)-1)-(*this)(i1,long(d2)-2));
    }
 
    *this = temp; 
@@ -1381,26 +1373,25 @@ template<class T> Array3D<T>& Array3D<T>::Dd1(){
 // (minus) Central difference in the d2 direction
 template<class T> Array3D<T>& Array3D<T>::Dd2_4th_order(){
     Array3D<T> temp(*this);
+    double onesixth(2.0/12.0);
 
-    for (long i1(0); i1<long(d1);++i1){
-        for (long i3(0); i3<long(d3);++i3){
-   //      /// Second Order
-        temp(i1,0,i3) = 2.0*((*this)(i1,0,i3)-(*this)(i1,1,i3));
-   //      // std::cout << "this(" << i1 << ")" << (*this)(i1,0) << "\n";
-   //      // std::cout << "temp(" << i1 << ")" << temp(i1,0) << "\n";
+    for (long i1(0); i1<long(d1);++i1)
+    {
+        for (long i3(0); i3<long(d3);++i3)
+        {
+            /// Second Order
+            temp(i1,0,i3) = -2.0*((*this)(i1,1,i3)-(*this)(i1,0,i3));
+            temp(i1,1,i3) = -1.0*((*this)(i1,2,i3)-(*this)(i1,0,i3));
+            
+            for (long i2(2); i2<long(d2)-2;++i2)
+            {
+                temp(i1,i2,i3) = -onesixth*(-(*this)(i1,i2+2,i3)+8.0*(*this)(i1,i2+1,i3)-8.0*(*this)(i1,i2-1,i3)+(*this)(i1,i2-2,i3));
+            }
+            
+            /// Second Order
+            temp(i1,long(d2)-2,i3) = -1.0*((*this)(i1,long(d2)-1,i3)-(*this)(i1,long(d2)-3,i3));        
+            temp(i1,long(d2)-1,i3) = -2.0*((*this)(i1,long(d2)-1,i3)-(*this)(i1,long(d2)-2,i3));
 
-        temp(i1,1,i3) = 2.0/12.0*((*this)(i1,4,i3)-6.0*(*this)(i1,3,i3)+18.0*(*this)(i1,2,i3)-10.0*(*this)(i1,1,i3)-3.0*(*this)(i1,0,i3));
-        for (long i2(2); i2<long(d2)-2;++i2){
-            temp(i1,i2,i3) = 2.0/12.0*(-(*this)(i1,i2+2,i3)+8.0*(*this)(i1,i2+1,i3)-8.0*(*this)(i1,i2-1,i3)+(*this)(i1,i2-2,i3));
-   //          /// Second Order
-   //          temp(i1,i2) = (*this)(i1,i2-1) - (*this)(i1,i2+1);
-   //          // std::cout << "this(" << i1 << "," << i2 << ")" << (*this)(i1,i2) << "\n";
-        }
-        temp(i1,long(d2)-2,i3) = 2.0/12.0*(3.0*(*this)(i1,long(d2)-1,i3)+10.0*(*this)(i1,long(d2)-2,i3)-18.0*(*this)(i1,long(d2)-3,i3)+6.0*(*this)(i1,long(d2)-4,i3)-(*this)(i1,long(d2)-5,i3));
-        // temp(i1,long(d2)-1) = (*this)(i1,long(d2)-1)-(*this)(i1,long(d2)-2);
-   //      /// Second Order
-        temp(i1,long(d2)-1,i3) = 2.0*((*this)(i1,long(d2)-2,i3)-(*this)(i1,long(d2)-1,i3));
-   //      // std::cout << "this(" << i1 << "," << long(d2)-1 << ")" << (*this)(i1,long(d2)-1) << "\n";
         }
     }
 
@@ -1437,26 +1428,26 @@ template<class T> Array3D<T>& Array3D<T>::Dd3_2nd_order() {
 template<class T> Array3D<T>& Array3D<T>::Dd3_4th_order(){
     Array3D<T> temp(*this);
 
-    for (long i1(0); i1<long(d1);++i1){
-        for (long i2(0); i2<long(d2);++i2){
-   //      /// Second Order
-        temp(i1,i2,0) = 2.0*((*this)(i1,i2,0)-(*this)(i1,i2,0));
-   //      // std::cout << "this(" << i1 << ")" << (*this)(i1,0) << "\n";
-   //      // std::cout << "temp(" << i1 << ")" << temp(i1,0) << "\n";
+double onesixth(2.0/12.0);
 
-        temp(i1,i2,0) = 2.0/12.0*((*this)(i1,i2,4)-6.0*(*this)(i1,i2,3)+18.0*(*this)(i1,i2,2)-10.0*(*this)(i1,i2,1)-3.0*(*this)(i1,i2,0));
-        for (long i3(2); i3<long(d3)-2;++i3){
-            temp(i1,i2,i3) = 2.0/12.0*(-(*this)(i1,i2,i3+2)+8.0*(*this)(i1,i2,i3+1)-8.0*(*this)(i1,i2,i3-1)+(*this)(i1,i2,i3-2));
-   //          /// Second Order
-   //          temp(i1,i2) = (*this)(i1,i2-1) - (*this)(i1,i2+1);
-   //          // std::cout << "this(" << i1 << "," << i2 << ")" << (*this)(i1,i2) << "\n";
-        }
-        temp(i1,i2,long(d3)-2) = 2.0/12.0*(3.0*(*this)(i1,i2,long(d3)-1)+10.0*(*this)(i1,i2,long(d3)-2)-18.0*(*this)(i1,i2,long(d3)-3)+6.0*(*this)(i1,i2,long(d3)-4)-(*this)(i1,i2,long(d3)-5));
-        // temp(i1,long(d2)-1) = (*this)(i1,long(d2)-1)-(*this)(i1,long(d2)-2);
-   //      /// Second Order
-        temp(i1,i2,long(d3)-1) = 2.0*((*this)(i1,i2,long(d3)-2)-(*this)(i1,i2,long(d3)-1));
-   //      // std::cout << "this(" << i1 << "," << long(d2)-1 << ")" << (*this)(i1,long(d2)-1) << "\n";
-        }
+    for (long i1(0); i1<long(d1);++i1)
+    {
+        for (long i2(0); i2<long(d2);++i2)
+        {
+            /// Second Order
+            temp(i1,i2,0) = -2.0*((*this)(i1,i2,1)-(*this)(i1,i2,0));
+            temp(i1,i2,1) = -1.0*((*this)(i1,i2,2)-(*this)(i1,i2,0));
+            
+            for (long i3(2); i3<long(d3)-2;++i3)
+            {
+                temp(i1,i2,i3) = -onesixth*(-(*this)(i1,i2,i3+2)+8.0*(*this)(i1,i2,i3+1)-8.0*(*this)(i1,i2,i3-1)+(*this)(i1,i2,i3-2));
+            }
+            
+            /// Second Order
+            temp(i1,i2,long(d3)-2) = -1.0*((*this)(i1,i2,long(d3)-1)-(*this)(i1,i2,long(d3)-3));        
+            temp(i1,i2,long(d3)-1) = -2.0*((*this)(i1,i2,long(d3)-1)-(*this)(i1,i2,long(d3)-2));
+            
+            }
     }
 
 
