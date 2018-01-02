@@ -110,7 +110,8 @@ small_dt                            = 0.01
 smaller_dt                          = 0.01
 f00_exp_parabolic_approximation	    = 4
 
-
+dbydx_order 						= 2
+dbydy_order 						= 2
 
 //-----------------------------------------------------------------------
 // Boundary type (default periodic)
