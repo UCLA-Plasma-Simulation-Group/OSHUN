@@ -46,6 +46,7 @@
 // Misc Declerations
 #include "input.h"
 #include "state.h"
+#include "clock.h"
 #include "formulary.h"
 #include "setup.h"
 #include "fluid.h"
@@ -140,7 +141,7 @@ int main(int argc, char** argv) {
 
     ///////////////////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////
-    /////////     MAIN LOOP FOR 1D CODE                                         ///////
+    /////////     MAIN LOOP                                                      ///////
     /////////       CONTAINS AN IF STATEMENT FOR EXPLICIT OR IMPLICIT E SOLVER  ///////
     ///////////////////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////
@@ -155,9 +156,13 @@ int main(int argc, char** argv) {
         if (PE.RANK() == 0) {
             Export_Files::Folders();
         }
-    
+    // --------------------------------------------------------------------------------------------------------------------------------
+    // --------------------------------------------------------------------------------------------------------------------------------
     ///  Set up the grid
     ///    Moves all of the relevant data from the input deck into a single container
+    ///
+    // --------------------------------------------------------------------------------------------------------------------------------
+    // --------------------------------------------------------------------------------------------------------------------------------
         if (!PE.RANK()) std::cout << "\nInitializing grid ...";
         Grid_Info grid(Input::List().ls, Input::List().ms,
                         Input::List().xminLocal, Input::List().xmaxLocal, Input::List().NxLocal,
@@ -168,20 +173,46 @@ int main(int argc, char** argv) {
                         // Input::List().Npx, Input::List().Npy, Input::List().Npz);
         if (!PE.RANK()) std::cout << "     done \n";
         
-    ///  Clock
+    // --------------------------------------------------------------------------------------------------------------------------------
+    // --------------------------------------------------------------------------------------------------------------------------------
+    ///  CLOCK
+    // --------------------------------------------------------------------------------------------------------------------------------
+    // --------------------------------------------------------------------------------------------------------------------------------
         int tout_start;
-        if (Input::List().isthisarestart) tout_start = Input::List().restart_time;
-        else  tout_start = 0;
+        if (Input::List().isthisarestart) 
+        {
+            tout_start = Input::List().restart_time;
+        }
+        else
+        {
+            tout_start = 0;
+        }
+        size_t t_out(tout_start+1);
+        double start_time(0.);
     
         double dt_out(Input::List().t_stop / Input::List().n_outsteps);
         double CLF(Input::List().dt);
         size_t n_outsteps(Input::List().n_outsteps);
         double numh  = size_t(static_cast<int>(dt_out/CLF))+1;
         double h     = dt_out/static_cast<double>(numh);
-    
+
+        // double dt_out(Input::List().t_stop / Input::List().n_outsteps);
+        double dt_dist_out(Input::List().t_stop / Input::List().n_distoutsteps);
+        double dt_big_dist_out(Input::List().t_stop / Input::List().n_bigdistoutsteps);
+        double dt_restart(Input::List().t_stop / Input::List().n_restarts);
+        
+        double next_out(dt_out);
+        double next_dist_out(dt_dist_out);
+        double next_big_dist_out(dt_big_dist_out);
+
+        double next_restart(dt_restart);
+
+    // --------------------------------------------------------------------------------------------------------------------------------
+    // --------------------------------------------------------------------------------------------------------------------------------
     ///  INITIALIZATION
-        
-        
+    // --------------------------------------------------------------------------------------------------------------------------------
+    // --------------------------------------------------------------------------------------------------------------------------------
+    
         if (!PE.RANK()) std::cout << "Initializing restart environment ...";
         Export_Files::Restart_Facility Re(PE.RANK());
         if (!PE.RANK()) std::cout << "     done \n";
@@ -194,21 +225,15 @@ int main(int argc, char** argv) {
             Input::List().numparticles, Input::List().particlemass, Input::List().particlecharge);
         if (!PE.RANK()) std::cout << "     done \n";
     
-    
-        // Y = 0.0;
-    
         if (!PE.RANK()) std::cout << "Initializing plasma profile ...";
         Setup_Y::initialize(Y, grid);
         if (!PE.RANK()) std::cout << "     done \n";
         
 
         if (!PE.RANK()) std::cout << "Initializing collision module ...";
-        collisions_1D collide(Y,h);
+        collisions_1D collide(Y);
         if (!PE.RANK()) std::cout << "     done \n";    
         
-
-    //    InverseBremsstrahlung IB(Y.DF(0).pmax(),Y.SH(0,0,0).nump(),Y.SH(0,0,0).numx(),tout_start,grid.axis.x(0));
-    //    
         if (!PE.RANK()) std::cout << "Initializing hydro module ...";
         Hydro_Functor         HydroFunc(grid.axis.xmin(0), grid.axis.xmax(0), grid.axis.Nx(0));
         if (!PE.RANK()) std::cout << "     done \n";
@@ -217,18 +242,10 @@ int main(int argc, char** argv) {
         Particle_Pusher       Particle_Push(Input::List().par_xpos, Input::List().par_px, Input::List().par_py,  Input::List().par_pz,
             Input::List().xminLocalnobnd[0], Input::List().xmaxLocalnobnd[0], Input::List().NxLocalnobnd[0], Y.particles());
         if (!PE.RANK()) std::cout << "     done \n";
-        
-    
-        // if (!PE.RANK()) std::cout << "Initializing time integrator ...";
-        // Algorithms::RK4<State1D> RK(Y);
-        // if (!PE.RANK()) std::cout << "     done \n";
-    
-        // Algorithms::LEAPs<State1D> LEAPs(Y);
-        // Algorithms::PEFRL<State1D> MAGIC(Y);
     
         if (Input::List().isthisarestart){
             if (!PE.RANK()) std::cout << "Reading restart files ...";
-            Re.Read(PE.RANK(),tout_start,Y);
+            Re.Read(PE.RANK(),tout_start,Y,start_time);
             if (!PE.RANK()) std::cout << "     done \n";
         }
         
@@ -237,12 +254,12 @@ int main(int argc, char** argv) {
         if (!PE.RANK()) std::cout << "     done \n";
         
         if (!PE.RANK()) std::cout << "Output #0 ...";    
-        output( Y, grid, tout_start, PE );
+        output( Y, grid, tout_start, start_time, Input::List().dt, PE );
         if (!PE.RANK()) std::cout << "     done \n";
     
         if (!PE.RANK()) std::cout << "Distribution function output #0 ...";    
-        output.distdump(Y, grid, tout_start, PE );
-        output.bigdistdump(Y, grid, tout_start, PE );
+        output.distdump(Y, grid, tout_start, start_time, Input::List().dt, PE );
+        output.bigdistdump(Y, grid, tout_start, start_time, Input::List().dt, PE );
         if (!PE.RANK()) std::cout << "     done \n";
     
         double plasmaperiod;
@@ -287,58 +304,82 @@ int main(int argc, char** argv) {
                 exit(0);
             }
             
-            for (size_t t_out(tout_start + 1); t_out < n_outsteps + 1; ++t_out) {
-                // --------------------------------------------------------------------------------------------------------------------------------
-                for (Clock W(t_out - 1, dt_out, CLF); W.tick() < W.numh(); ++W) {
-                    // --------------------------------------------------------------------------------------------------------------------------------
-                    // if (!(PE.RANK())) {
-                        // cout << "Time = " <<  W.time()<< "\n";
-                        // printf("\r Time = %4.4f tau_p = %4.4f fs", W.time(), W.time() * plasmaperiod);
-                        // fflush(stdout);
-                    // }
-                    // --------------------------------------------------------------------------------------------------------------------------------
-                    // --------------------------------------------------------------------------------------------------------------------------------
-                    // --------------------------------------------------------------------------------------------------------------------------------
-                    // --------------------------------------------------------------------------------------------------------------------------------
-                    //                                   the guts
-                    // --------------------------------------------------------------------------------------------------------------------------------
-                    if (Input::List().ext_fields) Setup_Y::applyexternalfields(grid, Y, W.time());
-                    if (Input::List().trav_wave) Setup_Y::applytravelingwave(grid, Y, W.time(), W.h());
-                    
-                    Y = RK(Y, W.h(),
-                           &impE_p1_Functor);                                                             /// Vlasov - Updates the distribution function: Spatial Advection and B Field "action".
-                    PE.Neighbor_ImplicitE_Communications(Y);                                            /// Boundaries
-                    eim.advance(&RK, Y, collide,
-                                &impE_p2_Functor);                                                 /// Finds new electric field
-                    Y = RK(Y, W.h(),
-                           &impE_p2_Functor);                                                             /// Uses new electric field to push distribution functions
-                    
-                    // std:: cout << "\n 10 \n";
-                    collide.advance(Y,W);
-                    // std:: cout << "\n 11 \n";                                                                             /// Fokker-Planck
-//                    if (Input::List().inverse_bremsstrahlung)
-//                        IB.loop(Y.SH(0, 0, 0), Y.HYDRO().Zarray(), W.time());     /// Explicit IB heating for f00
-                    if (Input::List().hydromotion)
-                        Y = RK(Y, W.h(), &HydroFunc);                                      /// Hydro Motion
-                    // Y.checknan();                                                                                /// Error Checking
-                    PE.Neighbor_Communications(
-                            Y);                                                                  /// Boundaries
             
-                    // --------------------------------------------------------------------------------------------------------------------------------
-                    // --------------------------------------------------------------------------------------------------------------------------------
-                    // --------------------------------------------------------------------------------------------------------------------------------
-                    // --------------------------------------------------------------------------------------------------------------------------------
-                    // --------------------------------------------------------------------------------------------------------------------------------
+            // Algorithms::RKCK54<State1D> RK54(Y);
+            // Algorithms::RK4<State1D> RK(Y);
+            // State1D Y_star(Y), Y_old(Y);
+            // bool success(false);
+
+            Stepper step(start_time,Input::List().dt,Input::List().abs_tol,Input::List().rel_tol,Input::List().max_fails);
+
+            for(step; step.time() < Input::List().t_stop; ++step)
+            {
+                if (Input::List().ext_fields) Setup_Y::applyexternalfields(grid, Y, step.time());
+
+                // Y_old = Y;
+
+                // while(!success)
+                // {
+                //     RK54(Y_star,Y,step.dt(),&impE_p1_Functor);
+                //     success = step.update_dt(Y_old,Y_star, Y);
+                // }
+                
+                Y = RK(Y, step.dt(), &impE_p1_Functor);                                                             /// Vlasov - Updates the distribution function: Spatial Advection and B Field "action".
+                PE.Neighbor_ImplicitE_Communications(Y);                                                            /// Boundaries
+                eim.advance(&RK, Y, collide,&impE_p2_Functor, step.dt());                                           /// Finds new electric field
+                Y = RK(Y, step.dt(), &impE_p2_Functor);         
+
+                if (Input::List().collisions)
+                    collide.advance(Y,step.time(),step.dt());                                               ///  Fokker-Planck   //
+
+                // if (Input::List().hydromotion)
+                //     Y = RK(Y, step.dt(), &HydroFunc);                                      /// Hydro Motion
+
+                if (Input::List().trav_wave) Setup_Y::applytravelingwave(grid, Y, step.time(), step.dt());
+
+                PE.Neighbor_Communications(Y);                                         ///  Boundaries      //
+                // --------------------------------------------------------------------------------------------------------------------------------
+                // --------------------------------------------------------------------------------------------------------------------------------
+                /// Output
+                // --------------------------------------------------------------------------------------------------------------------------------
+                if (step.time() > next_dist_out)
+                {
+                    if (!(PE.RANK())) cout << " \n Dist Output #" << t_out << "\n";
+                    output.distdump(Y, grid, t_out, step.time(), step.dt(), PE);
+                    next_dist_out += dt_dist_out;
+                }
+                
+                if (step.time() > next_big_dist_out)
+                {
+                    if (!(PE.RANK())) cout << " \n Big Dist Output #" << t_out << "\n";
+                    output.bigdistdump(Y, grid, t_out, step.time(), step.dt(), PE);
+                    next_big_dist_out += dt_big_dist_out;
                 }
 
-                if (!(PE.RANK())) cout << " \n Output #" << t_out << "\n";
-                output(Y, grid, t_out, PE);
-                Y.checknan();
+                if (step.time() > next_restart)
+                {
+                    if (!(PE.RANK())) cout << " \n Restart Output #" << t_out << "\n";
+                    Re.Write(PE.RANK(), t_out, Y, step.time());
+                    next_restart += dt_restart;
+                }
 
-                if (!(t_out%Input::List().n_distoutsteps))
-                    output.distdump(Y, grid, t_out, PE);
-                if (!(t_out%Input::List().n_bigdistoutsteps))
-                    output.bigdistdump(Y, grid, t_out, PE);
+                if (step.time() > next_out)
+                {
+                    if (!(PE.RANK()))
+                    {
+                        cout << "\n dt = " << step.dt();
+                        cout << " , Output #" << t_out;
+                        
+                    }
+
+                    output(Y, grid, t_out, step.time(), step.dt(), PE);
+                    Y.checknan();
+
+                    next_out += dt_out;
+                    ++t_out;
+                }
+
+                // success = false;                    
             }
         } 
         else 
@@ -348,8 +389,8 @@ int main(int argc, char** argv) {
                 std::cout << "Starting Fully-Explicit, 1D OSHUN\n";
             }
             
-            Algorithms::RK4<State1D> RK(Y);
-            // Algorithms::PEFRL<State1D> MAGIC(Y);
+            // Algorithms::RK4<State1D> RK(Y);
+
             // --------------------------------------------------------------------------------------------------------------------------------
             // --------------------------------------------------------------------------------------------------------------------------------
             // --------------------------------------------------------------------------------------------------------------------------------
@@ -358,74 +399,81 @@ int main(int argc, char** argv) {
             VlasovFunctor1D_explicitE rkF(Input::List().ls, Input::List().ms, 
                                                             Input::List().dp,
                                           grid.axis.xmin(0), grid.axis.xmax(0), grid.axis.Nx(0));
-
-            // VlasovFunctor1D_spatialAdvection SA(Input::List().ls, Input::List().ms, 
-            //                                                 Input::List().dp,
-            //                               grid.axis.xmin(0), grid.axis.xmax(0), grid.axis.Nx(0));
-
-            // VlasovFunctor1D_fieldUpdate FU(Input::List().ls, Input::List().ms, 
-            //                                                 Input::List().dp,
-            //                               grid.axis.xmin(0), grid.axis.xmax(0), grid.axis.Nx(0));
-
-            // VlasovFunctor1D_momentumAdvection PA(Input::List().ls, Input::List().ms, 
-            //                                                 Input::List().dp,
-            //                               grid.axis.xmin(0), grid.axis.xmax(0), grid.axis.Nx(0));
-
             // --------------------------------------------------------------------------------------------------------------------------------
-            for (size_t t_out(tout_start + 1); t_out < n_outsteps + 1; ++t_out) {
-                for (Clock W(t_out - 1, dt_out, CLF); W.tick() < W.numh(); ++W) {
 
-                    // --------------------------------------------------------------------------------------------------------------------------------
-                    // if (!(PE.RANK())) {
+            Algorithms::RKCK54<State1D> RK54(Y);
+            // Algorithms::RK4<State1D> RK(Y);
+            State1D Y_star(Y), Y_old(Y);
+            bool success(false);
 
-                    //     printf("\r Time = %4.4f tau_p = %4.4f fs", W.time(), W.time() * plasmaperiod);
-                    //     fflush(stdout);
+            Stepper step(start_time,Input::List().dt,Input::List().abs_tol,Input::List().rel_tol,Input::List().max_fails);
 
-                    // }
-                    // --------------------------------------------------------------------------------------------------------------------------------
-                    //                                   the guts
-                    // --------------------------------------------------------------------------------------------------------------------------------
-                    
+            for(step; step.time() < Input::List().t_stop; ++step)
+            {
+                if (Input::List().ext_fields) Setup_Y::applyexternalfields(grid, Y, step.time());
 
-                    if (Input::List().ext_fields) Setup_Y::applyexternalfields(grid, Y, W.time());
-                    if (Input::List().trav_wave) Setup_Y::applytravelingwave(grid, Y, W.time(), W.h());
+                Y_old = Y;
 
-                    
-                    // std::cout << "Vlasov ... ";
-                    Y = RK(Y, W.h(), &rkF);                                                 ///  Vlasov          //
-                    
-                    
-                    // std::cout << " done\n";
-                    // Y = LEAPs(Y, W.h(), &SA, &PA, &FU);                                                 ///  Vlasov          //
-                    // Y = MAGIC(Y, W.h(), &SA, &PA, &FU);                                                 ///  Vlasov          //
-                    
-                    // std::cout << "Fokker-Planck ... ";
-                    if (Input::List().collisions)
-                        collide.advance(Y,W);                                               ///  Fokker-Planck   //
-                    // std::cout << " done\n";
-
-                    if (Input::List().hydromotion)
-                        Y = RK(Y, W.h(), &HydroFunc);                                      ///  Hydro           //
-
-                    if (Input::List().particlepusher)
-                        Particle_Push.push(Y,W.h());
-
-                    PE.Neighbor_Communications(Y);                                         ///  Boundaries      //
-                    
+                while(!success)
+                {
+                    RK54(Y_star,Y,step.dt(),&rkF);
+                    success = step.update_dt(Y_old,Y_star, Y);
                 }
 
-                if (!(PE.RANK())) cout << " \n Output #" << t_out << "\n";
+                if (Input::List().collisions)
+                    collide.advance(Y,step.time(),step.dt());                                           ///  Fokker-Planck   //
 
-                output(Y, grid, t_out, PE);
-                Y.checknan();
+                // if (Input::List().hydromotion)
+                    // Y = RK(Y, step.dt(), &HydroFunc);                                                   /// Hydro Motion
 
-                if (!(t_out%Input::List().n_distoutsteps))
-                    output.distdump(Y, grid, t_out, PE);
-                if (!(t_out%Input::List().n_bigdistoutsteps))
-                    output.bigdistdump(Y, grid, t_out, PE);
+                if (Input::List().trav_wave) 
+                {                    
+                    Setup_Y::applytravelingwave(grid, Y, step.time(), step.dt());
+                }
 
-                if (!(t_out%Input::List().n_restarts))
-                    Re.Write(PE.RANK(), t_out, Y);
+                PE.Neighbor_Communications(Y);                                         ///  Boundaries      //
+                // --------------------------------------------------------------------------------------------------------------------------------
+                // --------------------------------------------------------------------------------------------------------------------------------
+                /// Output
+                // --------------------------------------------------------------------------------------------------------------------------------
+                if (step.time() > next_dist_out)
+                {
+                    if (!(PE.RANK())) cout << " \n Dist Output #" << t_out << "\n";
+                    output.distdump(Y, grid, t_out, step.time(), step.dt(), PE);
+                    next_dist_out += dt_dist_out;
+                }
+                
+                if (step.time() > next_big_dist_out)
+                {
+                    if (!(PE.RANK())) cout << " \n Big Dist Output #" << t_out << "\n";
+                    output.bigdistdump(Y, grid, t_out, step.time(), step.dt(), PE);
+                    next_big_dist_out += dt_big_dist_out;
+                }
+
+                if (step.time() > next_restart)
+                {
+                    if (!(PE.RANK())) cout << " \n Restart Output #" << t_out << "\n";
+                    Re.Write(PE.RANK(), t_out, Y, step.time());
+                    next_restart += dt_restart;
+                }
+
+                if (step.time() > next_out)
+                {
+                    if (!(PE.RANK()))
+                    {
+                        cout << "\n dt = " << step.dt();
+                        cout << " , Output #" << t_out;
+                        
+                    }
+
+                    output(Y, grid, t_out, step.time(), step.dt(), PE);
+                    Y.checknan();
+
+                    next_out += dt_out;
+                    ++t_out;
+                }
+
+                success = false;                    
             }
         }
         tend = omp_get_wtime();
@@ -461,18 +509,39 @@ int main(int argc, char** argv) {
                         
         if (!PE.RANK()) std::cout << "     done \n";
         
-        ///  Clock
+        // --------------------------------------------------------------------------------------------------------------------------------
+        // --------------------------------------------------------------------------------------------------------------------------------
+        ///  CLOCK
+        // --------------------------------------------------------------------------------------------------------------------------------
+        // --------------------------------------------------------------------------------------------------------------------------------
         int tout_start;
         if (Input::List().isthisarestart) tout_start = Input::List().restart_time;
         else  tout_start = 0;
+        size_t t_out(tout_start+1);
+        double start_time(0.);
     
         double dt_out(Input::List().t_stop / Input::List().n_outsteps);
         double CLF(Input::List().dt);
         size_t n_outsteps(Input::List().n_outsteps);
         double numh  = size_t(static_cast<int>(dt_out/CLF))+1;
         double h     = dt_out/static_cast<double>(numh);
-    
+
+        // double dt_out(Input::List().t_stop / Input::List().n_outsteps);
+        double dt_dist_out(Input::List().t_stop / Input::List().n_distoutsteps);
+        double dt_big_dist_out(Input::List().t_stop / Input::List().n_bigdistoutsteps);
+        double dt_restart(Input::List().t_stop / Input::List().n_restarts);
+        
+        double next_out(dt_out);
+        double next_dist_out(dt_dist_out);
+        double next_big_dist_out(dt_big_dist_out);
+
+        double next_restart(dt_restart);
+
+        // --------------------------------------------------------------------------------------------------------------------------------
+        // --------------------------------------------------------------------------------------------------------------------------------
         ///  INITIALIZATION
+        // --------------------------------------------------------------------------------------------------------------------------------
+        // --------------------------------------------------------------------------------------------------------------------------------
         if (!PE.RANK()) std::cout << "Initializing restart environment ...";
         Export_Files::Restart_Facility Re(PE.RANK());
         if (!PE.RANK()) std::cout << "     done \n";
@@ -490,23 +559,21 @@ int main(int argc, char** argv) {
         if (!PE.RANK()) std::cout << "     done \n";
     
         if (!PE.RANK()) std::cout << "Initializing collision module ...";
-        collisions_2D collide(Y,h);
+        collisions_2D collide(Y);
         if (!PE.RANK()) std::cout << "     done \n";    
     
-//     //    InverseBremsstrahlung IB(Y.DF(0).pmax(),Y.SH(0,0,0).nump(),Y.SH(0,0,0).numx(),tout_start,grid.axis.x(0));
-//     //    
         // if (!PE.RANK()) std::cout << "Initializing hydro module ...";
         // Hydro_Functor         HydroFunc(grid.axis.xmin(0), grid.axis.xmax(0), grid.axis.Nx(0));
         // if (!PE.RANK()) std::cout << "     done \n";
         
-//         if (!PE.RANK()) std::cout << "Initializing particle tracker ...";
-//         Particle_Pusher       Particle_Push(Input::List().par_xpos, Input::List().par_px, Input::List().par_py,  Input::List().par_pz,
-//             Input::List().xminLocalnobnd[0], Input::List().xmaxLocalnobnd[0], Input::List().NxLocalnobnd[0], Y.particles());
-//         if (!PE.RANK()) std::cout << "     done \n";
+        //         if (!PE.RANK()) std::cout << "Initializing particle tracker ...";
+        //         Particle_Pusher       Particle_Push(Input::List().par_xpos, Input::List().par_px, Input::List().par_py,  Input::List().par_pz,
+        //             Input::List().xminLocalnobnd[0], Input::List().xmaxLocalnobnd[0], Input::List().NxLocalnobnd[0], Y.particles());
+        //         if (!PE.RANK()) std::cout << "     done \n";
         
         if (Input::List().isthisarestart){
             if (!PE.RANK()) std::cout << "Reading restart files ...";
-            Re.Read(PE.RANK(),tout_start,Y);
+            Re.Read(PE.RANK(),tout_start,Y,start_time);
             if (!PE.RANK()) std::cout << "     done \n";
         }
         
@@ -515,12 +582,12 @@ int main(int argc, char** argv) {
         if (!PE.RANK()) std::cout << "     done \n";
                      
         if (!PE.RANK()) std::cout << "Output #0 ...";    
-        output( Y, grid, tout_start, PE );
+        output( Y, grid, tout_start, start_time, Input::List().dt, PE );
         if (!PE.RANK()) std::cout << "     done \n";
     
         if (!PE.RANK()) std::cout << "Distribution function output #0 ...";    
-        output.distdump(Y, grid, tout_start, PE );
-        output.bigdistdump(Y, grid, tout_start, PE );
+        output.distdump(Y, grid, tout_start, start_time, Input::List().dt, PE );
+        output.bigdistdump(Y, grid, tout_start, start_time, Input::List().dt, PE );
         if (!PE.RANK()) std::cout << "     done \n";
     
         double plasmaperiod;
@@ -528,12 +595,12 @@ int main(int argc, char** argv) {
             plasmaperiod = startmessages();
         }
     
-//     // --------------------------------------------------------------------------------------------------------------------------------
-//     // --------------------------------------------------------------------------------------------------------------------------------
-//     // --------------------------------------------------------------------------------------------------------------------------------
-//     //  ITERATION LOOP
-//     // --------------------------------------------------------------------------------------------------------------------------------
-//     // --------------------------------------------------------------------------------------------------------------------------------
+        // --------------------------------------------------------------------------------------------------------------------------------
+        // --------------------------------------------------------------------------------------------------------------------------------
+        // --------------------------------------------------------------------------------------------------------------------------------
+        //  ITERATION LOOP
+        // --------------------------------------------------------------------------------------------------------------------------------
+        // --------------------------------------------------------------------------------------------------------------------------------
         if (Input::List().implicit_E) 
         {
             if (!PE.RANK())
@@ -566,55 +633,81 @@ int main(int argc, char** argv) {
                 exit(0);
             }
 
-            for (size_t t_out(tout_start + 1); t_out < n_outsteps + 1; ++t_out) {
-                // --------------------------------------------------------------------------------------------------------------------------------
-                for (Clock W(t_out - 1, dt_out, CLF); W.tick() < W.numh(); ++W) {
-                    // --------------------------------------------------------------------------------------------------------------------------------
-                    // if (!(PE.RANK())) {
-                        // cout << "Time = " <<  W.time()<< "\n";
-                        // printf("\r Time = %4.4f tau_p = %4.4f fs", W.time(), W.time() * plasmaperiod);
-                        // fflush(stdout);
-                    // }
-                    // --------------------------------------------------------------------------------------------------------------------------------
-                    // --------------------------------------------------------------------------------------------------------------------------------
-                    // --------------------------------------------------------------------------------------------------------------------------------
-                    // --------------------------------------------------------------------------------------------------------------------------------
-                    //                                   the guts
-                    // --------------------------------------------------------------------------------------------------------------------------------
-                    if (Input::List().ext_fields) Setup_Y::applyexternalfields(grid, Y, W.time());
-                    if (Input::List().trav_wave) Setup_Y::applytravelingwave(grid, Y, W.time(), W.h());
+            // Algorithms::RKCK54<State1D> RK54(Y);
+            // Algorithms::RK4<State1D> RK(Y);
+            // State1D Y_star(Y), Y_old(Y);
+            // bool success(false);
 
-                    Y = RK(Y, W.h(),
-                           &impE_p1_Functor);                                                             /// Vlasov - Updates the distribution function: Spatial Advection and B Field "action".
-                    PE.Neighbor_ImplicitE_Communications(Y);                                            /// Boundaries
-                    eim.advance(&RK, Y, collide, &impE_p2_Functor);                                                 /// Finds new electric field
-                    Y = RK(Y, W.h(), &impE_p2_Functor);                                                             /// Uses new electric field to push distribution functions
-                    
-                    // std:: cout << "\n 10 \n";
-                    collide.advance(Y,W);
-                    // std:: cout << "\n 11 \n";                                                                             /// Fokker-Planck
-//                    if (Input::List().inverse_bremsstrahlung)
-//                        IB.loop(Y.SH(0, 0, 0), Y.HYDRO().Zarray(), W.time());     /// Explicit IB heating for f00
-                    // if (Input::List().hydromotion)
-                    //     Y = RK(Y, W.h(), &HydroFunc);                                      /// Hydro Motion
-                    // Y.checknan();                                                                                /// Error Checking
-                    PE.Neighbor_Communications(
-                            Y);                                                                  /// Boundaries
-                    // --------------------------------------------------------------------------------------------------------------------------------
-                    // --------------------------------------------------------------------------------------------------------------------------------
-                    // --------------------------------------------------------------------------------------------------------------------------------
-                    // --------------------------------------------------------------------------------------------------------------------------------
-                    // --------------------------------------------------------------------------------------------------------------------------------
+            Stepper step(start_time,Input::List().dt,Input::List().abs_tol,Input::List().rel_tol,Input::List().max_fails);
+
+            for(step; step.time() < Input::List().t_stop; ++step)
+            {
+                if (Input::List().ext_fields) Setup_Y::applyexternalfields(grid, Y, step.time());
+
+                // Y_old = Y;
+
+                // while(!success)
+                // {
+                //     RK54(Y_star,Y,step.dt(),&impE_p1_Functor);
+                //     success = step.update_dt(Y_old,Y_star, Y);
+                // }
+                
+                Y = RK(Y, step.dt(), &impE_p1_Functor);                                                             /// Vlasov - Updates the distribution function: Spatial Advection and B Field "action".
+                PE.Neighbor_ImplicitE_Communications(Y);                                                            /// Boundaries
+                eim.advance(&RK, Y, collide,&impE_p2_Functor, step.dt());                                           /// Finds new electric field
+                Y = RK(Y, step.dt(), &impE_p2_Functor);         
+
+                if (Input::List().collisions)
+                    collide.advance(Y,step.time(),step.dt());                                               ///  Fokker-Planck   //
+
+                // if (Input::List().hydromotion)
+                    // Y = RK(Y, step.dt(), &HydroFunc);                                      /// Hydro Motion
+
+                if (Input::List().trav_wave) Setup_Y::applytravelingwave(grid, Y, step.time(), step.dt());
+
+                PE.Neighbor_Communications(Y);                                         ///  Boundaries      //
+                // --------------------------------------------------------------------------------------------------------------------------------
+                // --------------------------------------------------------------------------------------------------------------------------------
+                /// Output
+                // --------------------------------------------------------------------------------------------------------------------------------
+                if (step.time() > next_dist_out)
+                {
+                    if (!(PE.RANK())) cout << " \n Dist Output #" << t_out << "\n";
+                    output.distdump(Y, grid, t_out, step.time(), step.dt(), PE);
+                    next_dist_out += dt_dist_out;
+                }
+                
+                if (step.time() > next_big_dist_out)
+                {
+                    if (!(PE.RANK())) cout << " \n Big Dist Output #" << t_out << "\n";
+                    output.bigdistdump(Y, grid, t_out, step.time(), step.dt(), PE);
+                    next_big_dist_out += dt_big_dist_out;
                 }
 
-                if (!(PE.RANK())) cout << " \n Output #" << t_out << "\n";
-                output(Y, grid, t_out, PE);
-                Y.checknan();
+                if (step.time() > next_restart)
+                {
+                    if (!(PE.RANK())) cout << " \n Restart Output #" << t_out << "\n";
+                    Re.Write(PE.RANK(), t_out, Y, step.time());
+                    next_restart += dt_restart;
+                }
 
-                if (!(t_out%Input::List().n_distoutsteps))
-                    output.distdump(Y, grid, t_out, PE);
-                if (!(t_out%Input::List().n_bigdistoutsteps))
-                    output.bigdistdump(Y, grid, t_out, PE);
+                if (step.time() > next_out)
+                {
+                    if (!(PE.RANK()))
+                    {
+                        cout << "\n dt = " << step.dt();
+                        cout << " , Output #" << t_out;
+                        
+                    }
+
+                    output(Y, grid, t_out, step.time(), step.dt(), PE);
+                    Y.checknan();
+
+                    next_out += dt_out;
+                    ++t_out;
+                }
+
+                // success = false;                    
             }
         } 
         else 
@@ -635,57 +728,76 @@ int main(int argc, char** argv) {
                                           grid.axis.xmin(0), grid.axis.xmax(0), grid.axis.Nx(0),
                                           grid.axis.xmin(1), grid.axis.xmax(1), grid.axis.Nx(1));
 
-            // --------------------------------------------------------------------------------------------------------------------------------
-            for (size_t t_out(tout_start + 1); t_out < n_outsteps + 1; ++t_out) {
-                for (Clock W(t_out - 1, dt_out, CLF); W.tick() < W.numh(); ++W) {
+            Algorithms::RKCK54<State2D> RK54(Y);
+            // Algorithms::RK4<State1D> RK(Y);
+            State2D Y_star(Y), Y_old(Y);
+            bool success(false);
 
-                    // --------------------------------------------------------------------------------------------------------------------------------
-                    // if (!(PE.RANK())) {
+            Stepper step(start_time,Input::List().dt,Input::List().abs_tol,Input::List().rel_tol,Input::List().max_fails);
 
-                    //     printf("\r Time = %4.4f tau_p = %4.4f fs", W.time(), W.time() * plasmaperiod);
-                    //     fflush(stdout);
+            for(step; step.time() < Input::List().t_stop; ++step)
+            {
+                if (Input::List().ext_fields) Setup_Y::applyexternalfields(grid, Y, step.time());
 
-                    // }
-                    // --------------------------------------------------------------------------------------------------------------------------------
-                    //                                   the guts
-                    // --------------------------------------------------------------------------------------------------------------------------------
+                Y_old = Y;
 
-                    if (Input::List().ext_fields) Setup_Y::applyexternalfields(grid, Y, W.time());
-                    if (Input::List().trav_wave) Setup_Y::applytravelingwave(grid, Y, W.time(), W.h());
-
-                    // std::cout << "Vlasov ... ";
-                    Y = RK(Y, W.h(), &rkF);                                                 ///  Vlasov          //
-                    // std::cout << " done\n";
-                    // Y = LEAPs(Y, W.h(), &SA, &PA, &FU);                                                 ///  Vlasov          //
-                    // Y = MAGIC(Y, W.h(), &SA, &PA);                                                 ///  Vlasov          //
-                    
-                    // std::cout << "Fokker-Planck ... ";
-                    if (Input::List().collisions)
-                        collide.advance(Y,W);                                               ///  Fokker-Planck   //
-                    // std::cout << " done\n";
-
-                    // if (Input::List().hydromotion)
-                    //     Y = RK(Y, W.h(), &HydroFunc);                                      ///  Hydro           //
-
-                    // if (Input::List().particlepusher)
-                    //     Particle_Push.push(Y,W.h());
-
-                    PE.Neighbor_Communications(Y);                                         ///  Boundaries      //
-                    
+                while(!success)
+                {
+                    RK54(Y_star,Y,step.dt(),&rkF);
+                    success = step.update_dt(Y_old,Y_star, Y);
                 }
 
-                if (!(PE.RANK())) cout << " \n Output #" << t_out << "\n";
+                if (Input::List().collisions)
+                    collide.advance(Y,step.time(),step.dt());                                           ///  Fokker-Planck   //
 
-                output(Y, grid, t_out, PE);
-                Y.checknan();
+                // if (Input::List().hydromotion)
+                    // Y = RK(Y, step.dt(), &HydroFunc);                                                   /// Hydro Motion
 
-                if (!(t_out%Input::List().n_distoutsteps))
-                    output.distdump(Y, grid, t_out, PE);
-                if (!(t_out%Input::List().n_bigdistoutsteps))
-                    output.bigdistdump(Y, grid, t_out, PE);
+                if (Input::List().trav_wave) Setup_Y::applytravelingwave(grid, Y, step.time(), step.dt());
 
-                if (!(t_out%Input::List().n_restarts))
-                    Re.Write(PE.RANK(), t_out, Y);
+                PE.Neighbor_Communications(Y);                                         ///  Boundaries      //
+                // --------------------------------------------------------------------------------------------------------------------------------
+                // --------------------------------------------------------------------------------------------------------------------------------
+                /// Output
+                // --------------------------------------------------------------------------------------------------------------------------------
+                if (step.time() > next_dist_out)
+                {
+                    if (!(PE.RANK())) cout << " \n Dist Output #" << t_out << "\n";
+                    output.distdump(Y, grid, t_out, step.time(), step.dt(), PE);
+                    next_dist_out += dt_dist_out;
+                }
+                
+                if (step.time() > next_big_dist_out)
+                {
+                    if (!(PE.RANK())) cout << " \n Big Dist Output #" << t_out << "\n";
+                    output.bigdistdump(Y, grid, t_out, step.time(), step.dt(), PE);
+                    next_big_dist_out += dt_big_dist_out;
+                }
+
+                if (step.time() > next_restart)
+                {
+                    if (!(PE.RANK())) cout << " \n Restart Output #" << t_out << "\n";
+                    Re.Write(PE.RANK(), t_out, Y, step.time());
+                    next_restart += dt_restart;
+                }
+
+                if (step.time() > next_out)
+                {
+                    if (!(PE.RANK()))
+                    {
+                        cout << "\n dt = " << step.dt();
+                        cout << " , Output #" << t_out;
+                        
+                    }
+
+                    output(Y, grid, t_out, step.time(), step.dt(), PE);
+                    Y.checknan();
+
+                    next_out += dt_out;
+                    ++t_out;
+                }
+
+                success = false;                    
             }
         }
         tend = omp_get_wtime();

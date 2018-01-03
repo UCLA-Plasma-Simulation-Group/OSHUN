@@ -127,29 +127,6 @@ ofstream& operator<<(ofstream& s, const Array4D<T>& array4D) {
 //--------------------------------------------------------------
 
 //--------------------------------------------------------------
-
-// //  Contains all the info you need to construct an output axis
-// class oAxis {
-// public:
-// //          Contents
-//             string label;           // e.g. label = cm 
-//             string units;
-//             double min, max;  
-//             size_t sz;
-
-// //          Constructors
-//             oAxis();
-//             oAxis(const float _m, const float _M, const size_t _sz); 
-//             oAxis(const string _l, const string _u, const float _m, const float _M, 
-//               const size_t _sz);
-
-// //          Copy constructor 
-//             oAxis(const oAxis& other);
-//             ~oAxis(){}
-//         };
-//--------------------------------------------------------------
-
-//--------------------------------------------------------------
 //  Facilitates the generation of a header
         class Header {
 //--------------------------------------------------------------        
@@ -157,42 +134,12 @@ ofstream& operator<<(ofstream& s, const Array4D<T>& array4D) {
 //          Constructor
             Header() { };
             Header(string _axis_units, string _quantity_units, string _outputDir);
-            // Header(oAxis _x,                                        // 1D
-            //  string _Ql, float _Qc, string _tl, string _tu, float _tc, string _oD);
-            // Header(oAxis _x, oAxis _y,                             // 2D 
-            //  string _Ql, float _Qc,  string _tl, string _tu, float _tc, string _oD);
-            // Header(oAxis _x, oAxis _y, oAxis _z,                  // 3D
-            //  string _Ql, float _Qc, string _tl, string _tu, float _tc, string _oD);
-            // Header(oAxis _x, oAxis _y, oAxis _z, oAxis _imre,     // 4D
-            //  string _Ql, float _Qc, string _tl, string _tu, float _tc, string _oD);
-
-            // Header(vector< oAxis > _xyz,                            // xD
-            //  string _Ql, float _Qc, string _tl, string _tu, float _tc, string _oD);
-            // size_t dim();    
             
-            // valarray<double> axis(const size_t i); // this is axis 0, 1, 2 
-            // string          label(const size_t i);
-            // string          units(const size_t i);
-            // float           conv(const size_t i);
-
-            // float           min(const size_t i) {return(xyz_axis[i].min);}
-            // float           max(const size_t i) {return(xyz_axis[i].max);}
-            
-            // string  Title_label(); 
-            // float   Title_conv(); 
-            // string  Time_label();
-            // float   Time_conv();
-            // string  AxisLabel();                {return axis_label;}
             double  AxisUnits()                {return formulary().Uconv(axis_units);}
             double  QuantityUnits()            {return formulary().Uconv(quantity_units);}
             string  Directory()                {return outputDir;}
 
         private:
-            // vector< oAxis >    xyz_axis;         // axis 0, 1, 2  : size 0-2
-            // string             title;
-            // float              titleC;
-            // string             time, timeU;
-            // float              timeC;
             string              axis_units;
             string              quantity_units;
             string              outputDir;
@@ -210,21 +157,30 @@ ofstream& operator<<(ofstream& s, const Array4D<T>& array4D) {
               string homedir=""); 
 
             void Export_h5(const std::string tag, std::vector<double> &axis1, 
-                std::vector<double> &data, const size_t& step, const int spec = -1);
+                std::vector<double> &data, 
+                const size_t step, const double time, const double dt,
+                const int spec = -1);
 
             void Export_h5(const std::string tag, 
                 std::vector<double> &axis1, std::vector<double> &axis2, 
-                Array2D<double> &dataA, const size_t& step, const int spec = -1);
+                Array2D<double> &dataA, 
+                const size_t  step, const double time, const double dt,
+                const int spec = -1);
 
             void Export_h5(const std::string tag, 
                 std::vector<double> &axis1, std::vector<double> &axis2, std::vector<double> &axis3, 
-                Array3D<double> &dataA, const size_t& step, const int spec = -1);
+                Array3D<double> &dataA, 
+                const size_t  step, const double time, const double dt,
+                const int spec = -1);
 
             void Export_h5(const std::string tag, 
                 std::vector<double> &axis1, std::vector<double> &axis2, std::vector<double> &axis3, std::vector<double> &axis4, 
-                Array4D<double> &dataA, const size_t& step, const int spec = -1);
+                Array4D<double> &dataA, 
+                const size_t  step, const double time, const double dt,
+                const int spec = -1);
             
-            void add_attributes(HighFive::DataSet &dataset, const std::string tag, size_t step);
+            void add_attributes(HighFive::DataSet &dataset, const std::string tag, 
+                const double time, const double dt);
 
         private:
             map< string, Header > Hdr; // Dictionary of headers
@@ -239,11 +195,11 @@ ofstream& operator<<(ofstream& s, const Array4D<T>& array4D) {
         public:
             Restart_Facility(const int rank, string homedir="");
 
-            void Read(const int rank, const size_t re_step, State1D& Y);
-            void Write(const int rank, const size_t re_step, State1D& Y);
+            void Read(const int rank, const size_t re_step, State1D& Y, double time_start);
+            void Write(const int rank, const size_t re_step, State1D& Y, double time_dump);
 
-            void Read(const int rank, const size_t re_step, State2D& Y);
-            void Write(const int rank, const size_t re_step, State2D& Y);
+            void Read(const int rank, const size_t re_step, State2D& Y, double time_start);
+            void Write(const int rank, const size_t re_step, State2D& Y, double time_dump);
 
         private:
             string hdir;
@@ -403,18 +359,18 @@ ofstream& operator<<(ofstream& s, const Array4D<T>& array4D) {
         : expo( _grid.axis, _oTags, homedir), p_x( _grid),f_x( _grid),oTags(_oTags) { }
 
 //      Functor
-        void operator()(const State1D& Y, const Grid_Info& grid, const size_t tout,
+        void operator()(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
             const Parallel_Environment_1D& PE);
-        void distdump(const State1D& Y, const Grid_Info& grid, const size_t tout,
+        void distdump(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
             const Parallel_Environment_1D& PE);
-        void bigdistdump(const State1D& Y, const Grid_Info& grid, const size_t tout,
+        void bigdistdump(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
             const Parallel_Environment_1D& PE);
 
-        void operator()(const State2D& Y, const Grid_Info& grid, const size_t tout,
+        void operator()(const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
             const Parallel_Environment_2D& PE);
-        void distdump(const State2D& Y, const Grid_Info& grid, const size_t tout,
+        void distdump(const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
             const Parallel_Environment_2D& PE);
-        void bigdistdump(const State2D& Y, const Grid_Info& grid, const size_t tout,
+        void bigdistdump(const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
             const Parallel_Environment_2D& PE);
 
     private:
@@ -425,171 +381,171 @@ ofstream& operator<<(ofstream& s, const Array4D<T>& array4D) {
         vector< string >                oTags;
         
         // Fields
-        void Ex(const State1D& Y, const Grid_Info& grid, const size_t tout,
+        void Ex(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
             const Parallel_Environment_1D& PE);
-        void Ey(const State1D& Y, const Grid_Info& grid, const size_t tout,
+        void Ey(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
             const Parallel_Environment_1D& PE);
-        void Ez(const State1D& Y, const Grid_Info& grid, const size_t tout,
+        void Ez(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
             const Parallel_Environment_1D& PE);
-        void Bx(const State1D& Y, const Grid_Info& grid, const size_t tout,
+        void Bx(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
             const Parallel_Environment_1D& PE);
-        void By(const State1D& Y, const Grid_Info& grid, const size_t tout,
+        void By(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
             const Parallel_Environment_1D& PE);
-        void Bz(const State1D& Y, const Grid_Info& grid, const size_t tout,
+        void Bz(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
             const Parallel_Environment_1D& PE);
 
-        void Ex(const State2D& Y, const Grid_Info& grid, const size_t tout,
+        void Ex(const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
             const Parallel_Environment_2D& PE);
-        void Ey(const State2D& Y, const Grid_Info& grid, const size_t tout,
+        void Ey(const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
             const Parallel_Environment_2D& PE);
-        void Ez(const State2D& Y, const Grid_Info& grid, const size_t tout,
+        void Ez(const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
             const Parallel_Environment_2D& PE);
-        void Bx(const State2D& Y, const Grid_Info& grid, const size_t tout,
+        void Bx(const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
             const Parallel_Environment_2D& PE);
-        void By(const State2D& Y, const Grid_Info& grid, const size_t tout,
+        void By(const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
             const Parallel_Environment_2D& PE);
-        void Bz(const State2D& Y, const Grid_Info& grid, const size_t tout,
+        void Bz(const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
             const Parallel_Environment_2D& PE);
 
         // P-Integrated distributions
-        void px(const State1D& Y, const Grid_Info& grid, const size_t tout,
+        void px(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
             const Parallel_Environment_1D& PE);
-        void py(const State1D& Y, const Grid_Info& grid, const size_t tout,
+        void py(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
             const Parallel_Environment_1D& PE);
-        void pz(const State1D& Y, const Grid_Info& grid, const size_t tout,
+        void pz(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
             const Parallel_Environment_1D& PE);
-        void pxpy(const State1D& Y, const Grid_Info& grid, const size_t tout,
+        void pxpy(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
          const Parallel_Environment_1D& PE);
-        void pypz(const State1D& Y, const Grid_Info& grid, const size_t tout,
+        void pypz(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
          const Parallel_Environment_1D& PE);
-        void pxpz(const State1D& Y, const Grid_Info& grid, const size_t tout,
+        void pxpz(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
          const Parallel_Environment_1D& PE);
 
-        void px(const State2D& Y, const Grid_Info& grid, const size_t tout,
+        void px(const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
             const Parallel_Environment_2D& PE);
-        void py(const State2D& Y, const Grid_Info& grid, const size_t tout,
+        void py(const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
             const Parallel_Environment_2D& PE);
-        void pz(const State2D& Y, const Grid_Info& grid, const size_t tout,
+        void pz(const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
             const Parallel_Environment_2D& PE);
-        void pxpy(const State2D& Y, const Grid_Info& grid, const size_t tout,
+        void pxpy(const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
          const Parallel_Environment_2D& PE);
-        void pypz(const State2D& Y, const Grid_Info& grid, const size_t tout,
+        void pypz(const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
          const Parallel_Environment_2D& PE);
-        void pxpz(const State2D& Y, const Grid_Info& grid, const size_t tout,
+        void pxpz(const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
          const Parallel_Environment_2D& PE);
 
         // Full distribution
-        void pxpypz(const State1D& Y, const Grid_Info& grid, const size_t tout,
+        void pxpypz(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
          const Parallel_Environment_1D& PE);
 
         // Raw distributions
-        void f0(const State1D& Y, const Grid_Info& grid, const size_t tout,
+        void f0(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
             const Parallel_Environment_1D& PE);
-        void f10(const State1D& Y, const Grid_Info& grid, const size_t tout,
+        void f10(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
             const Parallel_Environment_1D& PE);        
-        void f11(const State1D& Y, const Grid_Info& grid, const size_t tout,
+        void f11(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
             const Parallel_Environment_1D& PE);
-        void f20(const State1D& Y, const Grid_Info& grid, const size_t tout,
+        void f20(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
             const Parallel_Environment_1D& PE);        
-        void fl0(const State1D& Y, const Grid_Info& grid, const size_t tout,
+        void fl0(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
             const Parallel_Environment_1D& PE);
 
         // For 2D , integrated over space
-        // void f0i(size_t integrationdimension, const State2D& Y, const Grid_Info& grid, const size_t tout,
+        // void f0i(size_t integrationdimension, const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
         //     const Parallel_Environment_2D& PE);
-        // void f10i(size_t integrationdimension, const State2D& Y, const Grid_Info& grid, const size_t tout,
+        // void f10i(size_t integrationdimension, const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
         //     const Parallel_Environment_2D& PE);        
-        // void f11i(size_t integrationdimension, const State2D& Y, const Grid_Info& grid, const size_t tout,
+        // void f11i(size_t integrationdimension, const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
         //     const Parallel_Environment_2D& PE);
-        // void f20i(size_t integrationdimension, const State2D& Y, const Grid_Info& grid, const size_t tout,
+        // void f20i(size_t integrationdimension, const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
         //     const Parallel_Environment_2D& PE);        
-        // void fl0i(size_t integrationdimension, const State2D& Y, const Grid_Info& grid, const size_t tout,
+        // void fl0i(size_t integrationdimension, const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
         //     const Parallel_Environment_2D& PE);
 
-        void f0(const State2D& Y, const Grid_Info& grid, const size_t tout,
+        void f0(const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
             const Parallel_Environment_2D& PE);
-        void f10(const State2D& Y, const Grid_Info& grid, const size_t tout,
+        void f10(const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
             const Parallel_Environment_2D& PE);        
-        void f11(const State2D& Y, const Grid_Info& grid, const size_t tout,
+        void f11(const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
             const Parallel_Environment_2D& PE);
-        void f20(const State2D& Y, const Grid_Info& grid, const size_t tout,
+        void f20(const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
             const Parallel_Environment_2D& PE);        
-        void fl0(const State2D& Y, const Grid_Info& grid, const size_t tout,
+        void fl0(const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
             const Parallel_Environment_2D& PE);
 
         // f0 moments
-        void n(const State1D& Y, const Grid_Info& grid, const size_t tout,
+        void n(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
             const Parallel_Environment_1D& PE);
-        void T(const State1D& Y, const Grid_Info& grid, const size_t tout,
+        void T(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
             const Parallel_Environment_1D& PE);
 
-        void n(const State2D& Y, const Grid_Info& grid, const size_t tout,
+        void n(const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
             const Parallel_Environment_2D& PE);
-        void T(const State2D& Y, const Grid_Info& grid, const size_t tout,
+        void T(const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
             const Parallel_Environment_2D& PE);
 
 
         // Particle tracker
-        void particles_x(const State1D& Y, const Grid_Info& grid, const size_t tout,
+        void particles_x(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
             const Parallel_Environment_1D& PE);
-        void particles_px(const State1D& Y, const Grid_Info& grid, const size_t tout,
+        void particles_px(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
             const Parallel_Environment_1D& PE);
-        void particles_py(const State1D& Y, const Grid_Info& grid, const size_t tout,
+        void particles_py(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
             const Parallel_Environment_1D& PE);
-        void particles_pz(const State1D& Y, const Grid_Info& grid, const size_t tout,
+        void particles_pz(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
             const Parallel_Environment_1D& PE);
 
         // f1 moments
-        void Jx(const State1D& Y, const Grid_Info& grid, const size_t tout,
+        void Jx(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
             const Parallel_Environment_1D& PE);
-        void Jy(const State1D& Y, const Grid_Info& grid, const size_t tout,
+        void Jy(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
             const Parallel_Environment_1D& PE);
-        void Jz(const State1D& Y, const Grid_Info& grid, const size_t tout,
+        void Jz(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
             const Parallel_Environment_1D& PE);
-        void Qx(const State1D& Y, const Grid_Info& grid, const size_t tout,
+        void Qx(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
             const Parallel_Environment_1D& PE);
-        void Qy(const State1D& Y, const Grid_Info& grid, const size_t tout,
+        void Qy(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
             const Parallel_Environment_1D& PE);
-        void Qz(const State1D& Y, const Grid_Info& grid, const size_t tout,
+        void Qz(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
             const Parallel_Environment_1D& PE);
-        void vNx(const State1D& Y, const Grid_Info& grid, const size_t tout,
+        void vNx(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
             const Parallel_Environment_1D& PE);
-        void vNy(const State1D& Y, const Grid_Info& grid, const size_t tout,
+        void vNy(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
            const Parallel_Environment_1D& PE);
-        void vNz(const State1D& Y, const Grid_Info& grid, const size_t tout,
+        void vNz(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
            const Parallel_Environment_1D& PE);
 
-        void Jx(const State2D& Y, const Grid_Info& grid, const size_t tout,
+        void Jx(const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
             const Parallel_Environment_2D& PE);
-        void Jy(const State2D& Y, const Grid_Info& grid, const size_t tout,
+        void Jy(const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
             const Parallel_Environment_2D& PE);
-        void Jz(const State2D& Y, const Grid_Info& grid, const size_t tout,
+        void Jz(const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
             const Parallel_Environment_2D& PE);
-        void Qx(const State2D& Y, const Grid_Info& grid, const size_t tout,
+        void Qx(const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
             const Parallel_Environment_2D& PE);
-        void Qy(const State2D& Y, const Grid_Info& grid, const size_t tout,
+        void Qy(const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
             const Parallel_Environment_2D& PE);
-        void Qz(const State2D& Y, const Grid_Info& grid, const size_t tout,
+        void Qz(const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
             const Parallel_Environment_2D& PE);
-        void vNx(const State2D& Y, const Grid_Info& grid, const size_t tout,
+        void vNx(const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
             const Parallel_Environment_2D& PE);
-        void vNy(const State2D& Y, const Grid_Info& grid, const size_t tout,
+        void vNy(const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
            const Parallel_Environment_2D& PE);
-        void vNz(const State2D& Y, const Grid_Info& grid, const size_t tout,
+        void vNz(const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
            const Parallel_Environment_2D& PE);
 
         // Hydro
-        void Ux(const State1D& Y, const Grid_Info& grid, const size_t tout,
+        void Ux(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
             const Parallel_Environment_1D& PE);
-        void Uy(const State1D& Y, const Grid_Info& grid, const size_t tout,
+        void Uy(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
             const Parallel_Environment_1D& PE);
-        void Uz(const State1D& Y, const Grid_Info& grid, const size_t tout,
+        void Uz(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
             const Parallel_Environment_1D& PE);
-        void Z(const State1D& Y, const Grid_Info& grid, const size_t tout,
+        void Z(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
             const Parallel_Environment_1D& PE);
-        void ni(const State1D& Y, const Grid_Info& grid, const size_t tout,
+        void ni(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
             const Parallel_Environment_1D& PE);
-        void Ti(const State1D& Y, const Grid_Info& grid, const size_t tout,
+        void Ti(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
             const Parallel_Environment_1D& PE);
     };
 

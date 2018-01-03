@@ -50,6 +50,7 @@ Input::Input_List::Input_List():
     if_tridiagonal(1),
     implicit_E(1),
     dbydx_order(2),dbydy_order(2),
+    abs_tol(1e-16),rel_tol(1e-6),max_fails(20),
     relativity(0),
     implicit_B(0),
     collisions(1),
@@ -573,6 +574,7 @@ Input::Input_List::Input_List():
                 }
                 deckfile >> deckstringbool;
                 trav_wave = (deckstringbool[0] == 't' || deckstringbool[0] == 'T');
+                
             }
             if (deckstring == "num_waves") {
                 deckfile >> deckequalssign;
@@ -646,6 +648,30 @@ Input::Input_List::Input_List():
                     exit(1);
                 }
                 deckfile >> dbydy_order;
+            }
+            if (deckstring == "adaptive_time_step_abs_tol") {
+                deckfile >> deckequalssign;
+                if(deckequalssign != "=") {
+                    std::cout << "Error reading " << deckstring << std::endl;
+                    exit(1);
+                }
+                deckfile >> abs_tol;
+            }
+            if (deckstring == "adaptive_time_step_rel_tol") {
+                deckfile >> deckequalssign;
+                if(deckequalssign != "=") {
+                    std::cout << "Error reading " << deckstring << std::endl;
+                    exit(1);
+                }
+                deckfile >> rel_tol;
+            }
+            if (deckstring == "adaptive_time_step_max_iterations") {
+                deckfile >> deckequalssign;
+                if(deckequalssign != "=") {
+                    std::cout << "Error reading " << deckstring << std::endl;
+                    exit(1);
+                }
+                deckfile >> max_fails;
             }
             // if (deckstring == "relativistic_Vlasov") {
             //     deckfile >> deckequalssign;

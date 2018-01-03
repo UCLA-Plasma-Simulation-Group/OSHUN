@@ -132,7 +132,6 @@ void Setup_Y::applytravelingwave(Grid_Info &grid, State1D& Y, double time, doubl
 
     for (size_t n(0); n < Input::List().num_waves; ++n)
     {
-
         valarray<double> Ex_profile( grid.axis.Nx(0));
         valarray<double> Ey_profile( grid.axis.Nx(0));
         valarray<double> Ez_profile( grid.axis.Nx(0));

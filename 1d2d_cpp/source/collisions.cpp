@@ -43,12 +43,12 @@
 //*********************************************************************************************
 self_f00_implicit_step::self_f00_implicit_step(//const size_t &nump, const double &pmax,
                             const valarray<double>& dp,
-                         const double &_mass, const double& _deltat, bool& _ib):
-        mass(_mass), dt(_deltat), ib(_ib),
+                         const double &_mass, bool& _ib):
+        mass(_mass), ib(_ib),
         
         vr(Algorithms::MakeCAxis(0.0,dp)), dvr(0.,dp.size()), // Non-uniform velocity grid
         
-        vrh(0.0,dp.size()), dtoverv2(dp.size()),
+        vrh(0.0,dp.size()), oneoverv2(dp.size()),
         p2dp(0.0,dp.size()),p2dpm1(0.0,dp.size()),phdp(0.0,dp.size()),phdpm1(0.0,dp.size()), p4dp(0.0,dp.size()), laser_Inv_Uav6(0.0,dp.size()),
         C_RB(0.0,dp.size()+1), D_RB(0.0,dp.size()+1), 
 
@@ -91,7 +91,7 @@ self_f00_implicit_step::self_f00_implicit_step(//const size_t &nump, const doubl
 
 
     for (size_t i(0); i < vr.size(); ++i) {
-        dtoverv2[i] = dt / vr[i] / vr[i] / dvr[i];
+        oneoverv2[i] = 1.0 / vr[i] / vr[i] / dvr[i];
     }
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -280,7 +280,8 @@ void self_f00_implicit_step::update_D_inversebremsstrahlung(const double& Z0, co
 }
 //---------------------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------
-void self_f00_implicit_step::takestep(valarray<double>  &fin, valarray<double> &fh, const double& Z0, const double& vos, const double& cooling) {
+void self_f00_implicit_step::takestep(valarray<double>  &fin, valarray<double> &fh, const double& Z0, const double& vos, const double& step_size)//, const double& cooling) {
+{
 
     double collisional_coefficient;
     double heating_coefficient;
@@ -295,6 +296,8 @@ void self_f00_implicit_step::takestep(valarray<double>  &fin, valarray<double> &
     collisional_coefficient  = formulas.LOGee(C_RB[C_RB.size()-1],I4_Lnee/3.0/C_RB[C_RB.size()-1]);
     collisional_coefficient *= 4.0*M_PI/3.0*c_kpre;
 
+    collisional_coefficient *= step_size;           /// Step size incorporated here
+
 
 
     heating_coefficient  = formulas.Zeta*Z0*formulas.LOGei(C_RB[C_RB.size()-1],I4_Lnee/3.0/C_RB[C_RB.size()-1],Z0*formulas.Zeta);  ///< ZLogLambda
@@ -308,25 +311,25 @@ void self_f00_implicit_step::takestep(valarray<double>  &fin, valarray<double> &
     size_t ip(0);
 
     /// Boundaries by hand -- This operates on f(0)
-    LHS(ip, ip + 1) = - dtoverv2[ip] * collisional_coefficient
+    LHS(ip, ip + 1) = - oneoverv2[ip] * collisional_coefficient
                       * (C_RB[ip + 1] * (1.0 - delta_CC[ip + 1])
                          + D_RB[ip + 1] / dvr[ip + 1]);
 
-    LHS(ip    , ip) = 1.0 - dtoverv2[ip] * collisional_coefficient
+    LHS(ip    , ip) = 1.0 - oneoverv2[ip] * collisional_coefficient
                             * (C_RB[ip + 1] * delta_CC[ip + 1] - D_RB[ip + 1] / dvr[ip + 1]
                                - C_RB[ip] * (1.0 - delta_CC[ip]) - D_RB[ip] / dvr[ip]);
 
 
     for (ip = 1; ip < fin.size() - 1; ++ip){
-        LHS(ip, ip + 1) = - dtoverv2[ip] * collisional_coefficient
+        LHS(ip, ip + 1) = - oneoverv2[ip] * collisional_coefficient
                           * (C_RB[ip + 1] * (1.0 - delta_CC[ip + 1])
                              + D_RB[ip + 1] / dvr[ip + 1]);
 
-        LHS(ip    , ip) = 1.0 - dtoverv2[ip] * collisional_coefficient
+        LHS(ip    , ip) = 1.0 - oneoverv2[ip] * collisional_coefficient
                                 * (C_RB[ip + 1] * delta_CC[ip + 1] - D_RB[ip + 1] / dvr[ip + 1]
                                    - C_RB[ip] * (1.0 - delta_CC[ip]) - D_RB[ip] / dvr[ip]);
 
-        LHS(ip, ip - 1) = dtoverv2[ip] * collisional_coefficient
+        LHS(ip, ip - 1) = oneoverv2[ip] * collisional_coefficient
                           * (C_RB[ip] * delta_CC[ip]
                              - D_RB[ip] / dvr[ip]);
 
@@ -334,11 +337,11 @@ void self_f00_implicit_step::takestep(valarray<double>  &fin, valarray<double> &
 
     ip = fin.size() - 1;
 
-    LHS(ip    , ip) = 1.0 - dtoverv2[ip] * collisional_coefficient
+    LHS(ip    , ip) = 1.0 - oneoverv2[ip] * collisional_coefficient
                             * (C_RB[ip + 1] * delta_CC[ip + 1]
                                - C_RB[ip] * (1.0 - delta_CC[ip]) - D_RB[ip] / dvr[ip]);
 
-    LHS(ip, ip - 1) = dtoverv2[ip] * collisional_coefficient
+    LHS(ip, ip - 1) = oneoverv2[ip] * collisional_coefficient
                       * (C_RB[ip] * delta_CC[ip]
                          - D_RB[ip] / dvr[ip]);
 
@@ -357,83 +360,12 @@ void self_f00_implicit_step::takestep(valarray<double>  &fin, valarray<double> &
 }
 //---------------------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------
-void self_f00_implicit_step::getleftside(valarray<double>  &fin, const double& Z0, const double& vos, const double& cooling,  Array2D<double> &LHStemp) {
-
-    double collisional_coefficient;
-    double heating_coefficient;
-
-    ///  Calculate Rosenbluth and Chang-Cooper quantities
-    update_C_Rosenbluth(fin);   /// Also fills in I4_Lnee (the temperature for the Lnee calculation)
-    update_D_and_delta(fin);    /// And takes care of boundaries
-
-    /// Normalizing quantities (Inspired by previous collision routines and OSHUN notes by M. Tzoufras)
-    collisional_coefficient  = formulas.LOGee(C_RB[C_RB.size()-1],I4_Lnee/3.0/C_RB[C_RB.size()-1]);
-    collisional_coefficient *= 4.0*M_PI/3.0*c_kpre;
-
-    heating_coefficient  = formulas.Zeta*Z0*formulas.LOGei(C_RB[C_RB.size()-1],I4_Lnee/3.0/C_RB[C_RB.size()-1],Z0*formulas.Zeta);  ///< ZLogLambda
-    heating_coefficient *= c_kpre / 6.0 * pow(vos,2.0) * C_RB[C_RB.size()-1];
-    heating_coefficient /= collisional_coefficient;
-
-    if (ib) update_D_inversebremsstrahlung(Z0, heating_coefficient,vos);
-
-    /// Fill in matrix
-    size_t ip(0);
-
-    /// Boundaries by hand -- This operates on f(0)
-    LHStemp(ip, ip + 1) = - dtoverv2[ip] * collisional_coefficient
-                      * (C_RB[ip + 1] * (1.0 - delta_CC[ip + 1])
-                         + D_RB[ip + 1] / dvr[ip + 1]);
-
-    LHStemp(ip    , ip) = 1.0 - dtoverv2[ip] * collisional_coefficient
-                            * (C_RB[ip + 1] * delta_CC[ip + 1] - D_RB[ip + 1] / dvr[ip + 1]
-                               - C_RB[ip] * (1.0 - delta_CC[ip]) - D_RB[ip] / dvr[ip]);
-
-
-    for (ip = 1; ip < fin.size() - 1; ++ip){
-        LHStemp(ip, ip + 1) = - dtoverv2[ip] * collisional_coefficient
-                          * (C_RB[ip + 1] * (1.0 - delta_CC[ip + 1])
-                             + D_RB[ip + 1] / dvr[ip + 1]);
-
-        LHStemp(ip    , ip) = 1.0 - dtoverv2[ip] * collisional_coefficient
-                                * (C_RB[ip + 1] * delta_CC[ip + 1] - D_RB[ip + 1] / dvr[ip + 1]
-                                   - C_RB[ip] * (1.0 - delta_CC[ip]) - D_RB[ip] / dvr[ip]);
-
-        LHStemp(ip, ip - 1) = dtoverv2[ip] * collisional_coefficient
-                          * (C_RB[ip] * delta_CC[ip]
-                             - D_RB[ip] / dvr[ip]);
-
-    }
-
-    ip = fin.size() - 1;
-
-    LHStemp(ip    , ip) = 1.0 - dtoverv2[ip] * collisional_coefficient
-                            * (C_RB[ip + 1] * delta_CC[ip + 1]
-                               - C_RB[ip] * (1.0 - delta_CC[ip]) - D_RB[ip] / dvr[ip]);
-
-    LHStemp(ip, ip - 1) = dtoverv2[ip] * collisional_coefficient
-                      * (C_RB[ip] * delta_CC[ip]
-                         - D_RB[ip] / dvr[ip]);
-
-//    std::cout << "\n\n LHS = \n";
-//    for (size_t i(0); i < LHS.dim1(); ++i) {
-//        std::cout << "i = " << i << " :::: ";
-//        for (size_t j(0); j < LHS.dim2(); ++j) {
-//            std::cout << LHS(i, j) << "   ";
-//        }
-//        std::cout << "\n";
-//    }
-
-//
-//    Thomas_Tridiagonal(LHS,fin,fh);
-
-}
-//---------------------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------
 //*********************************************************************************************
 //---------------------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------
 self_f00_implicit_collisions::self_f00_implicit_collisions(
-    const valarray<double>& dp, const double& charge, const double& mass, const double& deltat)
+    const valarray<double>& dp, const double& charge, const double& mass)
 //-------------------------------------------------------------------
 //  Constructor
 //-------------------------------------------------------------------
@@ -442,12 +374,12 @@ self_f00_implicit_collisions::self_f00_implicit_collisions(
             ygrid(Algorithms::MakeCAxis(Input::List().xminLocal[1],Input::List().xmaxLocal[1],Input::List().NxLocal[1])),
             ib(((charge == 1.0) && (mass == 1.0))),
             // collide(DFin(0,0).nump(),DFin.pmax(),DFin.mass(), deltat, ib),
-            collide(dp,mass, deltat, ib),
-            IB_heating(Input::List().IB_heating), MX_cooling(Input::List().MX_cooling),
+            collide(dp,mass, ib),
+            IB_heating(Input::List().IB_heating),// MX_cooling(Input::List().MX_cooling),
             heatingprofile_1d(0.0,Input::List().NxLocal[0]),
-            coolingprofile_1d(0.0,Input::List().NxLocal[0]),
-            heatingprofile_2d(Input::List().NxLocal[0],Input::List().NxLocal[1]),
-            coolingprofile_2d(Input::List().NxLocal[0],Input::List().NxLocal[1])
+            // coolingprofile_1d(0.0,Input::List().NxLocal[0]),
+            heatingprofile_2d(Input::List().NxLocal[0],Input::List().NxLocal[1])
+            // coolingprofile_2d(Input::List().NxLocal[0],Input::List().NxLocal[1])
 {
     
     Nbc = Input::List().BoundaryCells;
@@ -458,7 +390,7 @@ self_f00_implicit_collisions::self_f00_implicit_collisions(
 
 
 //-------------------------------------------------------------------
-void self_f00_implicit_collisions::loop(SHarmonic1D& f00, valarray<double>& Zarray, const double time, SHarmonic1D& f00h){
+void self_f00_implicit_collisions::loop(SHarmonic1D& f00, valarray<double>& Zarray, SHarmonic1D& f00h, const double time, const double step_size){
 
     //-------------------------------------------------------------------
     //  This loop scans all the locations in configuration space
@@ -491,7 +423,7 @@ void self_f00_implicit_collisions::loop(SHarmonic1D& f00, valarray<double>& Zarr
            // std::cout << "fin[" << ip << "," << ix << "] = " << fin[ip] << "\n";
         }
 //
-        collide.takestep(fin,fout,Zarray[ix+Nbc],heatingprofile_1d[ix+Nbc],coolingprofile_1d[ix+Nbc]);
+        collide.takestep(fin,fout,Zarray[ix+Nbc],heatingprofile_1d[ix+Nbc],step_size);//,coolingprofile_1d[ix+Nbc]);
 
         // Return updated data to the harmonic
         for (size_t ip(0); ip < fin.size(); ++ip)
@@ -504,8 +436,9 @@ void self_f00_implicit_collisions::loop(SHarmonic1D& f00, valarray<double>& Zarr
     //-------------------------------------------------------------------
 
 }
+
 //-------------------------------------------------------------------
-void self_f00_implicit_collisions::loop(SHarmonic2D& f00, Array2D<double>& Zarray, const double time, SHarmonic2D& f00h){
+void self_f00_implicit_collisions::loop(SHarmonic2D& f00, Array2D<double>& Zarray, SHarmonic2D& f00h, const double time, const double step_size){
 
     //-------------------------------------------------------------------
     //  This loop scans all the locations in configuration space
@@ -544,7 +477,7 @@ void self_f00_implicit_collisions::loop(SHarmonic2D& f00, Array2D<double>& Zarra
     //  
     //  
             // std::cout << "ix,iy = " << ix << " , " << iy << ", hfp = " << heatingprofile_2d(ix+Nbc,iy+Nbc) << "\n";
-            collide.takestep(fin,fout,Zarray(ix+Nbc,iy+Nbc),heatingprofile_2d(ix+Nbc,iy+Nbc),coolingprofile_2d(ix+Nbc,iy+Nbc));
+            collide.takestep(fin,fout,Zarray(ix+Nbc,iy+Nbc),heatingprofile_2d(ix+Nbc,iy+Nbc),step_size);//,coolingprofile_2d(ix+Nbc,iy+Nbc));
 
             // Return updated data to the harmonic
             for (size_t ip(0); ip < fin.size(); ++ip)
@@ -782,16 +715,16 @@ void self_f00_RKfunctor::operator()(const valarray<double>& fin, valarray<double
 
 //*******************************************************************
 //-------------------------------------------------------------------
-self_f00_explicit_collisions::self_f00_explicit_collisions(const valarray<double>& dp, const double& deltat)
+self_f00_explicit_collisions::self_f00_explicit_collisions(const valarray<double>& dp)
 //-------------------------------------------------------------------
 //  Constructor
 //-------------------------------------------------------------------
         : fin(0.0, dp.size()),
           RK(fin),
           rkf00(dp),
-          num_h(size_t(deltat/Input::List().small_dt)+1)
+          num_h(0.)
 {
-    h = deltat/static_cast<double>(num_h);
+    h = 0. ;//deltat/static_cast<double>(num_h);
 
     Nbc = Input::List().BoundaryCells;
     szx = Input::List().NxLocalnobnd[0];  // size of useful x axis
@@ -801,13 +734,17 @@ self_f00_explicit_collisions::self_f00_explicit_collisions(const valarray<double
 
 
 //-------------------------------------------------------------------
-void self_f00_explicit_collisions::loop(SHarmonic1D& f00,SHarmonic1D& f00h){
+void self_f00_explicit_collisions::loop(SHarmonic1D& f00,SHarmonic1D& f00h, const double deltat){
 
     //-------------------------------------------------------------------
     //  This loop scans all the locations in configuration space
     //  and calls the RK4 for explicit integration at each location
     //-------------------------------------------------------------------
     //      Initialization
+
+    num_h = size_t(deltat/Input::List().small_dt)+1;
+    h = deltat/static_cast<double>(num_h);
+
 
     for (size_t ix(0); ix < szx; ++ix){
         // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -833,13 +770,17 @@ void self_f00_explicit_collisions::loop(SHarmonic1D& f00,SHarmonic1D& f00h){
 }
 //-------------------------------------------------------------------
 //-------------------------------------------------------------------
-void self_f00_explicit_collisions::loop(SHarmonic2D& f00,SHarmonic2D& f00h){
+void self_f00_explicit_collisions::loop(SHarmonic2D& f00,SHarmonic2D& f00h, const double deltat){
 
     //-------------------------------------------------------------------
     //  This loop scans all the locations in configuration space
     //  and calls the RK4 for explicit integration at each location
     //-------------------------------------------------------------------
     //      Initialization
+    
+    num_h = size_t(deltat/Input::List().small_dt)+1;
+    h = deltat/static_cast<double>(num_h);
+
     for (size_t ix(0); ix < szx; ++ix)
     {
         for (size_t iy(0); iy < szy; ++iy)
@@ -1212,7 +1153,7 @@ void  self_flm_implicit_step::advance(valarray<complex<double> >& fin, const int
 //*******************************************************************
 //-------------------------------------------------------------------
 self_flm_implicit_collisions::self_flm_implicit_collisions(const size_t _l0, const size_t _m0,
-                                                             const valarray<double>& dp, const double& deltat)
+                                                             const valarray<double>& dp)
 //-------------------------------------------------------------------
 //  Constructor
 //-------------------------------------------------------------------
@@ -1224,8 +1165,7 @@ self_flm_implicit_collisions::self_flm_implicit_collisions(const size_t _l0, con
             Nbc(Input::List().BoundaryCells),
             szx(Input::List().NxLocal[0]),
             szy(Input::List().NxLocal[1]),
-            implicit_step((szx*szy),dp),
-            Dt(deltat)
+            implicit_step((szx*szy),dp)
 {
     if (m0 == 0) {
         f1_m_upperlimit = 1;
@@ -1235,57 +1175,6 @@ self_flm_implicit_collisions::self_flm_implicit_collisions(const size_t _l0, con
     }
 }
 //-------------------------------------------------------------------
-
-//-------------------------------------------------------------------
-void self_flm_implicit_collisions::advancef1(DistFunc1D& DF, valarray<double>& Zarray, DistFunc1D& DFh){
-//-------------------------------------------------------------------
-//  This is the collision calculation for the harmonics f10, f11 
-//-------------------------------------------------------------------
-
-// For every location in space within the domain of this node
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -          
-    // Need advance f1 over whole domain for implicit E solver
-    #pragma omp parallel for num_threads(Input::List().ompthreads)
-    for (size_t ix = 0; ix < szx; ++ix)
-    {
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -      
-        // "00" harmonic --> Valarray
-        valarray<double> f00(0.,DF(0,0).nump());
-        for (size_t ip(0); ip < f00.size(); ++ip){
-            f00[ip] = (DF(0,0)(ip,ix)).real();
-        }
-        // Reset the integrals and coefficients
-        implicit_step.reset_coeff(f00, Zarray[ix], Dt, ix);
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -      
-    }
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -      
-    #pragma omp parallel for num_threads(Input::List().ompthreads)
-    for (size_t ix = 0; ix < szx; ++ix)
-    {
-        // Loop over the harmonics for this (x,y)
-        for(size_t m = 0; m < f1_m_upperlimit; ++m)
-        {
-            valarray<complex<double> > fc(0.,DF(0,0).nump());
-            // This harmonic --> Valarray
-            for (size_t ip(0); ip < DF(1,m).nump(); ++ip) {
-                fc[ip] = DF(1,m)(ip,ix);
-            }
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -      
-            // Take an implicit step
-            implicit_step.advance(fc, 1, ix);
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -      
-
-            //  Valarray --> This harmonic
-            for (size_t ip(0); ip < DF(1,m).nump(); ++ip) {
-                DFh(1,m)(ip,ix) = fc[ip];
-            }
-        }
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
-    }
-}
-//-------------------------------------------------------------------
-
 //-------------------------------------------------------------------
 void self_flm_implicit_collisions::advanceflm(DistFunc1D& DF, valarray<double>& Zarray, DistFunc1D& DFh)
 {
@@ -1343,7 +1232,58 @@ void self_flm_implicit_collisions::advanceflm(DistFunc1D& DF, valarray<double>& 
 }
 //-------------------------------------------------------------------
 //-------------------------------------------------------------------
-void self_flm_implicit_collisions::advancef1(DistFunc2D& DF, Array2D<double>& Zarray, DistFunc2D& DFh){
+void self_flm_implicit_collisions::advancef1(DistFunc1D& DF, valarray<double>& Zarray, DistFunc1D& DFh, double step_size){
+//-------------------------------------------------------------------
+//  This is the collision calculation for the harmonics f10, f11 
+//-------------------------------------------------------------------
+
+// For every location in space within the domain of this node
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -          
+    // Need advance f1 over whole domain for implicit E solver
+    #pragma omp parallel for num_threads(Input::List().ompthreads)
+    for (size_t ix = 0; ix < szx; ++ix)
+    {
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -      
+        // "00" harmonic --> Valarray
+        valarray<double> f00(0.,DF(0,0).nump());
+        for (size_t ip(0); ip < f00.size(); ++ip){
+            f00[ip] = (DF(0,0)(ip,ix)).real();
+        }
+        // Reset the integrals and coefficients
+        implicit_step.reset_coeff(f00, Zarray[ix], step_size, ix);
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -      
+    }
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -      
+    #pragma omp parallel for num_threads(Input::List().ompthreads)
+    for (size_t ix = 0; ix < szx; ++ix)
+    {
+        // Loop over the harmonics for this (x,y)
+        for(size_t m = 0; m < f1_m_upperlimit; ++m)
+        {
+            valarray<complex<double> > fc(0.,DF(0,0).nump());
+            // This harmonic --> Valarray
+            for (size_t ip(0); ip < DF(1,m).nump(); ++ip) {
+                fc[ip] = DF(1,m)(ip,ix);
+            }
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -      
+            // Take an implicit step
+            implicit_step.advance(fc, 1, ix);
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -      
+
+            //  Valarray --> This harmonic
+            for (size_t ip(0); ip < DF(1,m).nump(); ++ip) {
+                DFh(1,m)(ip,ix) = fc[ip];
+            }
+        }
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  
+    }
+}
+//-------------------------------------------------------------------
+
+//-------------------------------------------------------------------
+//-------------------------------------------------------------------
+void self_flm_implicit_collisions::advancef1(DistFunc2D& DF, Array2D<double>& Zarray, DistFunc2D& DFh, const double step_size){
 //-------------------------------------------------------------------
 //  This is the collision calculation for the harmonics f10, f11 
 //-------------------------------------------------------------------
@@ -1363,7 +1303,7 @@ void self_flm_implicit_collisions::advancef1(DistFunc2D& DF, Array2D<double>& Za
                 f00[ip] = (DF(0,0)(ip,ix,iy)).real();
             }
             // Reset the integrals and coefficients
-            implicit_step.reset_coeff(f00, Zarray(ix,iy), Dt, ix*szy+iy);
+            implicit_step.reset_coeff(f00, Zarray(ix,iy), step_size, ix*szy+iy);
         }
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -      
     }
@@ -1441,20 +1381,21 @@ void self_flm_implicit_collisions::advanceflm(DistFunc2D& DF, Array2D<double>& Z
 ////*******************************************************************
 //-------------------------------------------------------------------
 self_collisions::self_collisions(const size_t _l0, const size_t _m0,
-                             const valarray<double>& dp, const double& charge, const double& mass, const double& deltat)
+                             const valarray<double>& dp, const double& charge, const double& mass)
 //-------------------------------------------------------------------
 //  Constructor
 //-------------------------------------------------------------------
-        : self_f00_exp_collisions(dp, deltat),
-          self_f00_imp_collisions(dp, charge, mass, deltat),
-          self_flm_imp_collisions(_l0, _m0, dp, deltat){}
+        : self_f00_exp_collisions(dp),
+          self_f00_imp_collisions(dp, charge, mass),
+          self_flm_imp_collisions(_l0, _m0, dp){}
 //-------------------------------------------------------------------
+
 //-------------------------------------------------------------------
-void self_collisions::advancef00(SHarmonic1D& f00, valarray<double>& Zarray, const double time,SHarmonic1D& f00h)
+void self_collisions::advancef00(SHarmonic1D& f00, valarray<double>& Zarray,SHarmonic1D& f00h,  const double time, const double step_size)
 //-------------------------------------------------------------------
 {    
-    if (Input::List().f00_implicitorexplicit == 2) self_f00_imp_collisions.loop(f00,Zarray,time,f00h);
-    else self_f00_exp_collisions.loop(f00,f00h);
+    if (Input::List().f00_implicitorexplicit == 2) self_f00_imp_collisions.loop(f00,Zarray,f00h,time,step_size);
+    else self_f00_exp_collisions.loop(f00,f00h,step_size);
     
 }
 //-------------------------------------------------------------------
@@ -1466,17 +1407,18 @@ void self_collisions::advanceflm(DistFunc1D& DFin, valarray<double>& Zarray, Dis
 }
 
 //-------------------------------------------------------------------
-void self_collisions::advancef1(DistFunc1D& DFin,  valarray<double>& Zarray, DistFunc1D& DFh)
+//-------------------------------------------------------------------
+void self_collisions::advancef1(DistFunc1D& DFin,  valarray<double>& Zarray, DistFunc1D& DFh, const double step_size)
 //-------------------------------------------------------------------
 {    
-    self_flm_imp_collisions.advancef1(DFin,Zarray,DFh);
+    self_flm_imp_collisions.advancef1(DFin,Zarray,DFh,step_size);
 }
 //-------------------------------------------------------------------
-void self_collisions::advancef00(SHarmonic2D& f00, Array2D<double>& Zarray, const double time,SHarmonic2D& f00h)
+void self_collisions::advancef00(SHarmonic2D& f00, Array2D<double>& Zarray, SHarmonic2D& f00h, const double time, const double step_size)
 //-------------------------------------------------------------------
 {    
-    if (Input::List().f00_implicitorexplicit == 2) self_f00_imp_collisions.loop(f00,Zarray,time,f00h);
-    else self_f00_exp_collisions.loop(f00,f00h);
+    if (Input::List().f00_implicitorexplicit == 2) self_f00_imp_collisions.loop(f00,Zarray,f00h,time,step_size);
+    else self_f00_exp_collisions.loop(f00,f00h,step_size);
     
 }
 //-------------------------------------------------------------------
@@ -1488,20 +1430,17 @@ void self_collisions::advanceflm(DistFunc2D& DFin, Array2D<double>& Zarray, Dist
 }
 
 //-------------------------------------------------------------------
-void self_collisions::advancef1(DistFunc2D& DFin,  Array2D<double>& Zarray, DistFunc2D& DFh)
+void self_collisions::advancef1(DistFunc2D& DFin,  Array2D<double>& Zarray, DistFunc2D& DFh, const double step_size)
 //-------------------------------------------------------------------
 {    
-    self_flm_imp_collisions.advancef1(DFin,Zarray,DFh);
+    self_flm_imp_collisions.advancef1(DFin,Zarray,DFh, step_size);
 }
 ////*******************************************************************
 
 
 
-
-
-
 //-------------------------------------------------------------------
-collisions_1D::collisions_1D(const State1D& Yin, const double& deltat):Yh(Yin)
+collisions_1D::collisions_1D(const State1D& Yin):Yh(Yin)
 //-------------------------------------------------------------------
 //  Constructor
 //-------------------------------------------------------------------
@@ -1509,7 +1448,7 @@ collisions_1D::collisions_1D(const State1D& Yin, const double& deltat):Yh(Yin)
     Yh = complex<double>(0.0,0.0);
     for(size_t s(0); s < Yin.Species(); ++s){
         self_coll.push_back( self_collisions(Yin.DF(s).l0(),
-            Yin.DF(s).m0(),Yin.DF(s).getdp(),Yin.DF(s).q(),Yin.DF(s).mass(),deltat)  );
+            Yin.DF(s).m0(),Yin.DF(s).getdp(),Yin.DF(s).q(),Yin.DF(s).mass())  );
 
 
         if (Yin.Species() > 1){
@@ -1519,88 +1458,7 @@ collisions_1D::collisions_1D(const State1D& Yin, const double& deltat):Yh(Yin)
         }
     }
 }
-//-------------------------------------------------------------------
-void collisions_1D::advance(State1D& Yin, const Clock& W)
-//-------------------------------------------------------------------
-{
-    // Yh = complex<double>(0.0,0.0);
-    
-    if (Input::List().f00_implicitorexplicit)
-    {
-        advancef0(Yin,W,Yh);    
-    }
-    
-    if (Input::List().flm_collisions )
-    {
-        advancef1(Yin,Yh);
-        advanceflm(Yin,Yh);
-    }
-    
-    // if (Input::List().filterdistribution) Yh.DF(s) = Yh.DF(s).Filterp();
 
-    for (size_t s(0); s < Yin.Species(); ++s){
-        for (size_t i(0); i < Yin.DF(s).dim(); ++i){
-            Yin.DF(s)(i) = Yh.DF(s)(i);
-        }
-    }
-    
-}
-//-------------------------------------------------------------------
-void collisions_1D::advancef0(State1D& Yin, const Clock& W, State1D& Yh)
-//-------------------------------------------------------------------
-{
-    size_t sdummy(0);
-
-
-    for(size_t s(0); s < Yin.Species(); ++s)
-    {   
-        self_coll[s].advancef00(Yin.DF(s)(0,0),Yin.HYDRO().Zarray(),W.time(),Yh.DF(s)(0,0));
-    
-        if (Yin.Species() > 1)
-        {
-            for (size_t sind(0); sind < Yin.Species(); ++sind){
-                // std::cout << "\n\n sdummy = " << sdummy << ",sind = " << sind << ", s = " << s << "\n\n";
-                if (s!=sind)  {
-                    // std::cout << "\n\n12\n\n";
-                    // unself_f00_coll[sdummy].rkloop(Yin.SH(s,0,0),Yin.SH(sind,0,0)); ++sdummy;
-
-                }
-            }
-        }
-
-
-        // Yin.DF(s).checknan();
-
-    }
-
-}
-
-
-//-------------------------------------------------------------------
-void collisions_1D::advancef1(State1D& Yin, State1D& Yh)
-//-------------------------------------------------------------------
-{
-    size_t sdummy(0);
-
-
-    for(size_t s(0); s < Yin.Species(); ++s)
-    {
-        self_coll[s].advancef1(Yin.DF(s), Yin.HYDRO().Zarray(), Yh.DF(s) );
-
-        if (Yin.Species() > 1)
-        {
-            for (size_t sind(0); sind < Yin.Species(); ++sind){
-
-                if (s!=sind)  {
-
-
-                }
-            }
-        }
-
-    }
-
-}
 //-------------------------------------------------------------------
 void collisions_1D::advanceflm(State1D& Yin, State1D& Yh)
 //-------------------------------------------------------------------
@@ -1632,56 +1490,22 @@ void collisions_1D::advanceflm(State1D& Yin, State1D& Yh)
 
 }
 
-
 //-------------------------------------------------------------------
-//-------------------------------------------------------------------
-vector<self_collisions> collisions_1D::self(){
-
-    return self_coll;
-
-}
-
-//-------------------------------------------------------------------
-
-
-
-//-------------------------------------------------------------------
-collisions_2D::collisions_2D(const State2D& Yin, const double& deltat):Yh(Yin)
-//-------------------------------------------------------------------
-//  Constructor
-//-------------------------------------------------------------------
-{
-    Yh = complex<double>(0.0,0.0);
-    for(size_t s(0); s < Yin.Species(); ++s){
-        self_coll.push_back( self_collisions(Yin.DF(s).l0(),
-            Yin.DF(s).m0(),Yin.DF(s).getdp(),Yin.DF(s).q(),Yin.DF(s).mass(),deltat)  );
-
-
-        if (Yin.Species() > 1){
-            for (size_t sind(0); sind < Yin.Species(); ++sind){
-//                if (s!=sind) unself_f00_coll.push_back(interspecies_f00_explicit_collisions(Yin.DF(s),Yin.DF(sind),deltat));
-            }
-        }
-    }
-}
-//-------------------------------------------------------------------
-void collisions_2D::advance(State2D& Yin, const Clock& W)
+void collisions_1D::advance(State1D& Yin, double current_time, double step_size)
 //-------------------------------------------------------------------
 {
     // Yh = complex<double>(0.0,0.0);
     
     if (Input::List().f00_implicitorexplicit)
     {
-        advancef0(Yin,W,Yh);    
+        advancef0(Yin,Yh,current_time,step_size);    
     }
     
     if (Input::List().flm_collisions )
     {
-        advancef1(Yin,Yh);
+        advancef1(Yin,Yh,step_size);
         advanceflm(Yin,Yh);
     }
-    
-    // if (Input::List().filterdistribution) Yh.DF(s) = Yh.DF(s).Filterp();
 
     for (size_t s(0); s < Yin.Species(); ++s){
         for (size_t i(0); i < Yin.DF(s).dim(); ++i){
@@ -1691,7 +1515,7 @@ void collisions_2D::advance(State2D& Yin, const Clock& W)
     
 }
 //-------------------------------------------------------------------
-void collisions_2D::advancef0(State2D& Yin, const Clock& W, State2D& Yh)
+void collisions_1D::advancef0(State1D& Yin, State1D& Yh, double current_time, double step_size)
 //-------------------------------------------------------------------
 {
     size_t sdummy(0);
@@ -1699,7 +1523,7 @@ void collisions_2D::advancef0(State2D& Yin, const Clock& W, State2D& Yh)
 
     for(size_t s(0); s < Yin.Species(); ++s)
     {   
-        self_coll[s].advancef00(Yin.DF(s)(0,0),Yin.HYDRO().Zarray(),W.time(),Yh.DF(s)(0,0));
+        self_coll[s].advancef00(Yin.DF(s)(0,0),Yin.HYDRO().Zarray(),Yh.DF(s)(0,0),current_time,step_size);
     
         if (Yin.Species() > 1)
         {
@@ -1722,7 +1546,7 @@ void collisions_2D::advancef0(State2D& Yin, const Clock& W, State2D& Yh)
 
 
 //-------------------------------------------------------------------
-void collisions_2D::advancef1(State2D& Yin, State2D& Yh)
+void collisions_1D::advancef1(State1D& Yin, State1D& Yh, double step_size)
 //-------------------------------------------------------------------
 {
     size_t sdummy(0);
@@ -1730,7 +1554,120 @@ void collisions_2D::advancef1(State2D& Yin, State2D& Yh)
 
     for(size_t s(0); s < Yin.Species(); ++s)
     {
-        self_coll[s].advancef1(Yin.DF(s), Yin.HYDRO().Zarray(), Yh.DF(s) );
+        self_coll[s].advancef1(Yin.DF(s), Yin.HYDRO().Zarray(), Yh.DF(s) , step_size );
+
+        if (Yin.Species() > 1)
+        {
+            for (size_t sind(0); sind < Yin.Species(); ++sind){
+
+                if (s!=sind)  {
+
+
+                }
+            }
+        }
+
+    }
+
+}
+//-------------------------------------------------------------------
+//-------------------------------------------------------------------
+vector<self_collisions> collisions_1D::self(){
+
+    return self_coll;
+
+}
+
+//-------------------------------------------------------------------
+
+
+
+//-------------------------------------------------------------------
+collisions_2D::collisions_2D(const State2D& Yin):Yh(Yin)
+//-------------------------------------------------------------------
+//  Constructor
+//-------------------------------------------------------------------
+{
+    Yh = complex<double>(0.0,0.0);
+    for(size_t s(0); s < Yin.Species(); ++s){
+        self_coll.push_back( self_collisions(Yin.DF(s).l0(),
+            Yin.DF(s).m0(),Yin.DF(s).getdp(),Yin.DF(s).q(),Yin.DF(s).mass())  );
+
+
+        if (Yin.Species() > 1){
+            for (size_t sind(0); sind < Yin.Species(); ++sind){
+//                if (s!=sind) unself_f00_coll.push_back(interspecies_f00_explicit_collisions(Yin.DF(s),Yin.DF(sind),deltat));
+            }
+        }
+    }
+}
+//-------------------------------------------------------------------
+void collisions_2D::advance(State2D& Yin, const double time, const double step_size)
+//-------------------------------------------------------------------
+{
+    // Yh = complex<double>(0.0,0.0);
+    
+    if (Input::List().f00_implicitorexplicit)
+    {
+        advancef0(Yin,Yh,time,step_size);    
+    }
+    
+    if (Input::List().flm_collisions )
+    {
+        advancef1(Yin,Yh,step_size);
+        advanceflm(Yin,Yh);
+    }
+    
+    // if (Input::List().filterdistribution) Yh.DF(s) = Yh.DF(s).Filterp();
+
+    for (size_t s(0); s < Yin.Species(); ++s){
+        for (size_t i(0); i < Yin.DF(s).dim(); ++i){
+            Yin.DF(s)(i) = Yh.DF(s)(i);
+        }
+    }
+    
+}
+//-------------------------------------------------------------------
+void collisions_2D::advancef0(State2D& Yin, State2D& Yh, const double time, const double step_size)
+//-------------------------------------------------------------------
+{
+    size_t sdummy(0);
+
+
+    for(size_t s(0); s < Yin.Species(); ++s)
+    {   
+        self_coll[s].advancef00(Yin.DF(s)(0,0),Yin.HYDRO().Zarray(),Yh.DF(s)(0,0),time,step_size);
+    
+        if (Yin.Species() > 1)
+        {
+            for (size_t sind(0); sind < Yin.Species(); ++sind){
+                // std::cout << "\n\n sdummy = " << sdummy << ",sind = " << sind << ", s = " << s << "\n\n";
+                if (s!=sind)  {
+                    // std::cout << "\n\n12\n\n";
+                    // unself_f00_coll[sdummy].rkloop(Yin.SH(s,0,0),Yin.SH(sind,0,0)); ++sdummy;
+
+                }
+            }
+        }
+
+
+        // Yin.DF(s).checknan();
+
+    }
+
+}
+
+
+//-------------------------------------------------------------------
+void collisions_2D::advancef1(State2D& Yin, State2D& Yh, const double step_size)
+//-------------------------------------------------------------------
+{
+    size_t sdummy(0);
+
+
+    for(size_t s(0); s < Yin.Species(); ++s)
+    {
+        self_coll[s].advancef1(Yin.DF(s), Yin.HYDRO().Zarray(), Yh.DF(s), step_size );
 
         if (Yin.Species() > 1)
         {

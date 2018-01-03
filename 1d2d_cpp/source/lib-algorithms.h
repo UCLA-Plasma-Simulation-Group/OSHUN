@@ -827,6 +827,121 @@ namespace Algorithms {
     }
 
 
+//  RK4 
+    template<class T> class RKCK54 {
+    public:
+//      Constructor
+        RKCK54(T& Yin): Yh1(Yin), Yh3(Yin), Yh4(Yin), Yh5(Yin), Yh6(Yin), Yt(Yin) { }
+
+//      Main function
+        T& operator()(T& Y5, T&Y4, double h, AbstFunctor<T>* F);
+        // T& operator()(T& Y5, T&Y4, double h, AbstFunctor<T>* F, size_t dir);
+
+    private:
+//      R-K copies for the data
+        T  Yh1, Yh3, Yh4, Yh5, Yh6, Yt;
+        double a21 = 0.2;
+        double a31 = 3./40., a32 = 9./40.;
+        double a41 = .3, a42 = -.9, a43 = 1.2;
+        double a51 = -11./54., a52 = 2.5 ,a53 = -70./27. ,a54 = 35./27.;
+        double a61 = 1631./55296., a62 = 175./512., a63 = 575./13824., a64 = 44275./110592., a65 = 253./4096.;
+
+        double b1_5 = 37./378., b3_5 = 250./621., b4_5 = 125./594., b6_5 = 512./1771.;
+        double b1_4 = 2825./27648., b3_4 = 18575./48384., b4_4 = 13525./55296., b5_4 = 277./14336., b6_4 = 0.25;
+    };
+
+    template<class T> T& RKCK54<T>::operator()
+            (T& Y5, T& Y4, double h, AbstFunctor<T>* F) {
+//      Take a step using RKCK54
+
+//      Initialization
+        // Yh1 = Y5;   Yh3 = Y5;   Yh4 = Y5;   Yh5 = Y5;   Yh6 = Y5;
+        // Yt = Y5;
+
+//      Step 1
+        (*F)(Y4,Yh1); Yh1 *= h;
+        Yh1 *= a21;
+        Yt = Y4;    Yt  += Yh1;                              // Y1 = Y1 + (h/5)*Yh
+
+        //      Step 2
+        // (*F)(Yt,Yh2);                                   // f(Y1)
+        (*F)(Yt,Y5); Y5 *= h;                                   // f(Y1)
+        Yh1 *= a31/a21; Y5 *= a32;  
+        Yt = Y4;    Yt += Yh1;  Yt += Y5;
+
+        //      Step 3
+        (*F)(Yt,Yh3); Yh3 *= h;
+        Yh1 *= a41/a31; Y5 *= a42/a32;   Yh3 *= a43;
+        Yt = Y4;    Yt += Yh1; Yt += Y5; Yt += Yh3;
+        
+        //      Step 4
+        (*F)(Yt,Yh4); Yh4 *= h;
+        Yh1 *= a51/a41; Y5 *= a52/a42;   Yh3 *= a53/a43;    Yh4 *= a54;
+        Yt = Y4;    Yt += Yh1; Yt += Y5; Yt += Yh3; Yt += Yh4;
+        
+        //      Step 5
+        (*F)(Yt,Yh5); Yh5 *= h;
+        Yh1 *= a61/a51; Y5 *= a62/a52;   Yh3 *= a63/a53;    Yh4 *= a64/a54; Yh5 *= a65;
+        Yt = Y4;    Yt += Yh1; Yt += Y5; Yt += Yh3; Yt += Yh4; Yt += Yh5;
+            
+
+        //      Step 6
+        (*F)(Yt,Yh6); Yh6 *= h;
+
+
+        //      Assemble 5th order solution
+        Y5 = Y4;
+        Yh1 *= b1_5/a61;    Y5 += Yh1;
+        Yh3 *= b3_5/a63;    Y5 += Yh3;
+        Yh4 *= b4_5/a64;    Y5 += Yh4;
+        Yh6 *= b6_5;        Y5 += Yh6;
+
+        //      Assemble 4th order solution
+        Yh1 *= b1_4/b1_5;   Y4 += Yh1;
+        Yh3 *= b3_4/b3_5;   Y4 += Yh3;
+        Yh4 *= b4_4/b4_5;   Y4 += Yh4;
+        Yh5 *= b5_4/a65;    Y4 += Yh5;
+        Yh6 *= b6_4/b6_5;   Y4 += Yh6;
+
+//      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+        // return Y;
+    }
+    
+//     template<class T> T& RKCK54<T>::operator()
+//             (T& Y5, T&Y4, double h, AbstFunctor<T>* F, size_t dir) {
+// //      Take a step using RKCK54
+
+// //      Initialization
+//         Y0 = Y; Y1 = Y;
+
+// //      Step 1
+//         (*F)(Y1,Yh,dir);                    // slope in the beginning
+//         Yh *= (0.5*h);   Y1 += Yh;      // Y1 = Y1 + (h/2)*Yh
+//         Yh *= (1.0/3.0); Y  += Yh;      // Y  = Y  + (h/6)*Yh
+// //      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// //      Step 2
+//         (*F)(Y1,Yh,dir);     Y1  = Y0;      // slope in the middle
+//         Yh *= (0.5*h);   Y1 += Yh;      // Y1 = Y0 + (h/2)*Yh
+//         Yh *= (2.0/3.0); Y  += Yh;      // Y  = Y  + (h/3)*Yh
+// //      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// //      Step 3
+//         (*F)(Y1,Yh,dir);                    // slope in the middle again
+//         Yh *= h;          Y0 += Yh;     // Y0 = Y0 + h*Yh
+//         Yh *= (1.0/3.0);  Y  += Yh;     // Y  = Y  + (h/3)*Yh
+// //      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+// //      Step 4
+//         (*F)(Y0,Yh,dir);                    // slope at the end
+//         Yh *= (h/6.0);    Y += Yh;      // Y  = Y  + (h/6)*Yh
+// //      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
+
+//         return Y;
+//     }
+
+
 //--------------------------------------------------------------
 
     //  Leapfrog space (Position verlet)
@@ -1079,41 +1194,6 @@ namespace Algorithms {
 }
 //**************************************************************
 
-
-
-//**************************************************************
-//  This Clock controls an iteration loop, given an initial
-//  time tout_start*dt_out it evaluates the number of time-
-//  steps it takes to get to (tout_start+1)*dt_out and can
-//  be incremented;
-
-class Clock {
-public:
-//      Constructor
-    Clock(int tout_start, double dt_out, double CFL) {
-        _hstep = 0;
-        _t_start = double(tout_start)*dt_out;
-        _numh  = size_t(static_cast<int>(dt_out/CFL))+1;
-        _h     = dt_out/static_cast<double>(_numh);
-    }
-
-//      Clock readings
-    double h()     const {return _h;}                    // Step size
-    size_t numh()  const {return _numh;}                 // # steps
-    size_t tick()  const {return _hstep;}                // Current step
-    double time()  const {return tick()*h() + _t_start;} // Current time
-
-//      Increment time
-    Clock& operator++() { ++_hstep; return *this;}
-
-private:
-    double _t_start;   // Initial output timestep
-    size_t _numh;      // # of steps derived from this CFL
-    double _h;         // resulting time-step from CFL
-    size_t _hstep;
-};
-//--------------------------------------------------------------
-//**************************************************************
 
 
 #endif

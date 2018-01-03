@@ -10,10 +10,10 @@ Dimensionality = 1D		/// Make sure to run 2D with #Y-cells > 2
 
 numsp = 1
 
-l0 = 8				// If using implicit E field solver
+l0 = 32				// If using implicit E field solver
 m0 = 0				// set lmax = mmax = 1
-nump = 64
-dp(x) = fnc{0.04*8.0/64.0}		// Non-uniform v-grid has only been tested empirically
+nump = 400
+dp(x) = fnc{0.04*8.0/400.0}		// Non-uniform v-grid has only been tested empirically
 mass = 1.0
 charge = -1.0
 
@@ -21,7 +21,7 @@ charge = -1.0
 // Spatial Grid    
 //-----------------------------------------------------------------------
 
-Nx = 64 				/// Keep these even
+Nx = 24 				/// Keep these even
 Ny = 8												
 
 xmin = 0.0
@@ -35,27 +35,27 @@ ymax = 50000.0
 					OpenMP parallelizes harmonic space
 //-----------------------------------------------------------------------
 
-MPI_Processes_X = 4		// Make sure N_x/MPI_x >= 4
+MPI_Processes_X = 2		// Make sure N_x/MPI_x >= 4
 MPI_Processes_Y = 1		// Make sure N_y/MPI_y >= 4
 
-OpenMP_Threads = 1		// Make sure N_harmonics / OpenMPThreads > 5
+OpenMP_Threads = 2		// Make sure N_harmonics / OpenMPThreads > 5
 
 //-----------------------------------------------------------------------
 // Time and Output Discretization 
 //-----------------------------------------------------------------------
 
-max_timestep = 0.01
-n_outsteps = 200				// Number of outputs
-n_distoutsteps = 100			// Dist output every n_distoutstep of field outputs
-n_bigdistoutsteps = 100		// Big dist output every n_bigdistoutstep of field outputs
-t_stop = 200.0
+max_timestep = 0.06
+n_outsteps = 400				// Number of outputs
+n_distoutsteps = 40				// Number of Dist output
+n_bigdistoutsteps = 10			// Number of Big dist output 
+t_stop = 500.0
 
 //-----------------------------------------------------------------------
 // Restart information
 //-----------------------------------------------------------------------
 if_restart = false			// true if restart
 restart_time = 1000			// Read restart file from t = restart_tim
-n_restarts = 1000			// Write restart files every n_restart field outputs 
+n_restarts = 1			// Write restart files every n_restart field outputs 
 
 //-----------------------------------------------------------------------
 //
@@ -65,7 +65,7 @@ n_restarts = 1000			// Write restart files every n_restart field outputs
 // Set normalization
 //-----------------------------------------------------------------------
 
-density_np                  = 1e21	// Reference density
+density_np                  = 1e20	// Reference density
 super_gaussian_distribution = 2.0	// Initialize Maxwellian or ...
 pth_ref                     = 0.04      // Reference thermal velocity
 hydrocharge = 3.0			// Reference Z
@@ -91,7 +91,7 @@ implicit_E                          = false	// For collisional time-scale proble
 
 /   ---   /   ---   /   ---   /   ---   /   ---   /   ---   /   ---   /
 /// Fokker-Planck
-collisions_switch = false		
+collisions_switch = true		
 f00_collisions = implicit		// Can be implicit or explicit, implicit recommended
 flm_collisions = on				// Can be ee, ei, or on
 
@@ -110,8 +110,18 @@ small_dt                            = 0.01
 smaller_dt                          = 0.01
 f00_exp_parabolic_approximation	    = 4
 
-dbydx_order 						= 2
+
+// Spatial Differencing
+dbydx_order 						= 4
 dbydy_order 						= 2
+
+
+// Adaptive Time-Step
+adaptive_time_step_abs_tol			= 1e-16
+adaptive_time_step_rel_tol			= 1e-6
+
+adaptive_time_step_max_iterations 	= 20
+
 
 //-----------------------------------------------------------------------
 // Boundary type (default periodic)
@@ -168,7 +178,7 @@ nump3_out = 5
 dp3_out(x) = cst{0.2}
 
 // Distribution Function
-o_p1x1 = false
+o_p1x1 = true
 o_p2x1 = false
 o_p3x1 = false
 
@@ -176,7 +186,7 @@ o_p1p2x1 = false
 o_p1p3x1 = false
 o_p2p3x1 = false
 
-o_f0x1 = false
+o_f0x1 = true
 o_f10x1 = false
 o_f20x1 = false
 o_f11x1 = false
@@ -198,7 +208,7 @@ o_Ti = false
 
 traveling_wave = true
 num_waves = 1
-dEx(x,y,t) = fnc{1e-8*sin(2*pi/0.837758*x-1.159846*t)}   
+dEx(x,y,t) = fnc{1e-5*sin(2*pi/0.837758*x-1.159846*t)}   
 dEy(x,y,t) = cst{0.0} 
 dEz(x,y,t) = cst{0.0} 
 dBx(x,y,t) = cst{0.0} 

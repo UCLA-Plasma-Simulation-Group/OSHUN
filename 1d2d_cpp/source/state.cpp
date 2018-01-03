@@ -218,7 +218,7 @@ void SHarmonic1D::checknan(){
                     MPI_Comm_rank(MPI_COMM_WORLD, &rank); 
                     if (rank == 0)
                     {
-                            fprintf(stderr, "Error: Program terminated with error code %d\n", 1);
+                            fprintf(stderr, "Found %d NaN \n", 1);
                     }
                     MPI_Finalize();
                     exit(1);

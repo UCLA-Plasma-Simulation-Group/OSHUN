@@ -547,32 +547,6 @@ Export_Files::Xport::Xport(const Algorithms::AxisBundle<double>& _axis,
     size_t species(_axis.pdim());
     DefaultTags dTags(species);
 
-//     vector< oAxis > xyz, pxyz, imre, pr, parts;
-//     for (size_t i(0); i < _axis.xdim(); ++i) {
-//         xyz.push_back( Export_Files::oAxis(_axis.xgmin(i), _axis.xgmax(i), _axis.Nxg(i)) );
-//     }
-//     parts.push_back( Export_Files::oAxis(0.5, Input::List().numparticles+0.5, Input::List().numparticles));
-
-//     for (size_t s(0); s < species; ++s) {
-//         pr.push_back( Export_Files::oAxis(_axis.pmin(s), _axis.pmax(s), _axis.Np(s)));
-//         pxyz.push_back( Export_Files::oAxis( (-1.0)*float(_axis.pmax(s)), float(_axis.pmax(s)), _axis.Npx(s)) );
-//         pxyz.push_back( Export_Files::oAxis( (-1.0)*float(_axis.pmax(s)), float(_axis.pmax(s)), _axis.Npy(s)) );
-//         pxyz.push_back( Export_Files::oAxis( (-1.0)*float(_axis.pmax(s)), float(_axis.pmax(s)), _axis.Npz(s)) );
-//     }
-//     imre.push_back( Export_Files::oAxis(0,1,2) );
-// //  Time 
-//     size_t tloc(0);                  // Find the location of the right tag
-//     while ( ( tloc < dTags.time.size()-1 ) &&
-//         ( find(oTags.begin(),oTags.end(), dTags.time[tloc]) == oTags.end() ) ) 
-//     {
-//         ++tloc;
-//     }
-    
-
-//     string tlabel = "t[" +formulary().Label(dTags.time[tloc])+"]";
-//     string tunits = formulary().Label(dTags.time[tloc]);
-//     double  tconv  =  formulary().Uconv(dTags.time[tloc]);
-
 // //  xyz Axis
     size_t xloc(0);                  // Find the location of the right tag
     while ( ( xloc < dTags.space.size()-1 ) &&
@@ -581,33 +555,6 @@ Export_Files::Xport::Xport(const Algorithms::AxisBundle<double>& _axis,
     }
     // xyz[0].label = "x["+ formulary().Label(dTags.space[xloc]) +"]";
     string axis_units = dTags.space[xloc];
-//     if ( xyz.size() > 1 ) xyz[1].label = "y["+ formulary().Label(dTags.space[xloc]) +"]";
-//     if ( xyz.size() > 2 ) xyz[2].label = "z["+ formulary().Label(dTags.space[xloc]) +"]";
-//     xyz[0].units = formulary().Label(dTags.space[xloc]);
-//     if ( xyz.size() > 1 ) xyz[1].units = formulary().Label(dTags.space[xloc]);
-//     if ( xyz.size() > 2 ) xyz[2].units = formulary().Label(dTags.space[xloc]);
-
-//     parts[0].label = "particle index";
-//     parts[0].units = "#";
-
-    //  pxyz Axis
-    // for (size_t i(0); i < species; ++i) 
-    // {
-    //     pr[i].label = "p";
-    //     pr[i].units = "m_e c";
-
-    //     pxyz[i].label = "px[mc]";
-    //     pxyz[i].units = "m_e c";
-    //         // if ( pxyz.size()/species > 1 ) 
-    //     pxyz[1+i].label = "py[mc]";
-    //     pxyz[1+i].units = "m_e c";
-    //         // if ( pxyz.size()/species > 2 )
-    //     pxyz[2+i].label = "pz[mc]";
-    //     pxyz[2+i].units = "m_e c";
-
-    //         // if ( pxyz.size()/species > 1 ) 
-    //         // if ( pxyz.size()/species > 2 ) pxyz[2*species+i].units = "m_e c";
-    // }
 
 //  Tags for Fields -->
     for (size_t i(0); i < dTags.fld.size(); ++i) 
@@ -617,11 +564,7 @@ Export_Files::Xport::Xport(const Algorithms::AxisBundle<double>& _axis,
         {
             string nounits = dTags.fld[i].substr(0, dTags.fld[i].find("_"));
             string folder = homedir + "output/fields/" + nounits + "/";
-                //         Generate a header file for this tag
-            // Hdr[dTags.fld[i]] = Header(xyz[0],
-            //    nounits+"["+formulary().Label(dTags.fld[i])+"]",
-            //    formulary().Uconv(dTags.fld[i]),
-            //    tlabel, tunits, tconv, folder);
+                
             Hdr[nounits] = Header(axis_units, dTags.fld[i], folder);
         }
     } // <--
@@ -635,11 +578,6 @@ Export_Files::Xport::Xport(const Algorithms::AxisBundle<double>& _axis,
             string nounits = dTags.mom[i].substr(0, dTags.mom[i].find("_"));
             string folder = homedir + "output/moments/" + nounits + "/";
             //         Generate a header file for this tag
-            // Hdr[dTags.mom[i]] = Header(xyz[0],
-            //    nounits+"["+formulary().Label(dTags.mom[i])+"]",
-            //    formulary().Uconv(dTags.mom[i]),
-            //    tlabel, tunits, tconv, folder);
-            //    
             Hdr[nounits] = Header(axis_units, dTags.mom[i], folder);
         }
     } // <--
@@ -653,12 +591,6 @@ Export_Files::Xport::Xport(const Algorithms::AxisBundle<double>& _axis,
             string nounits = dTags.part[i].substr(0, dTags.part[i].find("_"));
             string folder = homedir + "output/particles/" + nounits + "/";
             //         Generate a header file for this tag
-            
-
-            // Hdr[dTags.part[i]] = Header(parts,
-            //  "particles", //nounits+"["+formulary().Label(dTags.mom[i])+"]",
-            //  1.0,//formulary().Uconv(dTags.mom[i]),
-            //  tlabel, tunits, tconv, folder);
         }
     } // <--
 
@@ -747,7 +679,7 @@ Export_Files::Restart_Facility::Restart_Facility(const int rank, string homedir)
 
 //--------------------------------------------------------------
 //  Read restart file
-void Export_Files::Restart_Facility::Read(const int rank, const size_t re_step, State1D& Y) {
+void Export_Files::Restart_Facility::Read(const int rank, const size_t re_step, State1D& Y, double time_start) {
 
 //      Generate filename 
     string   filename(hdir+"restart/re_1D_");
@@ -758,6 +690,7 @@ void Export_Files::Restart_Facility::Read(const int rank, const size_t re_step, 
 
     if (fin)
     {
+        fin.read((char *) &time,sizeof(time_start));
     //      Read distribution functions
         for(size_t s(0); s < Y.Species(); ++s) {
             for(size_t nh(0); nh < Y.DF(s).dim(); ++nh) {
@@ -787,7 +720,7 @@ void Export_Files::Restart_Facility::Read(const int rank, const size_t re_step, 
 
 //--------------------------------------------------------------
 //  Write restart file
-void Export_Files::Restart_Facility::Write(const int rank, const size_t re_step, State1D& Y) {
+void Export_Files::Restart_Facility::Write(const int rank, const size_t re_step, State1D& Y, double time_dump) {
 
 //      Generate filename 
     string   filename(hdir+"restart/re_1D_");
@@ -795,6 +728,8 @@ void Export_Files::Restart_Facility::Write(const int rank, const size_t re_step,
 
 //      Open file
     ofstream  fout(filename.c_str(), ios::binary);
+
+    fout.write((char *) &time_dump,sizeof(time_dump));
 
 //      Write distribution functions
     for (size_t s(0); s < Y.Species(); ++s) {
@@ -819,7 +754,7 @@ void Export_Files::Restart_Facility::Write(const int rank, const size_t re_step,
 //--------------------------------------------------------------
 //--------------------------------------------------------------
 //  Read restart file
-void Export_Files::Restart_Facility::Read(const int rank, const size_t re_step, State2D& Y) {
+void Export_Files::Restart_Facility::Read(const int rank, const size_t re_step, State2D& Y, double time_start) {
 
 //      Generate filename 
     string   filename(hdir+"restart/re_2D_");
@@ -830,6 +765,7 @@ void Export_Files::Restart_Facility::Read(const int rank, const size_t re_step, 
 
     if (fin)
     {
+        fin.read((char *) &time,sizeof(time_start));
     //      Read distribution functions
         for(size_t s(0); s < Y.Species(); ++s) {
             for(size_t nh(0); nh < Y.DF(s).dim(); ++nh) {
@@ -863,7 +799,7 @@ void Export_Files::Restart_Facility::Read(const int rank, const size_t re_step, 
 
 //--------------------------------------------------------------
 //  Write restart file
-void Export_Files::Restart_Facility::Write(const int rank, const size_t re_step, State2D& Y) {
+void Export_Files::Restart_Facility::Write(const int rank, const size_t re_step, State2D& Y, double time_dump) {
 
 //      Generate filename 
     string   filename(hdir+"restart/re_2D_");
@@ -872,6 +808,8 @@ void Export_Files::Restart_Facility::Write(const int rank, const size_t re_step,
 //      Open file
     ofstream  fout(filename.c_str(), ios::binary);
 
+
+    fout.write((char *) &time_dump,sizeof(time_dump));
 //      Write distribution functions
     
     for (size_t s(0); s < Y.Species(); ++s) {
@@ -2273,318 +2211,318 @@ Array3D<double>  Output_Data::fulldistvsposition::p1p2p3(DistFunc1D& df, size_t 
 //**************************************************************
 //--------------------------------------------------------------
 
-void Output_Data::Output_Preprocessor::operator()(const State1D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::operator()(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
  const Parallel_Environment_1D& PE) {
 
     if (Input::List().o_Ex) {
-        Ex( Y, grid, tout, PE );
+        Ex( Y, grid, tout, time, dt, PE );
     }
 
     if (Input::List().o_Ey) {
-        Ey( Y, grid, tout, PE );
+        Ey( Y, grid, tout, time, dt, PE );
     }
 
     if (Input::List().o_Ez) {
-        Ez( Y, grid, tout, PE );
+        Ez( Y, grid, tout, time, dt, PE );
     }
 
     if (Input::List().o_Bx) {
-        Bx( Y, grid, tout, PE );
+        Bx( Y, grid, tout, time, dt, PE );
     }
 
     if (Input::List().o_By) {
-        By( Y, grid, tout, PE );
+        By( Y, grid, tout, time, dt, PE );
     }
 
     if (Input::List().o_Bz) {
-        Bz( Y, grid, tout, PE );
+        Bz( Y, grid, tout, time, dt, PE );
     }
 
     if (Input::List().o_x1x2) {
-        n( Y, grid, tout, PE );
+        n( Y, grid, tout, time, dt, PE );
     }
 
     if (Input::List().o_Temperature) {
-        T( Y, grid, tout, PE );
+        T( Y, grid, tout, time, dt, PE );
     }
 
     if (Input::List().o_Jx) {
-        Jx( Y, grid, tout, PE );
+        Jx( Y, grid, tout, time, dt, PE );
     }
 
     if (Input::List().o_Jy) {
-        Jy( Y, grid, tout, PE );
+        Jy( Y, grid, tout, time, dt, PE );
     }
 
     if (Input::List().o_Jz) {
-        Jz( Y, grid, tout, PE );
+        Jz( Y, grid, tout, time, dt, PE );
     }
 
     if (Input::List().o_Qx) {
-        Qx( Y, grid, tout, PE );
+        Qx( Y, grid, tout, time, dt, PE );
     }
 
     if (Input::List().o_Qy) {
-        Qy( Y, grid, tout, PE );
+        Qy( Y, grid, tout, time, dt, PE );
     }
 
     if (Input::List().o_Qz) {
-        Qz( Y, grid, tout, PE );
+        Qz( Y, grid, tout, time, dt, PE );
     }
     if (Input::List().o_vNx) {
-        vNx( Y, grid, tout, PE );
+        vNx( Y, grid, tout, time, dt, PE );
     }
     if (Input::List().o_vNy) {
-        vNy( Y, grid, tout, PE );
+        vNy( Y, grid, tout, time, dt, PE );
     }
     if (Input::List().o_vNz) {
-        vNz( Y, grid, tout, PE );
+        vNz( Y, grid, tout, time, dt, PE );
     }
 
     if (Input::List().o_Ux) {
-        Ux( Y, grid, tout, PE );
+        Ux( Y, grid, tout, time, dt, PE );
     }
 
     if (Input::List().o_Uy) {
-        Uy( Y, grid, tout, PE );
+        Uy( Y, grid, tout, time, dt, PE );
     }
 
     if (Input::List().o_Uz) {
-        Uz( Y, grid, tout, PE );
+        Uz( Y, grid, tout, time, dt, PE );
     }
 
     if (Input::List().o_Z) {
-        Z( Y, grid, tout, PE );
+        Z( Y, grid, tout, time, dt, PE );
     }
 
     if (Input::List().o_ni) {
-        ni( Y, grid, tout, PE );
+        ni( Y, grid, tout, time, dt, PE );
     }
 
     if (Input::List().o_Ux) {
-        Ti( Y, grid, tout, PE );
+        Ti( Y, grid, tout, time, dt, PE );
     }
 
     if (Input::List().particlepusher) {
-        particles_x( Y, grid, tout, PE );
-        particles_px( Y, grid, tout, PE );
-        particles_py( Y, grid, tout, PE );
-        particles_pz( Y, grid, tout, PE );
+        particles_x( Y, grid, tout, time, dt, PE );
+        particles_px( Y, grid, tout, time, dt, PE );
+        particles_py( Y, grid, tout, time, dt, PE );
+        particles_pz( Y, grid, tout, time, dt, PE );
     }
 
 }
 //--------------------------------------------------------------
 //--------------------------------------------------------------
 
-void Output_Data::Output_Preprocessor::distdump(const State1D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::distdump(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
    const Parallel_Environment_1D& PE) 
 {
 
     if (Input::List().o_p1x1){
-        px( Y, grid, tout, PE );
+        px( Y, grid, tout, time, dt, PE );
     }
     if (Input::List().o_p2x1){
-        py( Y, grid, tout, PE );
+        py( Y, grid, tout, time, dt, PE );
     }
     if (Input::List().o_f0x1){
-        f0( Y, grid, tout, PE );
+        f0( Y, grid, tout, time, dt, PE );
     }
     if (Input::List().o_f10x1){
-        f10( Y, grid, tout, PE );
+        f10( Y, grid, tout, time, dt, PE );
     }
     if (Input::List().o_f11x1){
-        f11( Y, grid, tout, PE );
+        f11( Y, grid, tout, time, dt, PE );
     }
     if (Input::List().o_f20x1)
     {
-        f20( Y, grid, tout, PE );
+        f20( Y, grid, tout, time, dt, PE );
     }
     if (Input::List().o_fl0x1){
-        fl0( Y, grid, tout, PE );
+        fl0( Y, grid, tout, time, dt, PE );
     }
 
 }
 
-void Output_Data::Output_Preprocessor::bigdistdump(const State1D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::bigdistdump(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
    const Parallel_Environment_1D& PE) 
 {
 
     if (Input::List().o_p1p2x1)
     {
-        pxpy( Y, grid, tout, PE );
+        pxpy( Y, grid, tout, time, dt, PE );
     }
     if (Input::List().o_p1p3x1)
     {
-        pxpz( Y, grid, tout, PE );
+        pxpz( Y, grid, tout, time, dt, PE );
     }
     if (Input::List().o_p2p3x1)
     {
-        pypz( Y, grid, tout, PE );
+        pypz( Y, grid, tout, time, dt, PE );
     }
     if (Input::List().o_p1p2p3x1)
     {
-        // pxpypz( Y, grid, tout, PE );
+        // pxpypz( Y, grid, tout, time, dt, PE );
     }
 
 }
 //--------------------------------------------------------------
 //--------------------------------------------------------------
 
-void Output_Data::Output_Preprocessor::operator()(const State2D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::operator()(const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
  const Parallel_Environment_2D& PE) {
 
     if (Input::List().o_Ex) {
-        Ex( Y, grid, tout, PE );
+        Ex( Y, grid, tout, time, dt, PE );
     }
 
     if (Input::List().o_Ey) {
-        Ey( Y, grid, tout, PE );
+        Ey( Y, grid, tout, time, dt, PE );
     }
 
     if (Input::List().o_Ez) {
-        Ez( Y, grid, tout, PE );
+        Ez( Y, grid, tout, time, dt, PE );
     }
 
     if (Input::List().o_Bx) {
-        Bx( Y, grid, tout, PE );
+        Bx( Y, grid, tout, time, dt, PE );
     }
 
     if (Input::List().o_By) {
-        By( Y, grid, tout, PE );
+        By( Y, grid, tout, time, dt, PE );
     }
 
     if (Input::List().o_Bz) {
-        Bz( Y, grid, tout, PE );
+        Bz( Y, grid, tout, time, dt, PE );
     }
 
     if (Input::List().o_x1x2) {
-        n( Y, grid, tout, PE );
+        n( Y, grid, tout, time, dt, PE );
     }
 
     if (Input::List().o_Temperature) {
-        T( Y, grid, tout, PE );
+        T( Y, grid, tout, time, dt, PE );
     }
 
     if (Input::List().o_Jx) {
-        Jx( Y, grid, tout, PE );
+        Jx( Y, grid, tout, time, dt, PE );
     }
 
     if (Input::List().o_Jy) {
-        Jy( Y, grid, tout, PE );
+        Jy( Y, grid, tout, time, dt, PE );
     }
 
     if (Input::List().o_Jz) {
-        Jz( Y, grid, tout, PE );
+        Jz( Y, grid, tout, time, dt, PE );
     }
 
     if (Input::List().o_Qx) {
-        Qx( Y, grid, tout, PE );
+        Qx( Y, grid, tout, time, dt, PE );
     }
 
     if (Input::List().o_Qy) {
-        Qy( Y, grid, tout, PE );
+        Qy( Y, grid, tout, time, dt, PE );
     }
 
     if (Input::List().o_Qz) {
-        Qz( Y, grid, tout, PE );
+        Qz( Y, grid, tout, time, dt, PE );
     }
     if (Input::List().o_vNx) {
-        vNx( Y, grid, tout, PE );
+        vNx( Y, grid, tout, time, dt, PE );
     }
     if (Input::List().o_vNy) {
-        vNy( Y, grid, tout, PE );
+        vNy( Y, grid, tout, time, dt, PE );
     }
     if (Input::List().o_vNz) {
-        vNz( Y, grid, tout, PE );
+        vNz( Y, grid, tout, time, dt, PE );
     }
 
     // if (Input::List().o_Ux) {
-    //     Ux( Y, grid, tout, PE );
+    //     Ux( Y, grid, tout, time, dt, PE );
     // }
 
     // if (Input::List().o_Uy) {
-    //     Uy( Y, grid, tout, PE );
+    //     Uy( Y, grid, tout, time, dt, PE );
     // }
 
     // if (Input::List().o_Uz) {
-    //     Uz( Y, grid, tout, PE );
+    //     Uz( Y, grid, tout, time, dt, PE );
     // }
 
     // if (Input::List().o_Z) {
-    //     Z( Y, grid, tout, PE );
+    //     Z( Y, grid, tout, time, dt, PE );
     // }
 
     // if (Input::List().o_ni) {
-    //     ni( Y, grid, tout, PE );
+    //     ni( Y, grid, tout, time, dt, PE );
     // }
 
     // if (Input::List().o_Ux) {
-    //     Ti( Y, grid, tout, PE );
+    //     Ti( Y, grid, tout, time, dt, PE );
     // }
 
     // if (Input::List().particlepusher) {
-    //     particles_x( Y, grid, tout, PE );
-    //     particles_px( Y, grid, tout, PE );
-    //     particles_py( Y, grid, tout, PE );
-    //     particles_pz( Y, grid, tout, PE );
+    //     particles_x( Y, grid, tout, time, dt, PE );
+    //     particles_px( Y, grid, tout, time, dt, PE );
+    //     particles_py( Y, grid, tout, time, dt, PE );
+    //     particles_pz( Y, grid, tout, time, dt, PE );
     // }
 
 }
 //--------------------------------------------------------------
 //--------------------------------------------------------------
 
-void Output_Data::Output_Preprocessor::distdump(const State2D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::distdump(const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
    const Parallel_Environment_2D& PE) 
 {
     if (Input::List().o_p1x1){
-        px( Y, grid, tout, PE );
+        px( Y, grid, tout, time, dt, PE );
     }
     if (Input::List().o_p2x1){
-        py( Y, grid, tout, PE );
+        py( Y, grid, tout, time, dt, PE );
     }
     if (Input::List().o_f0x1){
-        f0( Y, grid, tout, PE );
+        f0( Y, grid, tout, time, dt, PE );
     }
     if (Input::List().o_f10x1){
-        f10( Y, grid, tout, PE );
+        f10( Y, grid, tout, time, dt, PE );
     }
     if (Input::List().o_f11x1){
-        f11( Y, grid, tout, PE );
+        f11( Y, grid, tout, time, dt, PE );
     }
     if (Input::List().o_f20x1)
     {
-        f20( Y, grid, tout, PE );
+        f20( Y, grid, tout, time, dt, PE );
     }
     if (Input::List().o_fl0x1){
-        fl0( Y, grid, tout, PE );
+        fl0( Y, grid, tout, time, dt, PE );
     }
 }
 
-void Output_Data::Output_Preprocessor::bigdistdump(const State2D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::bigdistdump(const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
    const Parallel_Environment_2D& PE) 
 {
     if (Input::List().o_p1p2x1)
     {
-        pxpy( Y, grid, tout, PE );
+        pxpy( Y, grid, tout, time, dt, PE );
     }
     if (Input::List().o_p1p3x1)
     {
-        pxpz( Y, grid, tout, PE );
+        pxpz( Y, grid, tout, time, dt, PE );
     }
     if (Input::List().o_p2p3x1)
     {
-        pypz( Y, grid, tout, PE );
+        pypz( Y, grid, tout, time, dt, PE );
     }
     if (Input::List().o_p1p2p3x1)
     {
-        // pxpypz( Y, grid, tout, PE );
+        // pxpypz( Y, grid, tout, time, dt, PE );
     }
 }
 //--------------------------------------------------------------
 //--------------------------------------------------------------
 //  Parallel output for Ex
 //--------------------------------------------------------------
-void Output_Data::Output_Preprocessor::Ex(const State1D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::Ex(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
  const Parallel_Environment_1D& PE) {
 
     size_t Nbc = Input::List().BoundaryCells;
@@ -2628,13 +2566,13 @@ void Output_Data::Output_Preprocessor::Ex(const State1D& Y, const Grid_Info& gri
         }
     }
 
-    if (PE.RANK() == 0) expo.Export_h5("Ex", xaxis, ExGlobal, tout);
+    if (PE.RANK() == 0) expo.Export_h5("Ex", xaxis, ExGlobal, tout, time, dt);
 
 }
 //--------------------------------------------------------------     
 //--------------------------------------------------------------
 ////--------------------------------------------------------------
-void Output_Data::Output_Preprocessor::Ey(const State1D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::Ey(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
  const Parallel_Environment_1D& PE) {
 
     size_t Nbc = Input::List().BoundaryCells;
@@ -2678,13 +2616,13 @@ void Output_Data::Output_Preprocessor::Ey(const State1D& Y, const Grid_Info& gri
         }
     }
 
-    if (PE.RANK() == 0) expo.Export_h5("Ey", xaxis, EyGlobal, tout);
+    if (PE.RANK() == 0) expo.Export_h5("Ey", xaxis, EyGlobal, tout, time, dt);
 
 }
 //--------------------------------------------------------------     
 //--------------------------------------------------------------
 ////--------------------------------------------------------------
-void Output_Data::Output_Preprocessor::Ez(const State1D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::Ez(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
  const Parallel_Environment_1D& PE) {
 
     size_t Nbc = Input::List().BoundaryCells;
@@ -2728,14 +2666,14 @@ void Output_Data::Output_Preprocessor::Ez(const State1D& Y, const Grid_Info& gri
         }
     }
 
-    if (PE.RANK() == 0) expo.Export_h5("Ez", xaxis, EzGlobal, tout);
+    if (PE.RANK() == 0) expo.Export_h5("Ez", xaxis, EzGlobal, tout, time, dt);
 
 
 }
 //--------------------------------------------------------------     
 //--------------------------------------------------------------
 ////--------------------------------------------------------------
-void Output_Data::Output_Preprocessor::Bx(const State1D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::Bx(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
  const Parallel_Environment_1D& PE) {
 
     size_t Nbc = Input::List().BoundaryCells;
@@ -2778,13 +2716,13 @@ void Output_Data::Output_Preprocessor::Bx(const State1D& Y, const Grid_Info& gri
         }
     }
 
-    if (PE.RANK() == 0) expo.Export_h5("Bx", xaxis, BxGlobal, tout);
+    if (PE.RANK() == 0) expo.Export_h5("Bx", xaxis, BxGlobal, tout, time, dt);
 
 }
 //--------------------------------------------------------------     
 //--------------------------------------------------------------
 ////--------------------------------------------------------------
-void Output_Data::Output_Preprocessor::By(const State1D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::By(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
  const Parallel_Environment_1D& PE) {
 
     size_t Nbc = Input::List().BoundaryCells;
@@ -2827,14 +2765,14 @@ void Output_Data::Output_Preprocessor::By(const State1D& Y, const Grid_Info& gri
         }
     }
 
-    if (PE.RANK() == 0) expo.Export_h5("By", xaxis, ByGlobal, tout);
+    if (PE.RANK() == 0) expo.Export_h5("By", xaxis, ByGlobal, tout, time, dt);
 
 
 }
 //--------------------------------------------------------------     
 //--------------------------------------------------------------
 ////--------------------------------------------------------------
-void Output_Data::Output_Preprocessor::Bz(const State1D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::Bz(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
  const Parallel_Environment_1D& PE) {
 
     size_t Nbc = Input::List().BoundaryCells;
@@ -2877,7 +2815,7 @@ void Output_Data::Output_Preprocessor::Bz(const State1D& Y, const Grid_Info& gri
         }
     }
 
-    if (PE.RANK() == 0) expo.Export_h5("Bz", xaxis, BzGlobal, tout);
+    if (PE.RANK() == 0) expo.Export_h5("Bz", xaxis, BzGlobal, tout, time, dt);
 
 
 }
@@ -2885,7 +2823,7 @@ void Output_Data::Output_Preprocessor::Bz(const State1D& Y, const Grid_Info& gri
 //--------------------------------------------------------------
 //  Parallel output for Ex
 //--------------------------------------------------------------
-void Output_Data::Output_Preprocessor::Ex(const State2D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::Ex(const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
                                              const Parallel_Environment_2D& PE) {
 
     size_t Nbc = Input::List().BoundaryCells;
@@ -2950,13 +2888,13 @@ void Output_Data::Output_Preprocessor::Ex(const State2D& Y, const Grid_Info& gri
         }
     }
 
-    if (PE.RANK() == 0) expo.Export_h5("Ex", xaxis, yaxis, ExGlobal, tout);
+    if (PE.RANK() == 0) expo.Export_h5("Ex", xaxis, yaxis, ExGlobal, tout, time, dt);
 
 }
 //--------------------------------------------------------------     
 //--------------------------------------------------------------
 ////--------------------------------------------------------------
-void Output_Data::Output_Preprocessor::Ey(const State2D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::Ey(const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
                                              const Parallel_Environment_2D& PE) {
 
     size_t Nbc = Input::List().BoundaryCells;
@@ -3022,14 +2960,14 @@ void Output_Data::Output_Preprocessor::Ey(const State2D& Y, const Grid_Info& gri
         }
     }
 
-    if (PE.RANK() == 0) expo.Export_h5("Ey", xaxis, yaxis, EyGlobal, tout);
+    if (PE.RANK() == 0) expo.Export_h5("Ey", xaxis, yaxis, EyGlobal, tout, time, dt);
 
 
 }
 //--------------------------------------------------------------     
 //--------------------------------------------------------------
 ////--------------------------------------------------------------
-void Output_Data::Output_Preprocessor::Ez(const State2D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::Ez(const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
                                              const Parallel_Environment_2D& PE) {
 
     size_t Nbc = Input::List().BoundaryCells;
@@ -3094,14 +3032,14 @@ void Output_Data::Output_Preprocessor::Ez(const State2D& Y, const Grid_Info& gri
         }
     }
 
-    if (PE.RANK() == 0) expo.Export_h5("Ez", xaxis, yaxis, EzGlobal, tout);
+    if (PE.RANK() == 0) expo.Export_h5("Ez", xaxis, yaxis, EzGlobal, tout, time, dt);
 
 
 }
 //--------------------------------------------------------------     
 //--------------------------------------------------------------
 ////--------------------------------------------------------------
-void Output_Data::Output_Preprocessor::Bx(const State2D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::Bx(const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
                                              const Parallel_Environment_2D& PE) {
 
     size_t Nbc = Input::List().BoundaryCells;
@@ -3166,13 +3104,13 @@ void Output_Data::Output_Preprocessor::Bx(const State2D& Y, const Grid_Info& gri
         }
     }
 
-    if (PE.RANK() == 0) expo.Export_h5("Bx", xaxis, yaxis, BxGlobal, tout);
+    if (PE.RANK() == 0) expo.Export_h5("Bx", xaxis, yaxis, BxGlobal, tout, time, dt);
 
 }
 //--------------------------------------------------------------     
 //--------------------------------------------------------------
 ////--------------------------------------------------------------
-void Output_Data::Output_Preprocessor::By(const State2D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::By(const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
                                              const Parallel_Environment_2D& PE) {
 
     size_t Nbc = Input::List().BoundaryCells;
@@ -3237,13 +3175,13 @@ void Output_Data::Output_Preprocessor::By(const State2D& Y, const Grid_Info& gri
         }
     }
 
-    if (PE.RANK() == 0) expo.Export_h5("By", xaxis, yaxis, ByGlobal, tout);
+    if (PE.RANK() == 0) expo.Export_h5("By", xaxis, yaxis, ByGlobal, tout, time, dt);
 
 }
 //--------------------------------------------------------------     
 //--------------------------------------------------------------
 ////--------------------------------------------------------------
-void Output_Data::Output_Preprocessor::Bz(const State2D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::Bz(const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
                                              const Parallel_Environment_2D& PE) {
 
     size_t Nbc = Input::List().BoundaryCells;
@@ -3309,12 +3247,12 @@ void Output_Data::Output_Preprocessor::Bz(const State2D& Y, const Grid_Info& gri
         }
     }
 
-    if (PE.RANK() == 0) expo.Export_h5("Bz", xaxis, yaxis, BzGlobal, tout);
+    if (PE.RANK() == 0) expo.Export_h5("Bz", xaxis, yaxis, BzGlobal, tout, time, dt);
 
 }
 //--------------------------------------------------------------   
 //--------------------------------------------------------------
-void Output_Data::Output_Preprocessor::px(const State1D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::px(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
  const Parallel_Environment_1D& PE) {
     // std::cout << "0 \n";
     size_t Nbc = Input::List().BoundaryCells;
@@ -3373,14 +3311,14 @@ void Output_Data::Output_Preprocessor::px(const State1D& Y, const Grid_Info& gri
             }
         }
 
-        if (PE.RANK() == 0) expo.Export_h5("px", p1axis, xaxis, p1x1Global, tout, s);
+        if (PE.RANK() == 0) expo.Export_h5("px", p1axis, xaxis, p1x1Global, tout, time, dt, s);
 
     }
 
 }
 //--------------------------------------------------------------
 //--------------------------------------------------------------
-void Output_Data::Output_Preprocessor::py(const State1D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::py(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
  const Parallel_Environment_1D& PE) {
     // std::cout << "0 \n";
     size_t Nbc = Input::List().BoundaryCells;
@@ -3442,13 +3380,13 @@ void Output_Data::Output_Preprocessor::py(const State1D& Y, const Grid_Info& gri
             }
         }
 
-        if (PE.RANK() == 0) expo.Export_h5("py", p2axis, xaxis, p2x1Global, tout, s);
+        if (PE.RANK() == 0) expo.Export_h5("py", p2axis, xaxis, p2x1Global, tout, time, dt, s);
 
     }
 
 }
 //--------------------------------------------------------------
-void Output_Data::Output_Preprocessor::pz(const State1D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::pz(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
  const Parallel_Environment_1D& PE) {
     // std::cout << "0 \n";
     size_t Nbc = Input::List().BoundaryCells;
@@ -3506,7 +3444,7 @@ void Output_Data::Output_Preprocessor::pz(const State1D& Y, const Grid_Info& gri
             }
         }
 
-        if (PE.RANK() == 0) expo.Export_h5("pz", p3axis, xaxis, p3x1Global, tout, s);
+        if (PE.RANK() == 0) expo.Export_h5("pz", p3axis, xaxis, p3x1Global, tout, time, dt, s);
 
     }
 
@@ -3514,7 +3452,7 @@ void Output_Data::Output_Preprocessor::pz(const State1D& Y, const Grid_Info& gri
 //-----------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------
-void Output_Data::Output_Preprocessor::px(const State2D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::px(const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
  const Parallel_Environment_2D& PE) {
     // std::cout << "0 \n";
     size_t Nbc = Input::List().BoundaryCells;
@@ -3608,7 +3546,7 @@ void Output_Data::Output_Preprocessor::px(const State2D& Y, const Grid_Info& gri
             }
         }
 
-        if (PE.RANK() == 0) expo.Export_h5("px", p1axis,xaxis, yaxis, p1x1Global, tout, s);
+        if (PE.RANK() == 0) expo.Export_h5("px", p1axis,xaxis, yaxis, p1x1Global, tout, time, dt, s);
 
     }
 
@@ -3616,7 +3554,7 @@ void Output_Data::Output_Preprocessor::px(const State2D& Y, const Grid_Info& gri
 //--------------------------------------------------------------
 //--------------------------------------------------------------
 //-----------------------------------------------------------------------------------
-void Output_Data::Output_Preprocessor::py(const State2D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::py(const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
  const Parallel_Environment_2D& PE) {
     // std::cout << "0 \n";
     size_t Nbc = Input::List().BoundaryCells;
@@ -3710,14 +3648,14 @@ void Output_Data::Output_Preprocessor::py(const State2D& Y, const Grid_Info& gri
             }
         }
 
-        if (PE.RANK() == 0) expo.Export_h5("py", p2axis, xaxis, yaxis, p1x1Global, tout, s);
+        if (PE.RANK() == 0) expo.Export_h5("py", p2axis, xaxis, yaxis, p1x1Global, tout, time, dt, s);
 
     }
 
 }
 //--------------------------------------------------------------
 //-----------------------------------------------------------------------------------
-void Output_Data::Output_Preprocessor::pz(const State2D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::pz(const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
  const Parallel_Environment_2D& PE) {
     // std::cout << "0 \n";
     size_t Nbc = Input::List().BoundaryCells;
@@ -3810,7 +3748,7 @@ void Output_Data::Output_Preprocessor::pz(const State2D& Y, const Grid_Info& gri
             }
         }
 
-        if (PE.RANK() == 0) expo.Export_h5("pz", p3axis, xaxis, yaxis, p1x1Global, tout, s);
+        if (PE.RANK() == 0) expo.Export_h5("pz", p3axis, xaxis, yaxis, p1x1Global, tout, time, dt, s);
 
     }
 
@@ -3825,7 +3763,7 @@ void Output_Data::Output_Preprocessor::pz(const State2D& Y, const Grid_Info& gri
  * @param[in]  PE    { parameter_description }
  */
 //--------------------------------------------------------------
-void Output_Data::Output_Preprocessor::pxpy(const State1D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::pxpy(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
   const Parallel_Environment_1D& PE) 
 {
 
@@ -3915,14 +3853,14 @@ void Output_Data::Output_Preprocessor::pxpy(const State1D& Y, const Grid_Info& g
            }
        }
 
-       if (PE.RANK() == 0) expo.Export_h5("pxpy", p1axis, p2axis, xaxis, pxpyGlobal, tout, s);
+       if (PE.RANK() == 0) expo.Export_h5("pxpy", p1axis, p2axis, xaxis, pxpyGlobal, tout, time, dt, s);
 
    }
 
 }
 //--------------------------------------------------------------
 //--------------------------------------------------------------
-void Output_Data::Output_Preprocessor::pxpy(const State2D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::pxpy(const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
   const Parallel_Environment_2D& PE) {
 
     size_t Nbc = Input::List().BoundaryCells;
@@ -4034,7 +3972,7 @@ void Output_Data::Output_Preprocessor::pxpy(const State2D& Y, const Grid_Info& g
         }
        
 
-       if (PE.RANK() == 0) expo.Export_h5("pxpy", p1axis, p2axis, xaxis, yaxis, pxpyGlobal, tout, s);
+       if (PE.RANK() == 0) expo.Export_h5("pxpy", p1axis, p2axis, xaxis, yaxis, pxpyGlobal, tout, time, dt, s);
 
    }
 
@@ -4051,7 +3989,7 @@ void Output_Data::Output_Preprocessor::pxpy(const State2D& Y, const Grid_Info& g
  * @param[in]  PE    { parameter_description }
  */
 //--------------------------------------------------------------
-void Output_Data::Output_Preprocessor::pypz(const State1D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::pypz(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
   const Parallel_Environment_1D& PE) {
 
     size_t Nbc = Input::List().BoundaryCells;
@@ -4138,14 +4076,14 @@ void Output_Data::Output_Preprocessor::pypz(const State1D& Y, const Grid_Info& g
             }
         }
 
-       if (PE.RANK() == 0) expo.Export_h5("pypz", p2axis, p3axis, xaxis, pypzGlobal, tout, s);
+       if (PE.RANK() == 0) expo.Export_h5("pypz", p2axis, p3axis, xaxis, pypzGlobal, tout, time, dt, s);
 
    }
 
 }
 //--------------------------------------------------------------
 //--------------------------------------------------------------
-void Output_Data::Output_Preprocessor::pypz(const State2D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::pypz(const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
   const Parallel_Environment_2D& PE) {
 
     size_t Nbc = Input::List().BoundaryCells;
@@ -4257,7 +4195,7 @@ void Output_Data::Output_Preprocessor::pypz(const State2D& Y, const Grid_Info& g
         }
        
 
-       if (PE.RANK() == 0) expo.Export_h5("pypz", p2axis, p3axis, xaxis, yaxis, dataGlobal, tout, s);
+       if (PE.RANK() == 0) expo.Export_h5("pypz", p2axis, p3axis, xaxis, yaxis, dataGlobal, tout, time, dt, s);
 
    }
 
@@ -4273,7 +4211,7 @@ void Output_Data::Output_Preprocessor::pypz(const State2D& Y, const Grid_Info& g
  * @param[in]  PE    { parameter_description }
  */
 //--------------------------------------------------------------
-void Output_Data::Output_Preprocessor::pxpz(const State1D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::pxpz(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
   const Parallel_Environment_1D& PE) {
 
     size_t Nbc = Input::List().BoundaryCells;
@@ -4359,13 +4297,13 @@ void Output_Data::Output_Preprocessor::pxpz(const State1D& Y, const Grid_Info& g
             }
         }
 
-       if (PE.RANK() == 0) expo.Export_h5("pxpz", p1axis, p3axis, xaxis, pxpzGlobal, tout, s);
+       if (PE.RANK() == 0) expo.Export_h5("pxpz", p1axis, p3axis, xaxis, pxpzGlobal, tout, time, dt, s);
 
    }
 
 }
 //--------------------------------------------------------------
-void Output_Data::Output_Preprocessor::pxpz(const State2D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::pxpz(const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
   const Parallel_Environment_2D& PE) {
 
     size_t Nbc = Input::List().BoundaryCells;
@@ -4478,7 +4416,7 @@ void Output_Data::Output_Preprocessor::pxpz(const State2D& Y, const Grid_Info& g
         }
        
 
-       if (PE.RANK() == 0) expo.Export_h5("pxpz", p1axis, p3axis, xaxis, yaxis, dataGlobal, tout, s);
+       if (PE.RANK() == 0) expo.Export_h5("pxpz", p1axis, p3axis, xaxis, yaxis, dataGlobal, tout, time, dt, s);
 
    }
 
@@ -4494,7 +4432,7 @@ void Output_Data::Output_Preprocessor::pxpz(const State2D& Y, const Grid_Info& g
  * @param[in]  PE    { parameter_description }
  */
 //--------------------------------------------------------------
-void Output_Data::Output_Preprocessor::pxpypz(const State1D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::pxpypz(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
   const Parallel_Environment_1D& PE) {
 
     size_t Nbc = Input::List().BoundaryCells;
@@ -4599,12 +4537,12 @@ void Output_Data::Output_Preprocessor::pxpypz(const State1D& Y, const Grid_Info&
             }
         }
 
-        if (PE.RANK() == 0) expo.Export_h5("pxpypz", p1axis, p2axis, p3axis, xaxis, pxpypzGlobal, tout, s);
+        if (PE.RANK() == 0) expo.Export_h5("pxpypz", p1axis, p2axis, p3axis, xaxis, pxpypzGlobal, tout, time, dt, s);
     }
 
 }
 //--------------------------------------------------------------
-void Output_Data::Output_Preprocessor::f0(const State1D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::f0(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
  const Parallel_Environment_1D& PE) {
 
     size_t Nbc = Input::List().BoundaryCells;
@@ -4678,14 +4616,14 @@ void Output_Data::Output_Preprocessor::f0(const State1D& Y, const Grid_Info& gri
             }
         }
 
-        if (PE.RANK() == 0) expo.Export_h5("f0", xaxis, paxis, re_im_axis, f0x1Global, tout, s);
+        if (PE.RANK() == 0) expo.Export_h5("f0", xaxis, paxis, re_im_axis, f0x1Global, tout, time, dt, s);
 
     }
 
 }
 //--------------------------------------------------------------
 //--------------------------------------------------------------
-void Output_Data::Output_Preprocessor::f10(const State1D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::f10(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
   const Parallel_Environment_1D& PE) {
 
     size_t Nbc = Input::List().BoundaryCells;
@@ -4756,14 +4694,14 @@ void Output_Data::Output_Preprocessor::f10(const State1D& Y, const Grid_Info& gr
             }
         }
 
-        if (PE.RANK() == 0) expo.Export_h5("f10", xaxis, paxis, re_im_axis, f0x1Global, tout, s);
+        if (PE.RANK() == 0) expo.Export_h5("f10", xaxis, paxis, re_im_axis, f0x1Global, tout, time, dt, s);
 
     }
 
 }
 //--------------------------------------------------------------
 //--------------------------------------------------------------
-void Output_Data::Output_Preprocessor::f11(const State1D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::f11(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
   const Parallel_Environment_1D& PE) {
 
     size_t Nbc = Input::List().BoundaryCells;
@@ -4834,14 +4772,14 @@ void Output_Data::Output_Preprocessor::f11(const State1D& Y, const Grid_Info& gr
             }
         }
 
-        if (PE.RANK() == 0) expo.Export_h5("f11", xaxis, paxis, re_im_axis, f0x1Global, tout, s);
+        if (PE.RANK() == 0) expo.Export_h5("f11", xaxis, paxis, re_im_axis, f0x1Global, tout, time, dt, s);
     }
 
 
 }
 //--------------------------------------------------------------
 //--------------------------------------------------------------
-void Output_Data::Output_Preprocessor::f20(const State1D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::f20(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
   const Parallel_Environment_1D& PE) {
 
     size_t Nbc = Input::List().BoundaryCells;
@@ -4911,7 +4849,7 @@ void Output_Data::Output_Preprocessor::f20(const State1D& Y, const Grid_Info& gr
                 }
             }
 
-            if (PE.RANK() == 0) expo.Export_h5("f20", xaxis, paxis, re_im_axis, f0x1Global, tout, s);
+            if (PE.RANK() == 0) expo.Export_h5("f20", xaxis, paxis, re_im_axis, f0x1Global, tout, time, dt, s);
 
         }
     }
@@ -4920,7 +4858,7 @@ void Output_Data::Output_Preprocessor::f20(const State1D& Y, const Grid_Info& gr
 //--------------------------------------------------------------
 //--------------------------------------------------------------
 //--------------------------------------------------------------
-void Output_Data::Output_Preprocessor::fl0(const State1D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::fl0(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
   const Parallel_Environment_1D& PE) {
 
     size_t Nbc = Input::List().BoundaryCells;
@@ -4989,7 +4927,7 @@ void Output_Data::Output_Preprocessor::fl0(const State1D& Y, const Grid_Info& gr
             }
         }
 
-        if (PE.RANK() == 0) expo.Export_h5("fl0", xaxis, paxis, re_im_axis, f0x1Global, tout, s);
+        if (PE.RANK() == 0) expo.Export_h5("fl0", xaxis, paxis, re_im_axis, f0x1Global, tout, time, dt, s);
 
     }
 
@@ -4997,7 +4935,7 @@ void Output_Data::Output_Preprocessor::fl0(const State1D& Y, const Grid_Info& gr
 //--------------------------------------------------------------
 //--------------------------------------------------------------
 //--------------------------------------------------------------
-void Output_Data::Output_Preprocessor::f0(const State2D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::f0(const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
                                              const Parallel_Environment_2D& PE) {
     size_t Nbc(Input::List().BoundaryCells);
     MPI_Status status;
@@ -5084,14 +5022,14 @@ void Output_Data::Output_Preprocessor::f0(const State2D& Y, const Grid_Info& gri
                 }
             }
 
-            if (PE.RANK() == 0) expo.Export_h5("f0", xaxis, yaxis, paxis, re_im_axis, global, tout, s);
+            if (PE.RANK() == 0) expo.Export_h5("f0", xaxis, yaxis, paxis, re_im_axis, global, tout, time, dt, s);
 
         }
 
     }
 //-----------------------------------------------------------------
 //--------------------------------------------------------------
-    void Output_Data::Output_Preprocessor::f10(const State2D& Y, const Grid_Info& grid, const size_t tout,
+    void Output_Data::Output_Preprocessor::f10(const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
                                                  const Parallel_Environment_2D& PE) {
         size_t Nbc(Input::List().BoundaryCells);
         MPI_Status status;
@@ -5175,14 +5113,14 @@ void Output_Data::Output_Preprocessor::f0(const State2D& Y, const Grid_Info& gri
                     }
                 }
 
-                if (PE.RANK() == 0) expo.Export_h5("f10", xaxis, yaxis, paxis, re_im_axis, global, tout, s);
+                if (PE.RANK() == 0) expo.Export_h5("f10", xaxis, yaxis, paxis, re_im_axis, global, tout, time, dt, s);
 
             }
 
         }
 //-----------------------------------------------------------------
 //--------------------------------------------------------------
-void Output_Data::Output_Preprocessor::f11(const State2D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::f11(const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
                                              const Parallel_Environment_2D& PE) {
     size_t Nbc(Input::List().BoundaryCells);
     MPI_Status status;
@@ -5268,14 +5206,14 @@ void Output_Data::Output_Preprocessor::f11(const State2D& Y, const Grid_Info& gr
                 }
             }
 
-            if (PE.RANK() == 0) expo.Export_h5("f11", xaxis, yaxis, paxis, re_im_axis, global, tout, s);
+            if (PE.RANK() == 0) expo.Export_h5("f11", xaxis, yaxis, paxis, re_im_axis, global, tout, time, dt, s);
 
         }
 
     }
 //-----------------------------------------------------------------
 //--------------------------------------------------------------
-void Output_Data::Output_Preprocessor::f20(const State2D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::f20(const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
                                              const Parallel_Environment_2D& PE) {
     size_t Nbc(Input::List().BoundaryCells);
     MPI_Status status;
@@ -5365,14 +5303,14 @@ void Output_Data::Output_Preprocessor::f20(const State2D& Y, const Grid_Info& gr
                 }
             }
 
-            if (PE.RANK() == 0) expo.Export_h5("f20", xaxis, yaxis, paxis, re_im_axis, global, tout, s);
+            if (PE.RANK() == 0) expo.Export_h5("f20", xaxis, yaxis, paxis, re_im_axis, global, tout, time, dt, s);
 
         }
 
     }
 //-----------------------------------------------------------------
 //--------------------------------------------------------------
-void Output_Data::Output_Preprocessor::fl0(const State2D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::fl0(const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
                                              const Parallel_Environment_2D& PE) {
     size_t Nbc(Input::List().BoundaryCells);
     MPI_Status status;
@@ -5461,7 +5399,7 @@ void Output_Data::Output_Preprocessor::fl0(const State2D& Y, const Grid_Info& gr
                 }
             }
 
-            if (PE.RANK() == 0) expo.Export_h5("fl0", xaxis, yaxis, paxis, re_im_axis, global, tout, s);
+            if (PE.RANK() == 0) expo.Export_h5("fl0", xaxis, yaxis, paxis, re_im_axis, global, tout, time, dt, s);
 
         }
 
@@ -5469,7 +5407,7 @@ void Output_Data::Output_Preprocessor::fl0(const State2D& Y, const Grid_Info& gr
 //-----------------------------------------------------------------
 //--------------------------------------------------------------    
 //--------------------------------------------------------------
-void Output_Data::Output_Preprocessor::n(const State1D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::n(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
     const Parallel_Environment_1D& PE) {
 
 
@@ -5515,14 +5453,14 @@ void Output_Data::Output_Preprocessor::n(const State1D& Y, const Grid_Info& grid
             }
         }
 
-        if (PE.RANK() == 0) expo.Export_h5("n", xaxis, nGlobal, tout, s);
+        if (PE.RANK() == 0) expo.Export_h5("n", xaxis, nGlobal, tout, time, dt, s);
 
     }
 
 }
 //--------------------------------------------------------------    
 //--------------------------------------------------------------
-void Output_Data::Output_Preprocessor::particles_x(const State1D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::particles_x(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
     const Parallel_Environment_1D& PE) {
 
 
@@ -5564,13 +5502,13 @@ void Output_Data::Output_Preprocessor::particles_x(const State1D& Y, const Grid_
     }
     
 
-    // if (PE.RANK() == 0) expo.Export_h5("prtx", pGlobal, tout);
+    // if (PE.RANK() == 0) expo.Export_h5("prtx", pGlobal, tout, time, dt);
 
 }
 //--------------------------------------------------------------
 //--------------------------------------------------------------    
 //--------------------------------------------------------------
-void Output_Data::Output_Preprocessor::particles_px(const State1D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::particles_px(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
     const Parallel_Environment_1D& PE) {
 
 
@@ -5611,13 +5549,13 @@ void Output_Data::Output_Preprocessor::particles_px(const State1D& Y, const Grid
         }
     }
 
-    // if (PE.RANK() == 0) expo.Export_h5("prtpx", pGlobal, tout);
+    // if (PE.RANK() == 0) expo.Export_h5("prtpx", pGlobal, tout, time, dt);
 
 }
 //--------------------------------------------------------------
 //--------------------------------------------------------------    
 //--------------------------------------------------------------
-void Output_Data::Output_Preprocessor::particles_py(const State1D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::particles_py(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
     const Parallel_Environment_1D& PE) {
 
 
@@ -5658,13 +5596,13 @@ void Output_Data::Output_Preprocessor::particles_py(const State1D& Y, const Grid
         }
     }
 
-    // if (PE.RANK() == 0) expo.Export_h5("prtpy", pGlobal, tout);
+    // if (PE.RANK() == 0) expo.Export_h5("prtpy", pGlobal, tout, time, dt);
 
 }
 //--------------------------------------------------------------
 //--------------------------------------------------------------    
 //--------------------------------------------------------------
-void Output_Data::Output_Preprocessor::particles_pz(const State1D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::particles_pz(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
     const Parallel_Environment_1D& PE) {
 
 
@@ -5705,11 +5643,11 @@ void Output_Data::Output_Preprocessor::particles_pz(const State1D& Y, const Grid
         }
     }
 
-    // if (PE.RANK() == 0) expo.Export_h5("prtpz", pGlobal, tout);
+    // if (PE.RANK() == 0) expo.Export_h5("prtpz", pGlobal, tout, time, dt);
 
 }
 //--------------------------------------------------------------
-void Output_Data::Output_Preprocessor::T(const State1D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::T(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
     const Parallel_Environment_1D& PE) {
 
 
@@ -5762,7 +5700,7 @@ void Output_Data::Output_Preprocessor::T(const State1D& Y, const Grid_Info& grid
             }
         }
 
-        if (PE.RANK() == 0) expo.Export_h5("T", xaxis, tGlobal, tout, s);
+        if (PE.RANK() == 0) expo.Export_h5("T", xaxis, tGlobal, tout, time, dt, s);
 
     }
 
@@ -5770,7 +5708,7 @@ void Output_Data::Output_Preprocessor::T(const State1D& Y, const Grid_Info& grid
 //--------------------------------------------------------------
 //--------------------------------------------------------------
 //--------------------------------------------------------------
-void Output_Data::Output_Preprocessor::Jx(const State1D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::Jx(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
  const Parallel_Environment_1D& PE) {
 
 
@@ -5818,7 +5756,7 @@ void Output_Data::Output_Preprocessor::Jx(const State1D& Y, const Grid_Info& gri
             }
         }
 
-        if (PE.RANK() == 0) expo.Export_h5("Jx", xaxis, JxGlobal, tout, s);
+        if (PE.RANK() == 0) expo.Export_h5("Jx", xaxis, JxGlobal, tout, time, dt, s);
 
     }
 
@@ -5827,7 +5765,7 @@ void Output_Data::Output_Preprocessor::Jx(const State1D& Y, const Grid_Info& gri
 //--------------------------------------------------------------
 //--------------------------------------------------------------
 //--------------------------------------------------------------
-void Output_Data::Output_Preprocessor::Jy(const State1D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::Jy(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
  const Parallel_Environment_1D& PE) {
 
 
@@ -5875,7 +5813,7 @@ void Output_Data::Output_Preprocessor::Jy(const State1D& Y, const Grid_Info& gri
             }
         }
 
-        if (PE.RANK() == 0) expo.Export_h5("Jy", xaxis, JyGlobal, tout, s);
+        if (PE.RANK() == 0) expo.Export_h5("Jy", xaxis, JyGlobal, tout, time, dt, s);
 
     }
 
@@ -5883,7 +5821,7 @@ void Output_Data::Output_Preprocessor::Jy(const State1D& Y, const Grid_Info& gri
 //--------------------------------------------------------------
 //--------------------------------------------------------------
 //--------------------------------------------------------------
-void Output_Data::Output_Preprocessor::Jz(const State1D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::Jz(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
  const Parallel_Environment_1D& PE) {
 
 
@@ -5930,14 +5868,14 @@ void Output_Data::Output_Preprocessor::Jz(const State1D& Y, const Grid_Info& gri
             }
         }
 
-        if (PE.RANK() == 0) expo.Export_h5("Jz", xaxis, JzGlobal, tout, s);
+        if (PE.RANK() == 0) expo.Export_h5("Jz", xaxis, JzGlobal, tout, time, dt, s);
 
     }
 
 }
 //--------------------------------------------------------------
 //--------------------------------------------------------------
-void Output_Data::Output_Preprocessor::Qx(const State1D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::Qx(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
  const Parallel_Environment_1D& PE) {
 
 
@@ -5988,7 +5926,7 @@ void Output_Data::Output_Preprocessor::Qx(const State1D& Y, const Grid_Info& gri
             }
         }
 
-        if (PE.RANK() == 0) expo.Export_h5("Qx", xaxis, QxGlobal, tout, s);
+        if (PE.RANK() == 0) expo.Export_h5("Qx", xaxis, QxGlobal, tout, time, dt, s);
 
     }
 
@@ -5996,7 +5934,7 @@ void Output_Data::Output_Preprocessor::Qx(const State1D& Y, const Grid_Info& gri
 //--------------------------------------------------------------
 //--------------------------------------------------------------
 //--------------------------------------------------------------
-void Output_Data::Output_Preprocessor::Qy(const State1D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::Qy(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
  const Parallel_Environment_1D& PE) {
 
 
@@ -6046,7 +5984,7 @@ void Output_Data::Output_Preprocessor::Qy(const State1D& Y, const Grid_Info& gri
             }
         }
 
-        if (PE.RANK() == 0) expo.Export_h5("Qy", xaxis, QxGlobal, tout, s);
+        if (PE.RANK() == 0) expo.Export_h5("Qy", xaxis, QxGlobal, tout, time, dt, s);
 
     }
 
@@ -6054,7 +5992,7 @@ void Output_Data::Output_Preprocessor::Qy(const State1D& Y, const Grid_Info& gri
 //--------------------------------------------------------------
 //--------------------------------------------------------------
 //--------------------------------------------------------------
-void Output_Data::Output_Preprocessor::Qz(const State1D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::Qz(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
  const Parallel_Environment_1D& PE) {
 
 
@@ -6106,7 +6044,7 @@ void Output_Data::Output_Preprocessor::Qz(const State1D& Y, const Grid_Info& gri
             }
         }
 
-        if (PE.RANK() == 0) expo.Export_h5("Qz", xaxis, QxGlobal, tout, s);
+        if (PE.RANK() == 0) expo.Export_h5("Qz", xaxis, QxGlobal, tout, time, dt, s);
 
     }
 
@@ -6115,7 +6053,7 @@ void Output_Data::Output_Preprocessor::Qz(const State1D& Y, const Grid_Info& gri
 //--------------------------------------------------------------
 //--------------------------------------------------------------
 //--------------------------------------------------------------
-void Output_Data::Output_Preprocessor::vNx(const State1D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::vNx(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
   const Parallel_Environment_1D& PE) {
 
 
@@ -6166,14 +6104,14 @@ void Output_Data::Output_Preprocessor::vNx(const State1D& Y, const Grid_Info& gr
             }
         }
 
-        if (PE.RANK() == 0) expo.Export_h5("vNx", xaxis, vNxGlobal, tout, 0);
+        if (PE.RANK() == 0) expo.Export_h5("vNx", xaxis, vNxGlobal, tout, time, dt, 0);
 
     }
 
 }
 //--------------------------------------------------------------
 //--------------------------------------------------------------
-void Output_Data::Output_Preprocessor::vNy(const State1D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::vNy(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
   const Parallel_Environment_1D& PE) {
 
 
@@ -6219,13 +6157,13 @@ void Output_Data::Output_Preprocessor::vNy(const State1D& Y, const Grid_Info& gr
                 vNxGlobal[i] = vNxbuf[i];
             }
         }
-        if (PE.RANK() == 0) expo.Export_h5("vNy", xaxis, vNxGlobal, tout, 0);
+        if (PE.RANK() == 0) expo.Export_h5("vNy", xaxis, vNxGlobal, tout, time, dt, 0);
     }
 }
 // --------------------------------------------------------------
 // --------------------------------------------------------------
 //--------------------------------------------------------------
-void Output_Data::Output_Preprocessor::vNz(const State1D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::vNz(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
   const Parallel_Environment_1D& PE) {
 
 
@@ -6272,13 +6210,13 @@ void Output_Data::Output_Preprocessor::vNz(const State1D& Y, const Grid_Info& gr
                 vNxGlobal[i] = vNxbuf[i];
             }
         }
-        if (PE.RANK() == 0) expo.Export_h5("vNz", xaxis, vNxGlobal, tout, 0);
+        if (PE.RANK() == 0) expo.Export_h5("vNz", xaxis, vNxGlobal, tout, time, dt, 0);
     }
     
 }
 // --------------------------------------------------------------
 // --------------------------------------------------------------
-void Output_Data::Output_Preprocessor::n(const State2D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::n(const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
                                             const Parallel_Environment_2D& PE) {
 
 
@@ -6348,7 +6286,7 @@ void Output_Data::Output_Preprocessor::n(const State2D& Y, const Grid_Info& grid
             }
         }
 
-        if (PE.RANK() == 0) expo.Export_h5("n", xaxis, yaxis, nGlobal, tout, s);
+        if (PE.RANK() == 0) expo.Export_h5("n", xaxis, yaxis, nGlobal, tout, time, dt, s);
 
     }
 
@@ -6357,7 +6295,7 @@ void Output_Data::Output_Preprocessor::n(const State2D& Y, const Grid_Info& grid
 }
 //--------------------------------------------------------------
 
-void Output_Data::Output_Preprocessor::T(const State2D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::T(const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
                                             const Parallel_Environment_2D& PE) {
 
 
@@ -6444,7 +6382,7 @@ void Output_Data::Output_Preprocessor::T(const State2D& Y, const Grid_Info& grid
             // exit(1);
         }
 
-        if (PE.RANK() == 0) expo.Export_h5("T", xaxis, yaxis, tGlobal, tout, s);
+        if (PE.RANK() == 0) expo.Export_h5("T", xaxis, yaxis, tGlobal, tout, time, dt, s);
 
     }
 
@@ -6454,7 +6392,7 @@ void Output_Data::Output_Preprocessor::T(const State2D& Y, const Grid_Info& grid
 //--------------------------------------------------------------
 //--------------------------------------------------------------
 //--------------------------------------------------------------
-void Output_Data::Output_Preprocessor::Jx(const State2D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::Jx(const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
                                              const Parallel_Environment_2D& PE) {
 
 
@@ -6529,7 +6467,7 @@ void Output_Data::Output_Preprocessor::Jx(const State2D& Y, const Grid_Info& gri
             }
         }
 
-        if (PE.RANK() == 0) expo.Export_h5("Jx", xaxis, yaxis, global, tout, s);
+        if (PE.RANK() == 0) expo.Export_h5("Jx", xaxis, yaxis, global, tout, time, dt, s);
 
     }
 
@@ -6539,7 +6477,7 @@ void Output_Data::Output_Preprocessor::Jx(const State2D& Y, const Grid_Info& gri
 //--------------------------------------------------------------
 //--------------------------------------------------------------
 //--------------------------------------------------------------
-void Output_Data::Output_Preprocessor::Jy(const State2D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::Jy(const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
                                              const Parallel_Environment_2D& PE) {
 
 
@@ -6609,7 +6547,7 @@ void Output_Data::Output_Preprocessor::Jy(const State2D& Y, const Grid_Info& gri
             }
         }
 
-        if (PE.RANK() == 0) expo.Export_h5("Jy", xaxis, yaxis, global, tout, s);
+        if (PE.RANK() == 0) expo.Export_h5("Jy", xaxis, yaxis, global, tout, time, dt, s);
 
     }
 
@@ -6618,7 +6556,7 @@ void Output_Data::Output_Preprocessor::Jy(const State2D& Y, const Grid_Info& gri
 }
 // //--------------------------------------------------------------
 // //--------------------------------------------------------------
-void Output_Data::Output_Preprocessor::Jz(const State2D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::Jz(const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
                                              const Parallel_Environment_2D& PE) {
 
 
@@ -6688,7 +6626,7 @@ void Output_Data::Output_Preprocessor::Jz(const State2D& Y, const Grid_Info& gri
             }
         }
 
-        if (PE.RANK() == 0) expo.Export_h5("Jz", xaxis, yaxis, global, tout, s);
+        if (PE.RANK() == 0) expo.Export_h5("Jz", xaxis, yaxis, global, tout, time, dt, s);
 
     }
 
@@ -6696,7 +6634,7 @@ void Output_Data::Output_Preprocessor::Jz(const State2D& Y, const Grid_Info& gri
 }
 //--------------------------------------------------------------
 //--------------------------------------------------------------
-void Output_Data::Output_Preprocessor::Qx(const State2D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::Qx(const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
                                              const Parallel_Environment_2D& PE) {
     size_t Nbc(Input::List().BoundaryCells);
     MPI_Status status;
@@ -6764,7 +6702,7 @@ void Output_Data::Output_Preprocessor::Qx(const State2D& Y, const Grid_Info& gri
             }
         }
 
-        if (PE.RANK() == 0) expo.Export_h5("Qx", xaxis, yaxis, global, tout, s);
+        if (PE.RANK() == 0) expo.Export_h5("Qx", xaxis, yaxis, global, tout, time, dt, s);
 
     }
 
@@ -6772,7 +6710,7 @@ void Output_Data::Output_Preprocessor::Qx(const State2D& Y, const Grid_Info& gri
 }
 //--------------------------------------------------------------
 //--------------------------------------------------------------
-void Output_Data::Output_Preprocessor::Qy(const State2D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::Qy(const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
                                              const Parallel_Environment_2D& PE) {
     size_t Nbc(Input::List().BoundaryCells);
     MPI_Status status;
@@ -6840,7 +6778,7 @@ void Output_Data::Output_Preprocessor::Qy(const State2D& Y, const Grid_Info& gri
             }
         }
 
-        if (PE.RANK() == 0) expo.Export_h5("Qy", xaxis, yaxis, global, tout, s);
+        if (PE.RANK() == 0) expo.Export_h5("Qy", xaxis, yaxis, global, tout, time, dt, s);
 
     }
 
@@ -6848,7 +6786,7 @@ void Output_Data::Output_Preprocessor::Qy(const State2D& Y, const Grid_Info& gri
 }
 //--------------------------------------------------------------
 //--------------------------------------------------------------
-void Output_Data::Output_Preprocessor::Qz(const State2D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::Qz(const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
                                              const Parallel_Environment_2D& PE) {
     size_t Nbc(Input::List().BoundaryCells);
     MPI_Status status;
@@ -6916,7 +6854,7 @@ void Output_Data::Output_Preprocessor::Qz(const State2D& Y, const Grid_Info& gri
             }
         }
 
-        if (PE.RANK() == 0) expo.Export_h5("Qz", xaxis, yaxis, global, tout, s);
+        if (PE.RANK() == 0) expo.Export_h5("Qz", xaxis, yaxis, global, tout, time, dt, s);
 
     }
 
@@ -6925,7 +6863,7 @@ void Output_Data::Output_Preprocessor::Qz(const State2D& Y, const Grid_Info& gri
 //--------------------------------------------------------------
 //--------------------------------------------------------------
 //--------------------------------------------------------------
-void Output_Data::Output_Preprocessor::vNx(const State2D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::vNx(const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
                                               const Parallel_Environment_2D& PE) {
 
     size_t Nbc(Input::List().BoundaryCells);
@@ -6995,7 +6933,7 @@ void Output_Data::Output_Preprocessor::vNx(const State2D& Y, const Grid_Info& gr
             }
         }
 
-        if (PE.RANK() == 0) expo.Export_h5("vNx", xaxis, yaxis, global, tout, s);
+        if (PE.RANK() == 0) expo.Export_h5("vNx", xaxis, yaxis, global, tout, time, dt, s);
 
     }
 
@@ -7005,7 +6943,7 @@ void Output_Data::Output_Preprocessor::vNx(const State2D& Y, const Grid_Info& gr
 //--------------------------------------------------------------
 //--------------------------------------------------------------
 //--------------------------------------------------------------
-void Output_Data::Output_Preprocessor::vNy(const State2D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::vNy(const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
                                               const Parallel_Environment_2D& PE) {
 
     size_t Nbc(Input::List().BoundaryCells);
@@ -7075,7 +7013,7 @@ void Output_Data::Output_Preprocessor::vNy(const State2D& Y, const Grid_Info& gr
             }
         }
 
-        if (PE.RANK() == 0) expo.Export_h5("vNy", xaxis, yaxis, global, tout, s);
+        if (PE.RANK() == 0) expo.Export_h5("vNy", xaxis, yaxis, global, tout, time, dt, s);
 
     }
 
@@ -7085,7 +7023,7 @@ void Output_Data::Output_Preprocessor::vNy(const State2D& Y, const Grid_Info& gr
 //--------------------------------------------------------------
 //--------------------------------------------------------------
 //--------------------------------------------------------------
-void Output_Data::Output_Preprocessor::vNz(const State2D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::vNz(const State2D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
                                               const Parallel_Environment_2D& PE) {
 
     size_t Nbc(Input::List().BoundaryCells);
@@ -7157,7 +7095,7 @@ void Output_Data::Output_Preprocessor::vNz(const State2D& Y, const Grid_Info& gr
             }
         }
 
-        if (PE.RANK() == 0) expo.Export_h5("vNz", xaxis, yaxis, global, tout, s);
+        if (PE.RANK() == 0) expo.Export_h5("vNz", xaxis, yaxis, global, tout, time, dt, s);
 
     }
 }
@@ -7165,7 +7103,7 @@ void Output_Data::Output_Preprocessor::vNz(const State2D& Y, const Grid_Info& gr
 //--------------------------------------------------------------
 
 //--------------------------------------------------------------
-void Output_Data::Output_Preprocessor::Ux(const State1D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::Ux(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
  const Parallel_Environment_1D& PE) {
 
 
@@ -7210,12 +7148,12 @@ void Output_Data::Output_Preprocessor::Ux(const State1D& Y, const Grid_Info& gri
         }
     }
 
-    if (PE.RANK() == 0) expo.Export_h5("Ux", xaxis, UxGlobal, tout, 0);
+    if (PE.RANK() == 0) expo.Export_h5("Ux", xaxis, UxGlobal, tout, time, dt, 0);
 
 }
 //--------------------------------------------------------------
 //--------------------------------------------------------------
-void Output_Data::Output_Preprocessor::Uy(const State1D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::Uy(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
  const Parallel_Environment_1D& PE) {
 
 
@@ -7259,12 +7197,12 @@ void Output_Data::Output_Preprocessor::Uy(const State1D& Y, const Grid_Info& gri
         }
     }
 
-    if (PE.RANK() == 0) expo.Export_h5("Uy", xaxis, UxGlobal, tout, 0);
+    if (PE.RANK() == 0) expo.Export_h5("Uy", xaxis, UxGlobal, tout, time, dt, 0);
 
 }
 //--------------------------------------------------------------
 //--------------------------------------------------------------
-void Output_Data::Output_Preprocessor::Uz(const State1D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::Uz(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
  const Parallel_Environment_1D& PE) {
 
 
@@ -7309,12 +7247,12 @@ void Output_Data::Output_Preprocessor::Uz(const State1D& Y, const Grid_Info& gri
         }
     }
 
-    if (PE.RANK() == 0) expo.Export_h5("Uz", xaxis, UxGlobal, tout, 0);
+    if (PE.RANK() == 0) expo.Export_h5("Uz", xaxis, UxGlobal, tout, time, dt, 0);
 
 }
 //--------------------------------------------------------------
 //--------------------------------------------------------------
-void Output_Data::Output_Preprocessor::Z(const State1D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::Z(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
     const Parallel_Environment_1D& PE) {
 
 
@@ -7359,7 +7297,7 @@ void Output_Data::Output_Preprocessor::Z(const State1D& Y, const Grid_Info& grid
         }
     }
 
-    if (PE.RANK() == 0) expo.Export_h5("Z", xaxis, UxGlobal, tout, 0);
+    if (PE.RANK() == 0) expo.Export_h5("Z", xaxis, UxGlobal, tout, time, dt, 0);
 
 }
 //--------------------------------------------------------------
@@ -7367,7 +7305,7 @@ void Output_Data::Output_Preprocessor::Z(const State1D& Y, const Grid_Info& grid
 //
 //--------------------------------------------------------------
 //--------------------------------------------------------------
-void Output_Data::Output_Preprocessor::ni(const State1D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::ni(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
  const Parallel_Environment_1D& PE) {
 
 
@@ -7412,7 +7350,7 @@ void Output_Data::Output_Preprocessor::ni(const State1D& Y, const Grid_Info& gri
         }
     }
 
-    if (PE.RANK() == 0) expo.Export_h5("ni",  xaxis, niGlobal, tout, 0);
+    if (PE.RANK() == 0) expo.Export_h5("ni",  xaxis, niGlobal, tout, time, dt, 0);
 
 }
 //--------------------------------------------------------------
@@ -7420,7 +7358,7 @@ void Output_Data::Output_Preprocessor::ni(const State1D& Y, const Grid_Info& gri
 //
 //--------------------------------------------------------------
 //--------------------------------------------------------------
-void Output_Data::Output_Preprocessor::Ti(const State1D& Y, const Grid_Info& grid, const size_t tout,
+void Output_Data::Output_Preprocessor::Ti(const State1D& Y, const Grid_Info& grid, const size_t tout, const double time, const double dt,
  const Parallel_Environment_1D& PE) {
 
 
@@ -7464,7 +7402,7 @@ void Output_Data::Output_Preprocessor::Ti(const State1D& Y, const Grid_Info& gri
         }
     }
 
-    if (PE.RANK() == 0) expo.Export_h5("Ti", xaxis, ThydroGlobal, tout, 0);
+    if (PE.RANK() == 0) expo.Export_h5("Ti", xaxis, ThydroGlobal, tout, time, dt, 0);
 
 }
 //--------------------------------------------------------------
@@ -7473,7 +7411,7 @@ void Output_Data::Output_Preprocessor::Ti(const State1D& Y, const Grid_Info& gri
 //--------------------------------------------------------------
 void Export_Files::Xport:: Export_h5(const std::string tag,
  std::vector<double> &axis1, std::vector<double> &data,
- const size_t& step,
+ const size_t  step, const double  time, const double  dt,
  const int spec){
 //--------------------------------------------------------------
 //  Export data to H5 file
@@ -7500,7 +7438,7 @@ void Export_Files::Xport:: Export_h5(const std::string tag,
     // lets write our vector of double to the HDF5 dataset
     dataset.write(data);
 
-    add_attributes(dataset,tag,step);
+    add_attributes(dataset,tag,time,dt);
 
     HighFive::Group Axes = file.createGroup("Axes");
 
@@ -7515,7 +7453,7 @@ void Export_Files::Xport:: Export_h5(const std::string tag,
 // --------------------------------------------------------------
 void Export_Files::Xport:: Export_h5(const std::string tag,
  std::vector<double> &axis1, std::vector<double> &axis2, Array2D<double> &dataA,
- const size_t& step,
+ const size_t  step, const double  time, const double  dt,
  const int spec){
 //--------------------------------------------------------------
 //  Export data to H5 file
@@ -7566,7 +7504,7 @@ void Export_Files::Xport:: Export_h5(const std::string tag,
     // lets write our vector of double to the HDF5 dataset
     dataset.write(data);
 
-    add_attributes(dataset,tag,step);
+    add_attributes(dataset,tag,time,dt);
 
     HighFive::Group Axes = file.createGroup("Axes");
 
@@ -7584,7 +7522,7 @@ void Export_Files::Xport:: Export_h5(const std::string tag,
 void Export_Files::Xport:: Export_h5(const std::string tag,
  std::vector<double> &axis1, std::vector<double> &axis2, std::vector<double> &axis3,
  Array3D<double> &dataA,
- const size_t& step,
+ const size_t  step, const double  time, const double  dt,
  const int spec){
 //--------------------------------------------------------------
 //  Export data to H5 file
@@ -7637,7 +7575,7 @@ void Export_Files::Xport:: Export_h5(const std::string tag,
     /// Attributes
     /// Only a few defined for now
     /// dt, time
-    add_attributes(dataset,tag,step);
+    add_attributes(dataset,tag,time,dt);
 
     HighFive::Group Axes = file.createGroup("Axes");
 
@@ -7658,7 +7596,7 @@ void Export_Files::Xport:: Export_h5(const std::string tag,
 void Export_Files::Xport:: Export_h5(const std::string tag,
  std::vector<double> &axis1, std::vector<double> &axis2, std::vector<double> &axis3, std::vector<double> &axis4,
  Array4D<double> &dataA,
- const size_t& step,
+ const size_t  step, const double  time, const double  dt,
  const int spec){
 //--------------------------------------------------------------
 //  Export data to H5 file
@@ -7717,7 +7655,7 @@ void Export_Files::Xport:: Export_h5(const std::string tag,
     /// Attributes
     /// Only a few defined for now
     /// dt, time
-    add_attributes(dataset,tag,step);
+    add_attributes(dataset,tag,time,dt);
 
     HighFive::Group Axes = file.createGroup("Axes");
 
@@ -7740,30 +7678,24 @@ void Export_Files::Xport:: Export_h5(const std::string tag,
 }
 //--------------------------------------------------------------
 //--------------------------------------------------------------
-    void Export_Files::Xport::add_attributes(HighFive::DataSet &dataset, const std::string tag, size_t step) {
+    void Export_Files::Xport::add_attributes(HighFive::DataSet &dataset, const std::string tag, 
+        const double  time, const double  dt) {
 //--------------------------------------------------------------
 //    Add initial attributes:
 //    time step, iteration number, name of diagnostic,
 //    physical time, time units, type, and max and min of axes ranges
 //--------------------------------------------------------------
 
-        double dt_out(Input::List().t_stop / Input::List().n_outsteps);
-
-        double dt = {dt_out/static_cast<double>(
-            size_t(static_cast<int>(dt_out/Input::List().dt))+1 )};
-
         // Now let's add a attribute on this dataset
         HighFive::Attribute adt = dataset.createAttribute<double>("dt", HighFive::DataSpace::From(dt));
         adt.write(dt);
 
-        double time = { static_cast<double>(dt_out*step) };
-
         HighFive::Attribute at = dataset.createAttribute<double>("Time (c/\\omega_p)", HighFive::DataSpace::From(time));
         at.write(time);
 
-        time *= formulary().Uconv("Time_ps");
-        HighFive::Attribute at_ps = dataset.createAttribute<double>("Time (ps)", HighFive::DataSpace::From(time));
-        at_ps.write(time);
+        double timeps = time*formulary().Uconv("Time_ps");
+        HighFive::Attribute at_ps = dataset.createAttribute<double>("Time (ps)", HighFive::DataSpace::From(timeps));
+        at_ps.write(timeps);
 
 
         // HighFive::Attribute aname = dataset.createAttribute<std::string>("Name", HighFive::DataSpace::From(tag));

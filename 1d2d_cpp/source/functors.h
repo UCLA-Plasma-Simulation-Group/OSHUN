@@ -24,6 +24,7 @@ public:
 
 //          Collect all the operators and apply on Yin
     void operator()(const State1D& Yin, State1D& Yslope);
+    void operator()(const State1D& Yin, State1D& Yslope, double dt);
     void operator()(const State1D& Yin, State1D& Yslope, size_t dir);
 
 private:

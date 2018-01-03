@@ -54,6 +54,8 @@ namespace Input{
         bool if_tridiagonal;
         bool implicit_E;
         size_t dbydx_order, dbydy_order;
+        double abs_tol, rel_tol;
+        size_t max_fails;
         bool relativity;
         bool implicit_B;
         bool collisions;
