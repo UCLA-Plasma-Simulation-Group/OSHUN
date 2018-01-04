@@ -332,7 +332,7 @@
 //**************************************************************
 //--------------------------------------------------------------
     Electric_Field_Methods::Implicit_E_Field::
-    Implicit_E_Field(const double& deltat, const Algorithms::AxisBundle<double> axes)://, int tout_start)
+    Implicit_E_Field(const Algorithms::AxisBundle<double> axes)://, int tout_start)
 //--------------------------------------------------------------
 //  Constructor for the implicit electric field
 //--------------------------------------------------------------
@@ -343,7 +343,7 @@
         J_Ex(), J_Ey(), J_Ez(),        // Current due to the effect of Ex, Ey, Ez
         EN(),   E0(),   DE(),          // New E, old E, perturbation E
    
-         dt(deltat),
+         
          idx(static_cast< complex<double> >(0.5/axes.dx(0))),
          idy(static_cast< complex<double> >(0.5/axes.dx(1)))
          {}
@@ -382,7 +382,7 @@
 
             // Ex
             Yin.EMF().Ex() = DE.Ex_1D();
-            Yin = (*rk)(Yin, dt, rkF, 1);           // Effect of DEx on Y00, Y10, Y11, Y20, Y21, Y22            
+            Yin = (*rk)(Yin, step_size, rkF, 1);           // Effect of DEx on Y00, Y10, Y11, Y20, Y21, Y22            
             coll.advancef1(Yin,Yh,step_size);                 // Collisions for f10, f11
             J_Ex.calculate_J_1D(Yh);                   // Evaluate J(DEx)
             Yin.SH(0,0,0) = f00;
@@ -391,7 +391,7 @@
 
             // Ey
             Yin.EMF().Ey() = DE.Ey_1D();               // Ey = DEy
-            Yin = (*rk)(Yin, dt, rkF, 2);           // Effect of DEy on Y00, Y10, Y11, Y20, Y21, Y22
+            Yin = (*rk)(Yin, step_size, rkF, 2);           // Effect of DEy on Y00, Y10, Y11, Y20, Y21, Y22
             coll.advancef1(Yin,Yh,step_size);                 // Collisions for f10, f11
             J_Ey.calculate_J_1D(Yh);                   // Evaluate J(DEy)           
 
@@ -401,7 +401,7 @@
 
             // Ez
             Yin.EMF().Ez() = DE.Ez_1D();               // Ey = DEy
-            Yin = (*rk)(Yin, dt, rkF, 3);           // Effect of DEy on Y00, Y10, Y11, Y20, Y21, Y22            
+            Yin = (*rk)(Yin, step_size, rkF, 3);           // Effect of DEy on Y00, Y10, Y11, Y20, Y21, Y22            
             coll.advancef1(Yin,Yh,step_size);                 // Collisions for f10, f11
             J_Ez.calculate_J_1D(Yh);                   // Evaluate J(DEy)
             
@@ -587,7 +587,7 @@
 
             // Ex
             Yin.EMF().Ex() = DE.Ex_2D();   // Ex = DEx
-            Yin = (*rk)(Yin, dt, rkF, 1);           // Effect of DEx on Y00, Y10, Y11, Y20, Y21, Y22            
+            Yin = (*rk)(Yin, step_size, rkF, 1);           // Effect of DEx on Y00, Y10, Y11, Y20, Y21, Y22            
             coll.advancef1(Yin,Yh,step_size);                 // Collisions for f10, f11
             J_Ex.calculate_J_2D(Yh);                   // Evaluate J(DEx)
 
@@ -598,7 +598,7 @@
 
             // Ey
             Yin.EMF().Ey() = DE.Ey_2D();               // Ey = DEy
-            Yin = (*rk)(Yin, dt, rkF, 2);           // Effect of DEy on Y00, Y10, Y11, Y20, Y21, Y22
+            Yin = (*rk)(Yin, step_size, rkF, 2);           // Effect of DEy on Y00, Y10, Y11, Y20, Y21, Y22
             coll.advancef1(Yin,Yh,step_size);                 // Collisions for f10, f11
             J_Ey.calculate_J_2D(Yh);                   // Evaluate J(DEy)           
 
@@ -608,7 +608,7 @@
             
             // Ez
             Yin.EMF().Ez() = DE.Ez_2D();               // Ey = DEy
-            Yin = (*rk)(Yin, dt, rkF, 3);           // Effect of DEy on Y00, Y10, Y11, Y20, Y21, Y22            
+            Yin = (*rk)(Yin, step_size, rkF, 3);           // Effect of DEy on Y00, Y10, Y11, Y20, Y21, Y22            
             coll.advancef1(Yin,Yh,step_size);                 // Collisions for f10, f11
             J_Ez.calculate_J_2D(Yh);                   // Evaluate J(DEy)
 

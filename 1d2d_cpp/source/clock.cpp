@@ -33,10 +33,10 @@
 //**************************************************************
 //--------------------------------------------------------------
 Stepper::Stepper(double starttime, double __dt, double abs_tol, double rel_tol, size_t _maxfails): 
-    current_time(starttime), dt_next(__dt), _dt(__dt),
+    current_time(starttime), dt_next(0.5*__dt), _dt(0.5*__dt),
     atol(abs_tol), rtol(rel_tol), 
     acceptability(0.), err_val(0.), 
-    failed_steps(0), max_failures(_maxfails),overall_check(true), 
+    failed_steps(0), max_failures(_maxfails),overall_check(true), _success(false),
     Nbc(Input::List().BoundaryCells), world_rank(0), world_size(1)
     {
         MPI_Comm_rank(MPI_COMM_WORLD, &world_rank); 
@@ -55,16 +55,17 @@ Stepper:: ~Stepper(){
 Stepper& Stepper::operator++() 
 {
     dt_next = min(dt_next,1.01*_dt);
+    dt_next = min(dt_next,Input::List().dt);
     failed_steps = 0;
     current_time += _dt;
     _dt = dt_next; 
-
+    _success = false;
     return *this;
 }
 
 //--------------------------------------------------------------
 //  Collect all of the terms
-bool Stepper::update_dt(const State1D& Y_old, const State1D& Ystar, State1D& Y_new){
+void Stepper::update_dt(const State1D& Y_old, const State1D& Ystar, State1D& Y_new){
 //--------------------------------------------------------------
 
     // err_val =  check_temperature(Ystar,Y);  
@@ -77,6 +78,8 @@ bool Stepper::update_dt(const State1D& Y_old, const State1D& Ystar, State1D& Y_n
     if (acceptability > 1) overall_check = false;
     else overall_check = true;
 
+    std::cout << "\n acc = " << acceptability;
+    std::cout << "\n dt = " << _dt;
 
     /// Error is shared so that global timestep can be determined on rank 0
     MPI_Gather(&acceptability, 1, MPI_DOUBLE, acceptabilitylist, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
@@ -93,7 +96,7 @@ bool Stepper::update_dt(const State1D& Y_old, const State1D& Ystar, State1D& Y_n
         /// Update timestep and if failed, add an iteration
         if (overall_check > 0)
         {
-            dt_next = 0.95*_dt/pow(acceptability,0.2);
+            dt_next = 0.9*_dt/pow(acceptability,0.2);   
         }
         else
         {
@@ -120,12 +123,16 @@ bool Stepper::update_dt(const State1D& Y_old, const State1D& Ystar, State1D& Y_n
         _dt = dt_next;
         Y_new = Y_old;
     }
+    else
+    {
+        _success = true;
+    }
 
-    return (overall_check > 0);
+    // return (overall_check > 0);
 }
 //--------------------------------------------------------------
 //  Collect all of the terms
-bool Stepper::update_dt(const State2D& Y_old, const State2D& Ystar, State2D& Y_new){
+void Stepper::update_dt(const State2D& Y_old, const State2D& Ystar, State2D& Y_new){
 //--------------------------------------------------------------
 
     // err_val =  check_temperature(Ystar,Y);  
@@ -181,8 +188,10 @@ bool Stepper::update_dt(const State2D& Y_old, const State2D& Ystar, State2D& Y_n
         _dt = dt_next;
         Y_new = Y_old;
     }
-
-    return (overall_check > 0);
+    else
+    {
+        _success = true;
+    }
 }
 
 //--------------------------------------------------------------
@@ -219,7 +228,7 @@ double Stepper::check_flds(const State1D& Ystar, const State1D& Y, double& maxva
 
         tmp_err = abs(tmp_err);
 
-        return tmp_err.max();
+        return tmp_err.sum();
     }
 }
 //--------------------------------------------------------------
@@ -245,7 +254,7 @@ double Stepper::check_flds(const State2D& Ystar, const State2D& Y, double& maxva
 
         tmp_err = abs(tmp_err);
 
-        return tmp_err.max();
+        return tmp_err.sum();
     }
 }
 

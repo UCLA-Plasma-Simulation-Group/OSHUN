@@ -190,16 +190,10 @@ int main(int argc, char** argv) {
         size_t t_out(tout_start+1);
         double start_time(0.);
     
-        double dt_out(Input::List().t_stop / Input::List().n_outsteps);
-        double CLF(Input::List().dt);
-        size_t n_outsteps(Input::List().n_outsteps);
-        double numh  = size_t(static_cast<int>(dt_out/CLF))+1;
-        double h     = dt_out/static_cast<double>(numh);
-
-        // double dt_out(Input::List().t_stop / Input::List().n_outsteps);
-        double dt_dist_out(Input::List().t_stop / Input::List().n_distoutsteps);
-        double dt_big_dist_out(Input::List().t_stop / Input::List().n_bigdistoutsteps);
-        double dt_restart(Input::List().t_stop / Input::List().n_restarts);
+        double dt_out(Input::List().t_stop / (Input::List().n_outsteps+1));
+        double dt_dist_out(Input::List().t_stop / (Input::List().n_distoutsteps+1));
+        double dt_big_dist_out(Input::List().t_stop / (Input::List().n_bigdistoutsteps+1));
+        double dt_restart(Input::List().t_stop / (Input::List().n_restarts+1));
         
         double next_out(dt_out);
         double next_dist_out(dt_dist_out);
@@ -296,7 +290,7 @@ int main(int argc, char** argv) {
             
             // --------------------------------------------------------------------------------------------------------------------------------
             using Electric_Field_Methods::Efield_Method;
-            Electric_Field_Methods::Implicit_E_Field eim(h, grid.axis);
+            Electric_Field_Methods::Implicit_E_Field eim(grid.axis);
 
             if (!Input::List().collisions) {
                 if (!PE.RANK())
@@ -401,10 +395,11 @@ int main(int argc, char** argv) {
                                           grid.axis.xmin(0), grid.axis.xmax(0), grid.axis.Nx(0));
             // --------------------------------------------------------------------------------------------------------------------------------
 
-            Algorithms::RKCK54<State1D> RK54(Y);
+            // Algorithms::RKCK54<State1D> RK54(Y);
+            Algorithms::RKBS54<State1D> RK54(Y);
+            // Algorithms::RKT54<State1D> RK54(Y);
             // Algorithms::RK4<State1D> RK(Y);
             State1D Y_star(Y), Y_old(Y);
-            bool success(false);
 
             Stepper step(start_time,Input::List().dt,Input::List().abs_tol,Input::List().rel_tol,Input::List().max_fails);
 
@@ -414,10 +409,12 @@ int main(int argc, char** argv) {
 
                 Y_old = Y;
 
-                while(!success)
+                // RK(Y,step.dt(),&rkF);
+
+                while(!step.success())
                 {
                     RK54(Y_star,Y,step.dt(),&rkF);
-                    success = step.update_dt(Y_old,Y_star, Y);
+                    step.update_dt(Y_old,Y_star, Y);
                 }
 
                 if (Input::List().collisions)
@@ -472,8 +469,6 @@ int main(int argc, char** argv) {
                     next_out += dt_out;
                     ++t_out;
                 }
-
-                success = false;                    
             }
         }
         tend = omp_get_wtime();
@@ -520,16 +515,10 @@ int main(int argc, char** argv) {
         size_t t_out(tout_start+1);
         double start_time(0.);
     
-        double dt_out(Input::List().t_stop / Input::List().n_outsteps);
-        double CLF(Input::List().dt);
-        size_t n_outsteps(Input::List().n_outsteps);
-        double numh  = size_t(static_cast<int>(dt_out/CLF))+1;
-        double h     = dt_out/static_cast<double>(numh);
-
-        // double dt_out(Input::List().t_stop / Input::List().n_outsteps);
-        double dt_dist_out(Input::List().t_stop / Input::List().n_distoutsteps);
-        double dt_big_dist_out(Input::List().t_stop / Input::List().n_bigdistoutsteps);
-        double dt_restart(Input::List().t_stop / Input::List().n_restarts);
+        double dt_out(Input::List().t_stop / (Input::List().n_outsteps+1));
+        double dt_dist_out(Input::List().t_stop / (Input::List().n_distoutsteps+1));
+        double dt_big_dist_out(Input::List().t_stop / (Input::List().n_bigdistoutsteps+1));
+        double dt_restart(Input::List().t_stop / (Input::List().n_restarts+1));
         
         double next_out(dt_out);
         double next_dist_out(dt_dist_out);
@@ -625,7 +614,7 @@ int main(int argc, char** argv) {
                                                          grid.axis.xmin(1), grid.axis.xmax(1), grid.axis.Nx(1));
             // --------------------------------------------------------------------------------------------------------------------------------
             using Electric_Field_Methods::Efield_Method;
-            Electric_Field_Methods::Implicit_E_Field eim(h, grid.axis);
+            Electric_Field_Methods::Implicit_E_Field eim(grid.axis);
 
             if (!Input::List().collisions) {
                 if (!PE.RANK())
@@ -731,7 +720,6 @@ int main(int argc, char** argv) {
             Algorithms::RKCK54<State2D> RK54(Y);
             // Algorithms::RK4<State1D> RK(Y);
             State2D Y_star(Y), Y_old(Y);
-            bool success(false);
 
             Stepper step(start_time,Input::List().dt,Input::List().abs_tol,Input::List().rel_tol,Input::List().max_fails);
 
@@ -741,10 +729,10 @@ int main(int argc, char** argv) {
 
                 Y_old = Y;
 
-                while(!success)
+                while(!step.success())
                 {
                     RK54(Y_star,Y,step.dt(),&rkF);
-                    success = step.update_dt(Y_old,Y_star, Y);
+                    step.update_dt(Y_old,Y_star, Y);
                 }
 
                 if (Input::List().collisions)
@@ -795,9 +783,7 @@ int main(int argc, char** argv) {
 
                     next_out += dt_out;
                     ++t_out;
-                }
-
-                success = false;                    
+                }                
             }
         }
         tend = omp_get_wtime();

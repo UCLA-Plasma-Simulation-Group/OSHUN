@@ -25,14 +25,15 @@ public:
     double check_flds(const State2D& Ystar, const State2D& Y, double& maxval);
     double check_js(const State1D& Ystar, const State1D& Y);
 
-    bool update_dt(const State1D& Y_old, const State1D& Ystar, State1D& Y_new);
-    bool update_dt(const State2D& Y_old, const State2D& Ystar, State2D& Y_new);
+    void update_dt(const State1D& Y_old, const State1D& Ystar, State1D& Y_new);
+    void update_dt(const State2D& Y_old, const State2D& Ystar, State2D& Y_new);
 
     Stepper& operator++();
 
     double dt() {return _dt;}
     double nextdt() {return dt_next;}
     double time() {return current_time;}
+    bool success() {return _success;}
 
 private:
 
@@ -42,6 +43,7 @@ private:
     size_t failed_steps, max_failures;
 
     int overall_check;
+    bool _success;
 
     size_t Nbc;
     int world_rank, world_size;

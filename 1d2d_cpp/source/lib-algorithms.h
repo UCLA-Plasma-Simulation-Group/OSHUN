@@ -827,11 +827,19 @@ namespace Algorithms {
     }
 
 
-//  RK4 
+//  RKCK
     template<class T> class RKCK54 {
     public:
 //      Constructor
-        RKCK54(T& Yin): Yh1(Yin), Yh3(Yin), Yh4(Yin), Yh5(Yin), Yh6(Yin), Yt(Yin) { }
+        RKCK54(T& Yin): Yh1(Yin), Yh3(Yin), Yh4(Yin), Yh5(Yin), Yh6(Yin), Yt(Yin),
+        a21(0.2), 
+        a31(3./40.), a32(9./40.),
+        a41(.3), a42(-.9), a43(1.2),
+        a51(-11./54.), a52(2.5) ,a53(-70./27.), a54(35./27.),
+        a61(1631./55296.), a62(175./512.), a63(575./13824.), a64(44275./110592.), a65(253./4096.),
+        b1_5(37./378.), b3_5(250./621.), b4_5(125./594.), b6_5(512./1771.),
+        b1_4(2825./27648.), b3_4(18575./48384.), b4_4(13525./55296.), b5_4(277./14336.), b6_4(0.25)
+        {}
 
 //      Main function
         T& operator()(T& Y5, T&Y4, double h, AbstFunctor<T>* F);
@@ -840,14 +848,15 @@ namespace Algorithms {
     private:
 //      R-K copies for the data
         T  Yh1, Yh3, Yh4, Yh5, Yh6, Yt;
-        double a21 = 0.2;
-        double a31 = 3./40., a32 = 9./40.;
-        double a41 = .3, a42 = -.9, a43 = 1.2;
-        double a51 = -11./54., a52 = 2.5 ,a53 = -70./27. ,a54 = 35./27.;
-        double a61 = 1631./55296., a62 = 175./512., a63 = 575./13824., a64 = 44275./110592., a65 = 253./4096.;
 
-        double b1_5 = 37./378., b3_5 = 250./621., b4_5 = 125./594., b6_5 = 512./1771.;
-        double b1_4 = 2825./27648., b3_4 = 18575./48384., b4_4 = 13525./55296., b5_4 = 277./14336., b6_4 = 0.25;
+        double a21;
+        double a31,a32;
+        double a41,a42,a43;
+        double a51,a52,a53,a54;
+        double a61,a62,a63,a64,a65;
+
+        double b1_5,b3_5,b4_5,b6_5;
+        double b1_4,b3_4,b4_4,b5_4,b6_4;
     };
 
     template<class T> T& RKCK54<T>::operator()
@@ -907,43 +916,216 @@ namespace Algorithms {
 
         // return Y;
     }
-    
-//     template<class T> T& RKCK54<T>::operator()
-//             (T& Y5, T&Y4, double h, AbstFunctor<T>* F, size_t dir) {
-// //      Take a step using RKCK54
-
-// //      Initialization
-//         Y0 = Y; Y1 = Y;
-
-// //      Step 1
-//         (*F)(Y1,Yh,dir);                    // slope in the beginning
-//         Yh *= (0.5*h);   Y1 += Yh;      // Y1 = Y1 + (h/2)*Yh
-//         Yh *= (1.0/3.0); Y  += Yh;      // Y  = Y  + (h/6)*Yh
-// //      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-// //      Step 2
-//         (*F)(Y1,Yh,dir);     Y1  = Y0;      // slope in the middle
-//         Yh *= (0.5*h);   Y1 += Yh;      // Y1 = Y0 + (h/2)*Yh
-//         Yh *= (2.0/3.0); Y  += Yh;      // Y  = Y  + (h/3)*Yh
-// //      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-// //      Step 3
-//         (*F)(Y1,Yh,dir);                    // slope in the middle again
-//         Yh *= h;          Y0 += Yh;     // Y0 = Y0 + h*Yh
-//         Yh *= (1.0/3.0);  Y  += Yh;     // Y  = Y  + (h/3)*Yh
-// //      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-// //      Step 4
-//         (*F)(Y0,Yh,dir);                    // slope at the end
-//         Yh *= (h/6.0);    Y += Yh;      // Y  = Y  + (h/6)*Yh
-// //      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
-
-//         return Y;
-//     }
-
 
 //--------------------------------------------------------------
+//  RKCK
+    template<class T> class RKBS54 {
+    public:
+//      Constructor
+        RKBS54(T& Yin): Yh1(Yin), Yh3(Yin), Yh4(Yin), Yh5(Yin), Yh6(Yin), Yh7(Yin), Yt(Yin),
+        a21(1.0/6.0), 
+        a31(2./27.), a32(4./27.),
+        a41(183./1372.), a42(-162./343.), a43(1053./1372.),
+        a51(68./297.), a52(-4./11.), a53(42./143.), a54(1960./3861.),
+        a61(597./22528.), a62(81./352.), a63(63099./585728.), a64(58653./366080.), a65(4617./20480.),
+        a71(174197./959244.), a72(-30942./79937.), a73(8152137./19744439.), a74(666106./1039181.), a75(-29421./29068.), a76(482048./414219.),
+        a81(587./8064.), a83(4440339./15491840.), a84(24353./124800.), a85(387./44800.), a86(2152./5985.), a87(7267./94080.),
+        b1_5(587./8064.), b3_5(4440339./15491840.), b4_5(24353./124800.), b5_5(387./44800.), b6_5(2152./5985.), b7_5(7267./94080.),
+        bw1_4(6059./80640.), bw3_4(8559189./30983680.), bw4_4(26411./124800.), bw5_4(-927./89600.), bw6_4(443./1197.), bw7_4(7267./94080.),
+        
+        bs1_4(2479./34992.), bs3_4(123./416.), bs4_4(612941./3411720.), bs5_4(43./1440.), bs6_4(2272./6651.), bs7_4(79937./1113912.), bs8_4(3293./556956.)
+        {}
 
+//      Main function
+        T& operator()(T& Y5, T&Y4, double h, AbstFunctor<T>* F);
+        // T& operator()(T& Y5, T&Y4, double h, AbstFunctor<T>* F, size_t dir);
+
+    private:
+//      R-K copies for the data
+        T  Yh1, Yh3, Yh4, Yh5, Yh6, Yh7, Yt;
+
+        double a21;
+        double a31,a32;
+        double a41,a42,a43;
+        double a51,a52,a53,a54;
+        double a61,a62,a63,a64,a65;
+        double a71,a72,a73,a74,a75,a76;
+        double a81,a82,a83,a84,a85,a86,a87;
+
+        double b1_5,b3_5,b4_5,b5_5,b6_5,b7_5;
+        double bw1_4,bw3_4,bw4_4,bw5_4,bw6_4, bw7_4;
+        double bs1_4,bs3_4,bs4_4,bs5_4,bs6_4, bs7_4, bs8_4;
+    };
+
+    template<class T> T& RKBS54<T>::operator()
+            (T& Y5, T& Y4, double h, AbstFunctor<T>* F) {
+//      Take a step using RKBS54
+
+//      Initialization
+        // Yh1 = Y5;   Yh3 = Y5;   Yh4 = Y5;   Yh5 = Y5;   Yh6 = Y5;
+        // Yt = Y5;
+
+//      Step 1
+        (*F)(Y4,Yh1); Yh1 *= h;
+        Yh1 *= a21;
+        Yt = Y4;    Yt  += Yh1;                              // Y1 = Y1 + (h/5)*Yh
+
+        //      Step 2
+        // (*F)(Yt,Yh2);                                   // f(Y1)
+        (*F)(Yt,Y5); Y5 *= h;                                   // f(Y1)
+        Yh1 *= a31/a21; Y5 *= a32;  
+        Yt = Y4;    Yt += Yh1;  Yt += Y5;
+
+        //      Step 3
+        (*F)(Yt,Yh3); Yh3 *= h;
+        Yh1 *= a41/a31; Y5 *= a42/a32;   Yh3 *= a43;
+        Yt = Y4;    Yt += Yh1; Yt += Y5; Yt += Yh3;
+        
+        //      Step 4
+        (*F)(Yt,Yh4); Yh4 *= h;
+        Yh1 *= a51/a41; Y5 *= a52/a42;   Yh3 *= a53/a43;    Yh4 *= a54;
+        Yt = Y4;    Yt += Yh1; Yt += Y5; Yt += Yh3; Yt += Yh4;
+        
+        //      Step 5
+        (*F)(Yt,Yh5); Yh5 *= h;
+        Yh1 *= a61/a51; Y5 *= a62/a52;   Yh3 *= a63/a53;    Yh4 *= a64/a54; Yh5 *= a65;
+        Yt = Y4;    Yt += Yh1; Yt += Y5; Yt += Yh3; Yt += Yh4; Yt += Yh5;
+            
+        //      Step 6
+        (*F)(Yt,Yh6); Yh6 *= h;
+        Yh1 *= a71/a61; Y5 *= a72/a62;   Yh3 *= a73/a63;    Yh4 *= a74/a64; Yh5 *= a75/a65; Yh6 *= a76;
+        Yt = Y4;    Yt += Yh1;  Yt += Y5;   Yt += Yh3;  Yt += Yh4;  Yt += Yh5;  Yt += Yh6;
+
+        //      Step 7
+        (*F)(Yt,Yh7); Yh7 *= h;
+
+
+        //      Assemble 5th order solution
+        Y5 = Y4;
+        Yh1 *= b1_5/a71;    Y5 += Yh1;
+        Yh3 *= b3_5/a73;    Y5 += Yh3;
+        Yh4 *= b4_5/a74;    Y5 += Yh4;
+        Yh5 *= b5_5/a75;    Y5 += Yh5;
+        Yh6 *= b6_5/a76;    Y5 += Yh6;
+        Yh7 *= b7_5;        Y5 += Yh7;
+
+        //      Assemble 4th order solution
+        Yh1 *= bw1_4/b1_5;  Y4 += Yh1;
+        Yh3 *= bw3_4/b3_5;  Y4 += Yh3;
+        Yh4 *= bw4_4/b4_5;  Y4 += Yh4;
+        Yh5 *= bw5_4/b5_5;  Y4 += Yh5;
+        Yh6 *= bw6_4/b6_5;  Y4 += Yh6;
+        Yh7 *= bw7_4/b7_5;  Y4 += Yh7;
+
+//      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+        // return Y;
+    }
+//--------------------------------------------------------------
+//  RKTsitouras
+    template<class T> class RKT54 {
+    public:
+//      Constructor
+        RKT54(T& Yin): Yh1(Yin), Yh2(Yin), Yh3(Yin), Yh4(Yin), Yh5(Yin), Yh6(Yin), Yh7(Yin), Yt(Yin),
+        
+        a21(0.161),
+        a31(-0.008480655492356989),   a32(0.335480655492357),
+        a41(2.8971530571054935),    a42(-6.359448489975075),    a43(4.3622954328695815),
+        a51(5.325864828439257),   a52(-11.748883564062828),  a53(7.4955393428898365),  a54(-0.09249506636175525),
+        a61(5.86145544294642),    a62(-12.92096931784711),    a63(8.159367898576159), a64(-0.071584973281401), a65(-0.028269050394068383),
+        a71(0.09646076681806523), a72(0.01),   a73(0.4798896504144996),   a74(1.379008574103742),    a75(-3.290069515436081),    a76(2.324710524099774),
+
+        b1_5(0.09468075576583945),    b2_5(0.009183565540343254),   b3_5(0.4877705284247616),    b4_5(1.234297566930479),  b5_5(-2.7077123499835256),  b6_5(1.866628418170587),    b7_5(0.015151515151515152),
+        btilde1(-0.00178001105222577714),   btilde2(-0.0008164344596567469),   btilde3(0.007880878010261995), btilde4(-0.1447110071732629),    btilde5(0.5823571654525552),    btilde6(-0.45808210592918697),  btilde7(0.015151515151515152)
+        {}
+
+//      Main function
+        T& operator()(T& Y5, T&Y4, double h, AbstFunctor<T>* F);
+        // T& operator()(T& Y5, T&Y4, double h, AbstFunctor<T>* F, size_t dir);
+
+    private:
+//      R-K copies for the data
+        T  Yh1, Yh2, Yh3, Yh4, Yh5, Yh6, Yh7, Yt;
+
+        double a21;
+        double a31,a32;
+        double a41,a42,a43;
+        double a51,a52,a53,a54;
+        double a61,a62,a63,a64,a65;
+        double a71,a72,a73,a74,a75,a76;
+        
+
+        double b1_5,b2_5,b3_5,b4_5,b5_5,b6_5, b7_5;
+        double btilde1, btilde2, btilde3, btilde4, btilde5, btilde6, btilde7;
+    };
+
+    template<class T> T& RKT54<T>::operator()
+            (T& Y5, T& Y4, double h, AbstFunctor<T>* F) {
+//      Take a step using RKT54
+
+//      Initialization
+        // Yh1 = Y5;   Yh3 = Y5;   Yh4 = Y5;   Yh5 = Y5;   Yh6 = Y5;
+        // Yt = Y5;
+
+//      Step 1
+        (*F)(Y4,Yh1); Yh1 *= h;
+        Yh1 *= a21;
+        Yt = Y4;    Yt  += Yh1;                              // Y1 = Y1 + (h/5)*Yh
+
+        //      Step 2
+        // (*F)(Yt,Yh2);                                   // f(Y1)
+        (*F)(Yt,Yh2); Yh2 *= h;                                   // f(Y1)
+        Yh1 *= a31/a21; Yh2 *= a32;  
+        Yt = Y4;    Yt += Yh1;  Yt += Yh2;
+
+        //      Step 3
+        (*F)(Yt,Yh3); Yh3 *= h;
+        Yh1 *= a41/a31; Yh2 *= a42/a32;   Yh3 *= a43;
+        Yt = Y4;    Yt += Yh1; Yt += Yh2; Yt += Yh3;
+        
+        //      Step 4
+        (*F)(Yt,Yh4); Yh4 *= h;
+        Yh1 *= a51/a41; Yh2 *= a52/a42;   Yh3 *= a53/a43;    Yh4 *= a54;
+        Yt = Y4;    Yt += Yh1; Yt += Yh2; Yt += Yh3; Yt += Yh4;
+        
+        //      Step 5
+        (*F)(Yt,Yh5); Yh5 *= h;
+        Yh1 *= a61/a51; Yh2 *= a62/a52;   Yh3 *= a63/a53;    Yh4 *= a64/a54; Yh5 *= a65;
+        Yt = Y4;    Yt += Yh1; Yt += Yh2; Yt += Yh3; Yt += Yh4; Yt += Yh5;
+            
+        //      Step 6
+        (*F)(Yt,Yh6); Yh6 *= h;
+        Yh1 *= a71/a61; Yh2 *= a72/a62;   Yh3 *= a73/a63;    Yh4 *= a74/a64; Yh5 *= a75/a65; Yh6 *= a76;
+        Yt = Y4;    Yt += Yh1;  Yt += Yh2;   Yt += Yh3;  Yt += Yh4;  Yt += Yh5;  Yt += Yh6;
+
+        //      Step 7
+        (*F)(Yt,Yh7); Yh7 *= h;
+
+        //      Assemble 5th order solution
+        Y5 = Y4;
+        Yh1 *= b1_5/a71;    Y5 += Yh1;
+        Yh2 *= b2_5/a72;    Y5 += Yh2;
+        Yh3 *= b3_5/a73;    Y5 += Yh3;
+        Yh4 *= b4_5/a74;    Y5 += Yh4;
+        Yh5 *= b5_5/a75;    Y5 += Yh5;
+        Yh6 *= b6_5/a76;    Y5 += Yh6;
+        Yh7 *= b7_5;        Y5 += Yh7;
+
+        //      Assemble 4th order solution
+        Yh1 *= btilde1/b1_5;  Y4 += Yh1;
+        Yh2 *= btilde2/b2_5;  Y4 += Yh3;
+        Yh3 *= btilde3/b3_5;  Y4 += Yh3;
+        Yh4 *= btilde4/b4_5;  Y4 += Yh4;
+        Yh5 *= btilde5/b5_5;  Y4 += Yh5;
+        Yh6 *= btilde6/b6_5;  Y4 += Yh6;
+        Yh7 *= btilde7/b7_5;  Y4 += Yh7;
+
+//      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+        // return Y;
+    }
+
+//--------------------------------------------------------------
     //  Leapfrog space (Position verlet)
     template<class T> class LEAPs {
     public:
