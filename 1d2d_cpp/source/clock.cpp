@@ -78,8 +78,8 @@ void Stepper::update_dt(const State1D& Y_old, const State1D& Ystar, State1D& Y_n
     if (acceptability > 1) overall_check = false;
     else overall_check = true;
 
-    std::cout << "\n acc = " << acceptability;
-    std::cout << "\n dt = " << _dt;
+    // std::cout << "\n acc = " << acceptability;
+    // std::cout << "\n dt = " << _dt;
 
     /// Error is shared so that global timestep can be determined on rank 0
     MPI_Gather(&acceptability, 1, MPI_DOUBLE, acceptabilitylist, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
