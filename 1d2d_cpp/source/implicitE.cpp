@@ -332,7 +332,7 @@
 //**************************************************************
 //--------------------------------------------------------------
     Electric_Field_Methods::Implicit_E_Field::
-    Implicit_E_Field(const double& deltat, const Algorithms::AxisBundle<double> axes)://, int tout_start)
+    Implicit_E_Field(const Algorithms::AxisBundle<double> axes)://, int tout_start)
 //--------------------------------------------------------------
 //  Constructor for the implicit electric field
 //--------------------------------------------------------------
@@ -343,7 +343,7 @@
         J_Ex(), J_Ey(), J_Ez(),        // Current due to the effect of Ex, Ey, Ez
         EN(),   E0(),   DE(),          // New E, old E, perturbation E
    
-         dt(deltat),
+         
          idx(static_cast< complex<double> >(0.5/axes.dx(0))),
          idy(static_cast< complex<double> >(0.5/axes.dx(1)))
          {}
@@ -351,7 +351,7 @@
 
 //--------------------------------------------------------------
     void Electric_Field_Methods::Implicit_E_Field::
-    advance(Algorithms::RK2<State1D>* rk, State1D& Yin, collisions_1D& coll, VlasovFunctor1D_implicitE_p2* rkF){//, double time, double dt){
+    advance(Algorithms::RK2<State1D>* rk, State1D& Yin, collisions_1D& coll, VlasovFunctor1D_implicitE_p2* rkF, const double step_size){//, double time, double dt){
 //--------------------------------------------------------------
 //  Calculate the implicit electric field
 //--------------------------------------------------------------
@@ -373,7 +373,7 @@
 // - - - - - - - - - - - - - - - - - - - - - -
 // - - - - - - - - - - - - - - - - - - - - - -  
             // Effect of E = 0 on f00, f10, f11
-            coll.advancef1(Yin,Yh);                 // Collisions for f10, f11
+            coll.advancef1(Yin,Yh,step_size);                 // Collisions for f10, f11
             
             J0.calculate_J_1D(Yh);
             Yin.SH(0,0,0) = f00;
@@ -382,8 +382,8 @@
 
             // Ex
             Yin.EMF().Ex() = DE.Ex_1D();
-            Yin = (*rk)(Yin, dt, rkF, 1);           // Effect of DEx on Y00, Y10, Y11, Y20, Y21, Y22            
-            coll.advancef1(Yin,Yh);                 // Collisions for f10, f11
+            Yin = (*rk)(Yin, step_size, rkF, 1);           // Effect of DEx on Y00, Y10, Y11, Y20, Y21, Y22            
+            coll.advancef1(Yin,Yh,step_size);                 // Collisions for f10, f11
             J_Ex.calculate_J_1D(Yh);                   // Evaluate J(DEx)
             Yin.SH(0,0,0) = f00;
             Yin.SH(0,1,0) = f10;
@@ -391,8 +391,8 @@
 
             // Ey
             Yin.EMF().Ey() = DE.Ey_1D();               // Ey = DEy
-            Yin = (*rk)(Yin, dt, rkF, 2);           // Effect of DEy on Y00, Y10, Y11, Y20, Y21, Y22
-            coll.advancef1(Yin,Yh);                 // Collisions for f10, f11
+            Yin = (*rk)(Yin, step_size, rkF, 2);           // Effect of DEy on Y00, Y10, Y11, Y20, Y21, Y22
+            coll.advancef1(Yin,Yh,step_size);                 // Collisions for f10, f11
             J_Ey.calculate_J_1D(Yh);                   // Evaluate J(DEy)           
 
             Yin.SH(0,0,0) = f00;
@@ -401,8 +401,8 @@
 
             // Ez
             Yin.EMF().Ez() = DE.Ez_1D();               // Ey = DEy
-            Yin = (*rk)(Yin, dt, rkF, 3);           // Effect of DEy on Y00, Y10, Y11, Y20, Y21, Y22            
-            coll.advancef1(Yin,Yh);                 // Collisions for f10, f11
+            Yin = (*rk)(Yin, step_size, rkF, 3);           // Effect of DEy on Y00, Y10, Y11, Y20, Y21, Y22            
+            coll.advancef1(Yin,Yh,step_size);                 // Collisions for f10, f11
             J_Ez.calculate_J_1D(Yh);                   // Evaluate J(DEy)
             
             Yin.SH(0,0,0) = f00;
@@ -544,19 +544,19 @@
 //      Jy = -dBz/dx       
         tmpJi    = emf.Bz(); 
         tmpJi   *= (-1.0) * idx;
-        JN.Jy_1D()  = tmpJi.Dx();  
+        JN.Jy_1D()  = tmpJi.Dx(Input::List().dbydx_order);  
 
 //      Jz += dBy/dx       
         tmpJi    = emf.By(); 
         tmpJi   *=  idx;
-        JN.Jz_1D() += tmpJi.Dx();   
+        JN.Jz_1D() += tmpJi.Dx(Input::List().dbydx_order);   
     }
 //--------------------------------------------------------------
 
 
 //--------------------------------------------------------------
     void Electric_Field_Methods::Implicit_E_Field::
-    advance(Algorithms::RK2<State2D>* rk, State2D& Yin, collisions_2D& coll, VlasovFunctor2D_implicitE_p2* rkF){//, double time, double dt){
+    advance(Algorithms::RK2<State2D>* rk, State2D& Yin, collisions_2D& coll, VlasovFunctor2D_implicitE_p2* rkF, const double step_size){//, double time, double dt){
 //--------------------------------------------------------------
 //  Calculate the implicit electric field
 //--------------------------------------------------------------
@@ -578,7 +578,7 @@
 // - - - - - - - - - - - - - - - - - - - - - -
 // - - - - - - - - - - - - - - - - - - - - - -  
             // Effect of E = 0 on f00, f10, f11
-            coll.advancef1(Yin,Yh);                 // Collisions for f10, f11
+            coll.advancef1(Yin,Yh,step_size);                 // Collisions for f10, f11
             J0.calculate_J_2D(Yh);
             Yin.SH(0,0,0) = f00;
             Yin.SH(0,1,0) = f10;
@@ -587,8 +587,8 @@
 
             // Ex
             Yin.EMF().Ex() = DE.Ex_2D();   // Ex = DEx
-            Yin = (*rk)(Yin, dt, rkF, 1);           // Effect of DEx on Y00, Y10, Y11, Y20, Y21, Y22            
-            coll.advancef1(Yin,Yh);                 // Collisions for f10, f11
+            Yin = (*rk)(Yin, step_size, rkF, 1);           // Effect of DEx on Y00, Y10, Y11, Y20, Y21, Y22            
+            coll.advancef1(Yin,Yh,step_size);                 // Collisions for f10, f11
             J_Ex.calculate_J_2D(Yh);                   // Evaluate J(DEx)
 
             Yin.SH(0,0,0) = f00;
@@ -598,8 +598,8 @@
 
             // Ey
             Yin.EMF().Ey() = DE.Ey_2D();               // Ey = DEy
-            Yin = (*rk)(Yin, dt, rkF, 2);           // Effect of DEy on Y00, Y10, Y11, Y20, Y21, Y22
-            coll.advancef1(Yin,Yh);                 // Collisions for f10, f11
+            Yin = (*rk)(Yin, step_size, rkF, 2);           // Effect of DEy on Y00, Y10, Y11, Y20, Y21, Y22
+            coll.advancef1(Yin,Yh,step_size);                 // Collisions for f10, f11
             J_Ey.calculate_J_2D(Yh);                   // Evaluate J(DEy)           
 
             Yin.SH(0,0,0) = f00;
@@ -608,8 +608,8 @@
             
             // Ez
             Yin.EMF().Ez() = DE.Ez_2D();               // Ey = DEy
-            Yin = (*rk)(Yin, dt, rkF, 3);           // Effect of DEy on Y00, Y10, Y11, Y20, Y21, Y22            
-            coll.advancef1(Yin,Yh);                 // Collisions for f10, f11
+            Yin = (*rk)(Yin, step_size, rkF, 3);           // Effect of DEy on Y00, Y10, Y11, Y20, Y21, Y22            
+            coll.advancef1(Yin,Yh,step_size);                 // Collisions for f10, f11
             J_Ez.calculate_J_2D(Yh);                   // Evaluate J(DEy)
 
             Yin.SH(0,0,0) = f00;
@@ -763,22 +763,22 @@
 //      Jx =  dBz/dy       
         // tmpJi    = emf.Bz(); //(same as assignment above)
         tmpJi   *= idy;
-        JN.Jx_2D()  = tmpJi.Dy();
+        JN.Jx_2D()  = tmpJi.Dy(Input::List().dbydy_order);
 
 //      Jy = -dBz/dx       
         tmpJi    = emf.Bz(); 
         tmpJi   *= (-1.0) * idx;
-        JN.Jy_2D()  = tmpJi.Dx();  
+        JN.Jy_2D()  = tmpJi.Dx(Input::List().dbydx_order);  
 
 //      Jz = -dBx/dy       
         tmpJi    = emf.Bx(); 
         tmpJi   *= (-1.0) * idy;
-        JN.Jz_2D()  = tmpJi.Dy();    
+        JN.Jz_2D()  = tmpJi.Dy(Input::List().dbydy_order);    
 
 //      Jz += dBy/dx       
         tmpJi    = emf.By(); 
         tmpJi   *=  idx;
-        JN.Jz_2D() += tmpJi.Dx();   
+        JN.Jz_2D() += tmpJi.Dx(Input::List().dbydx_order);   
     }
 //--------------------------------------------------------------
 

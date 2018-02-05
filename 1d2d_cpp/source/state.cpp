@@ -24,11 +24,12 @@
 //--------------------------------------------------------------
 
 // Standard Libraries
+#include <mpi.h>
 #include <iostream>
 #include <vector>
 #include <valarray>
 #include <complex>
-#include <mpi.h>
+
 
 // My Libraries
 #include "lib-array.h"
@@ -166,7 +167,7 @@ SHarmonic1D& SHarmonic1D::Dp(){
 //--------------------------------------------------------------
 
 //  X-difference
-SHarmonic1D& SHarmonic1D::Dx(){
+SHarmonic1D& SHarmonic1D::Dx(size_t order){
 
     //--------------------------------------------------------//
     //--------------------------------------------------------//
@@ -176,7 +177,11 @@ SHarmonic1D& SHarmonic1D::Dx(){
     //         (*sh)(ip,ix) = ix;
     //     }
     // }
-    *sh = (*sh).Dd2();           				// Worry about boundaries elsewhere
+    if (order == 2) *sh = (*sh).Dd2_2nd_order();                          // Worry about boundaries elsewhere
+    if (order == 4) *sh = (*sh).Dd2_4th_order();                          // Worry about boundaries elsewhere
+
+
+    
     
     // for (size_t ix(0); ix < this->numx(); ++ix) {
     //     for (size_t ip(0); ip < this->nump(); ++ip) {
@@ -213,7 +218,7 @@ void SHarmonic1D::checknan(){
                     MPI_Comm_rank(MPI_COMM_WORLD, &rank); 
                     if (rank == 0)
                     {
-                            fprintf(stderr, "Error: Program terminated with error code %d\n", 1);
+                            fprintf(stderr, "Found %d NaN \n", 1);
                     }
                     MPI_Finalize();
                     exit(1);
@@ -355,15 +360,20 @@ void SHarmonic1D::checknan(){
     }
 //--------------------------------------------------------------
 //  X-difference 
-    SHarmonic2D& SHarmonic2D::Dx(){
+    SHarmonic2D& SHarmonic2D::Dx(size_t order){
 
-        *sh = (*sh).Dd2();                          // Worry about boundaries elsewhere
-        return *this;
+    if (order == 2) *sh = (*sh).Dd2_2nd_order();                          // Worry about boundaries elsewhere
+    if (order == 4) *sh = (*sh).Dd2_4th_order();                          // Worry about boundaries elsewhere
+        // *sh = (*sh).Dd2();                          // Worry about boundaries elsewhere
+    return *this;
     }
 //  y-difference 
-    SHarmonic2D& SHarmonic2D::Dy(){
+    SHarmonic2D& SHarmonic2D::Dy(size_t order){
 
-        *sh = (*sh).Dd3();                          // Worry about boundaries elsewhere
+        // *sh = (*sh).Dd3();                          // Worry about boundaries elsewhere
+
+        if (order == 2) *sh = (*sh).Dd3_2nd_order();                          // Worry about boundaries elsewhere
+        if (order == 4) *sh = (*sh).Dd3_4th_order();                          // Worry about boundaries elsewhere
         return *this;
     }
     SHarmonic2D& SHarmonic2D::mxy_matrix(Array2D< complex<double> >& shmultiM){
@@ -496,25 +506,26 @@ Field1D& Field1D::Re(){
 }
 
 //--------------------------------------------------------------
-Field1D& Field1D::Dx(){
+Field1D& Field1D::Dx(size_t order){
 //--------------------------------------------------------------
     //--------------------------------------------------------//
     //--------------------------------------------------------//
     /// 4th order
-    // valarray<complex<double> > df(numx());
+    if (order == 4)
+    {
+        valarray<complex<double> > df(numx());
 
-    // df[0] = (*fi)[1]-(*fi)[0];
-    // df[1] = 1.0/12.0*((*fi)[4]-6.0*(*fi)[3]+18.0*(*fi)[2]-10.0*(*fi)[1]-3.0*(*fi)[0]);
+        df[0] = -2.0*((*fi)[1]-(*fi)[0]);
+        df[1] = -1.0*((*fi)[2]-(*fi)[0]);
 
-    // for (long i(2); i < numx()-2; ++i) {
-    //     df[i] = 1.0/12.0*(-(*fi)[i+2]+8.0*(*fi)[i+1]-8.0*(*fi)[i-1]+(*fi)[i-2]);
-    // }
+        for (long i(2); i < numx()-2; ++i) {
+            df[i] = -2.0/12.0*(-(*fi)[i+2]+8.0*(*fi)[i+1]-8.0*(*fi)[i-1]+(*fi)[i-2]);
+        }
 
-    // df[numx()-2] = 1.0/12.0*(3.0*(*fi)[numx()-1]+10.0*(*fi)[numx()-2]-18.0*(*fi)[numx()-3]+6.0*(*fi)[numx()-4]-(*fi)[numx()-5]);
-    // df[numx()-1] = (*fi)[numx()-1]-(*fi)[numx()-2];
+        df[numx()-2] = -1.0*((*fi)[numx()-1]-(*fi)[numx()-3]);
+        df[numx()-1] = -2.0*((*fi)[numx()-1]-(*fi)[numx()-2]);
 
-    // for (long i(0); i < numx(); ++i)
-    //     (*fi)[i] = -2.0*df[i];
+    }
     //--------------------------------------------------------//
     //--------------------------------------------------------//
     // 2nd order
@@ -524,7 +535,8 @@ Field1D& Field1D::Dx(){
         // }
         // df[numx()-1] = 2.0*((*fi)[numx()-2]-(*fi)[numx()-1]);
         // *fi = df;
-       
+    else
+    {   
         for(long i(0); i< long(numx())-2; ++i) {
             (*fi)[i] -= (*fi)[i+2];
         }
@@ -532,6 +544,7 @@ Field1D& Field1D::Dx(){
         for(long i(numx()-3); i>-1; --i) {
             (*fi)[i+1] = (*fi)[i];
         }
+    }
     //--------------------------------------------------------//
     //--------------------------------------------------------//
     return *this;
@@ -600,15 +613,22 @@ Field1D& Field1D::Dx(){
     }
 
 //--------------------------------------------------------------
-    Field2D& Field2D::Dx(){
+    Field2D& Field2D::Dx(size_t order){
 //--------------------------------------------------------------
-        *fi = (*fi).Dd1();
+        // *fi = (*fi).Dd1();
+        if (order == 2) *fi = (*fi).Dd1_2nd_order();                          // Worry about boundaries elsewhere
+        if (order == 4) *fi = (*fi).Dd1_4th_order();                          // Worry about boundaries elsewhere
+
         return *this;
     }
 //--------------------------------------------------------------
-    Field2D& Field2D::Dy(){
+    Field2D& Field2D::Dy(size_t order){
 //--------------------------------------------------------------
-        *fi = (*fi).Dd2();
+        // *fi = (*fi).Dd2();
+
+        if (order == 2) *fi = (*fi).Dd2_2nd_order();                          // Worry about boundaries elsewhere
+        if (order == 4) *fi = (*fi).Dd2_4th_order();                          // Worry about boundaries elsewhere
+
         return *this;
     } 
 //--------------------------------------------------------------
@@ -798,7 +818,7 @@ DistFunc1D:: DistFunc1D(size_t l, size_t m,
                         valarray<double> _dp, 
                         size_t nx, 
                         double q, double _ma)
-        : lmax(l), mmax(m), 
+        : lmax(l), mmax(m), sz(((m+1)*(2*l-m+2))/2),
         dp(_dp), 
         charge(q), ma(_ma), ind(l+1,m+1) {
 
@@ -809,7 +829,7 @@ DistFunc1D:: DistFunc1D(size_t l, size_t m,
     }
 
 //      Generate container for the harmonics
-    sz = ((mmax+1)*(2*lmax-mmax+2))/2;
+    // sz = ((mmax+1)*(2*lmax-mmax+2))/2;
     df = new vector<SHarmonic1D>(sz,SHarmonic1D(_dp.size(),nx));
     
 //      Define the index for the triangular array 
@@ -840,13 +860,14 @@ DistFunc1D:: DistFunc1D(size_t l, size_t m,
 //  Copy constructor
 DistFunc1D:: DistFunc1D(const DistFunc1D& other)
         : lmax(other.l0()), mmax(other.m0()),
+        sz(((other.m0()+1)*(2*other.l0()-other.m0()+2))/2),
             dp(other.getdp()),
           charge(other.q()), ma(other.mass()), 
           ind(other.l0()+1,other.m0()+1)
           {
 
 //      Generate container for the harmonics
-    sz = ((mmax+1)*(2*lmax-mmax+2))/2;
+    // sz = ((mmax+1)*(2*lmax-mmax+2))/2;
     df = new vector<SHarmonic1D>(sz,SHarmonic1D(other(0).nump(),other(0).numx()));
     
 
@@ -1321,7 +1342,8 @@ void DistFunc1D::checknan(){
                             valarray<double> _dp, 
                             size_t nx, size_t ny,
                             double q=1, double _ma=1) 
-             : lmax(l), mmax(m), dp(_dp), charge(q), ma(_ma), ind(l+1,m+1) {
+             : lmax(l), mmax(m), sz(((m+1)*(2*l-m+2))/2),
+             dp(_dp), charge(q), ma(_ma), ind(l+1,m+1) {
              
 //      Initialize the array of the harmonics
         if (lmax < 1 || mmax < 1) {
@@ -1329,7 +1351,7 @@ void DistFunc1D::checknan(){
             exit(1);
         }
 
-        sz = ((mmax+1)*(2*lmax-mmax+2))/2;
+        // sz = ((mmax+1)*(2*lmax-mmax+2))/2;
         //      Generate container for the harmonics
         df = new vector<SHarmonic2D>(sz,SHarmonic2D(_dp.size(),nx,ny)); 
         
@@ -1361,10 +1383,12 @@ void DistFunc1D::checknan(){
 
 //  Copy constructor
     DistFunc2D:: DistFunc2D(const DistFunc2D& other)
-              : lmax(other.l0()), mmax(other.m0()), dp(other.getdp()),
+              : lmax(other.l0()), mmax(other.m0()), 
+              sz(((other.m0()+1)*(2*other.l0()-other.m0()+2))/2),
+              dp(other.getdp()),
               charge(other.q()), ma(other.mass()), ind(other.l0()+1,other.m0()+1)
     {
-        sz = ((mmax+1)*(2*lmax-mmax+2))/2;
+        // sz = ((mmax+1)*(2*lmax-mmax+2))/2;
 
 //      Generate container for the harmonics
         df = new vector<SHarmonic2D>(sz,SHarmonic2D(other(0).nump(),other(0).numx(),other(0).numy()));

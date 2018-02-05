@@ -7,7 +7,7 @@ read NUM_NODES
 
 mkdir ./bin/$DIR
 
-cp ./bin/oshun1d.e ./input/inputdeck ./bin/$DIR/
+cp ./bin/oshun.e ./input/inputdeck ./bin/$DIR/
 cd ./bin/$DIR
 
-mpiexec -np $NUM_NODES ./oshun1d.e
+mpiexec -np $NUM_NODES ./oshun.e

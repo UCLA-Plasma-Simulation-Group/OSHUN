@@ -438,19 +438,19 @@ void Hydro_Advection_1D::operator()(const DistFunc1D& Din, const Hydro1D& hydro,
         // C df/dr term
         for (size_t m(0); m < ((m0<l0)?(m0+1):m0); ++m){
             
-            tH = Din(m,m);                             tH = tH.Dx();
+            tH = Din(m,m);                             tH = tH.Dx(Input::List().dbydx_order);
             for (int ip(0); ip<tH.nump(); ++ip) tH(ip,Din(0,0).numx()-1)  = 0.0; 
             Dh(m,m) += tH.mxaxis(Ux);
 
             for (size_t l(m+1); l < l0; ++l) {
-               tH = Din(l,m);                          tH = tH.Dx();  
+               tH = Din(l,m);                          tH = tH.Dx(Input::List().dbydx_order);  
                for (int ip(0); ip<tH.nump(); ++ip) tH(ip,Din(0,0).numx()-1)  = 0.0;  
                
                Dh(l,m) += tH.mxaxis(Ux);
 
             }
             
-            tH = Din(l0,m);                            tH = tH.Dx();
+            tH = Din(l0,m);                            tH = tH.Dx(Input::List().dbydx_order);
             for (int ip(0); ip<tH.nump(); ++ip) tH(ip,Din(0,0).numx()-1)  = 0.0; 
 
             Dh(l0,m) += tH.mxaxis(Ux);
@@ -496,5 +496,4 @@ void Hydro_Advection_1D::operator()(const DistFunc1D& Din, const Hydro1D& hydro,
              G(0,i) = ( f(1,i) - f00) * g_r;
         }
     }
-
 //--------------------------------------------------------------

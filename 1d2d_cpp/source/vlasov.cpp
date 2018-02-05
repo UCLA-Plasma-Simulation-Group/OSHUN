@@ -833,7 +833,7 @@ void Electric_Field::operator()(const DistFunc1D& Din,
 //--------------------------------------------------------------
 //
 void Electric_Field::es1d(const DistFunc1D& Din,
-   const Field1D& FEx, const Field1D& FEy, const Field1D& FEz,
+   const Field1D& FEx,
    DistFunc1D& Dh) {
 //--------------------------------------------------------------
 //  This is the core calculation for the electric field
@@ -2321,7 +2321,7 @@ void Electric_Field::operator()(const DistFunc2D& Din,
             dist_il[id] = il;
             dist_im[id] = im;
 
-            if (im < il && im < Nm + 1)
+            if (im < il && im < Nm)
             {
                 ++im;
             }
@@ -2336,6 +2336,162 @@ void Electric_Field::operator()(const DistFunc2D& Din,
     }
 //--------------------------------------------------------------
 
+
+//--------------------------------------------------------------
+  void Magnetic_Field::operator()(const DistFunc1D& Din,
+   const Field1D& FBx, const Field1D& FBy, const Field1D& FBz,
+   DistFunc1D& Dh) {
+//--------------------------------------------------------------
+//  This is the core calculation for the magnetic field
+//--------------------------------------------------------------
+
+    complex<double> ii(0.0,1.0);
+
+    #pragma omp parallel num_threads(Input::List().ompthreads)
+    {
+        valarray<complex<double> > Bx(FBx.array());
+        valarray<complex<double> > Bm(FBy.array());
+        Bm *= (-1.0)*ii;
+        Bm += FBz.array();
+        valarray<complex<double> > Bp(FBy.array());
+        Bp *= ii;
+        Bp += FBz.array();
+
+        Bx *= Din.q();
+        Bm *= Din.q();
+        Bp *= Din.q();
+
+        size_t l0(Din.l0());
+        size_t m0(Din.m0());
+
+        size_t this_thread  = omp_get_thread_num();
+
+        size_t f_start_thread(f_start[this_thread]);
+        size_t f_end_thread(f_end[this_thread]);
+
+        SHarmonic1D FLM(Din(0,0)), TMP(Din(0,0));
+
+        Bp *= A3;
+
+        size_t l(0),m(0);
+
+        if (this_thread == 0)
+        {
+            FLM = Din(1,0);                 Dh(1,1) += FLM.mxaxis(Bp);
+            // - - - - - - - - - - - - - - - - - - - - - - - - - - -
+            //      l = 1, m = 1
+            // - - - - - - - - - - - - - - - - - - - - - - - - - - -
+            FLM = Din(1,1); Bx *= A1[1];    Dh(1,1) += FLM.mxaxis(Bx);  Bx /= A1[1];
+        
+            // - - - - - - - - - - - - - - - - - - - - - - - - - - -
+            //      m = 1, l = 1
+            // - - - - - - - - - - - - - - - - - - - - - - - - - - -
+            FLM = Din(1,1); Bm *= B1[1];    FLM = FLM.mxaxis(Bm);     Dh(1,0) += FLM.Re();  Bm /= B1[1];
+        }
+
+        // ----------------------------------------- //
+        //              Do the chunks
+        // ----------------------------------------- //       
+        
+        for (size_t id = f_start_thread; id < f_end_thread ; ++id)
+        {   
+
+            l = dist_il[id];
+            m = dist_im[id];
+
+            FLM = Din(l,m);
+            TMP = FLM;
+
+            if (l == m || m == m0)         // Diagonal, no m + 1
+            {
+                            Bx *= A1[m];        Dh(l,m  ) += TMP.mxaxis(Bx);        Bx /= A1[m];
+                            Bm *= A2(l,m);      Dh(l,m-1) += FLM.mxaxis(Bm);        Bm /= A2(l,m);                   
+            }
+            else if (m == 0)    // m = 0, no m - 1
+            {   
+                                                Dh(l,1) += TMP.mxaxis(Bp);
+            }
+            else if (m == 1)
+            {
+                            Bm *= B1[l];        TMP = TMP.mxaxis(Bm);               Dh(l,0) += TMP.Re();        Bm /= B1[l];
+                TMP = FLM;                      Dh(l,2) += TMP.mxaxis(Bp);
+                TMP = FLM;  Bx *= A1[1];        Dh(l,1) += TMP.mxaxis(Bx);          Bx /= A1[1];
+            }
+            else
+            {
+                                                Dh(l,m+1) += TMP.mxaxis(Bp);
+                TMP = FLM; Bx *= A1[m];         Dh(l,m  ) += TMP.mxaxis(Bx);        Bx /= A1[m];
+                TMP = FLM; Bm *= A2(l,m);       Dh(l,m-1) += TMP.mxaxis(Bm);        Bm /= A2(l,m);                   
+            } 
+        }
+    }
+
+    // ----------------------------------------- //
+    //          Boundaries between chunks
+    // ----------------------------------------- //
+
+    #pragma omp parallel for num_threads(f_start.size()-1)
+    for (size_t threadboundaries = 0; threadboundaries < f_start.size()-1; ++threadboundaries)
+    {
+        valarray<complex<double> > Bx(FBx.array());
+        valarray<complex<double> > Bm(FBy.array());
+        Bm *= (-1.0)*ii;
+        Bm += FBz.array();
+        valarray<complex<double> > Bp(FBy.array());
+        Bp *= ii;
+        Bp += FBz.array();
+
+        Bx *= Din.q();
+        Bm *= Din.q();
+        Bp *= Din.q();
+
+        size_t l0(Din.l0());
+        size_t m0(Din.m0());
+
+        size_t this_thread  = omp_get_thread_num();
+
+        size_t f_start_thread(f_start[this_thread]);
+        size_t f_end_thread(f_end[this_thread]);
+
+        SHarmonic1D FLM(Din(0,0)), TMP(Din(0,0));
+
+        Bp *= A3;
+
+        size_t l(0),m(0);
+
+        for (size_t id = f_end[threadboundaries]; id < f_start[threadboundaries+1]; ++id)
+        {   
+            l = dist_il[id];
+            m = dist_im[id];
+
+            FLM = Din(l,m);
+            TMP = FLM;
+
+            if (l == m || m == m0)         // Diagonal, no m + 1
+            {
+                            Bx *= A1[m];        Dh(l,m  ) += TMP.mxaxis(Bx);        Bx /= A1[m];
+                            Bm *= A2(l,m);      Dh(l,m-1) += FLM.mxaxis(Bm);        Bm /= A2(l,m);                   
+            }
+            else if (m == 0)    // m = 0, no m - 1
+            {
+                                                Dh(l,1) += TMP.mxaxis(Bp);
+            }
+            else if (m == 1)
+            {
+                            Bm *= B1[l];        TMP = TMP.mxaxis(Bm);               Dh(l,0) += TMP.Re();        Bm /= B1[l];           
+                TMP = FLM;                      Dh(l,2) += TMP.mxaxis(Bp);
+                TMP = FLM;  Bx *= A1[1];        Dh(l,1) += TMP.mxaxis(Bx);          Bx /= A1[1];        
+            }
+            else
+            {
+                                                Dh(l,m+1) += TMP.mxaxis(Bp);
+                TMP = FLM; Bx *= A1[m];         Dh(l,m  ) += TMP.mxaxis(Bx);        Bx /= A1[m];
+                TMP = FLM; Bm *= A2(l,m);       Dh(l,m-1) += TMP.mxaxis(Bm);        Bm /= A2(l,m);                   
+            }
+        }
+    }
+}
+//--------------------------------------------------------------
 //--------------------------------------------------------------
 void Magnetic_Field::operator()(const DistFunc2D& Din, 
        const Field2D& FBx, const Field2D& FBy, const Field2D& FBz, 
@@ -2570,163 +2726,6 @@ void Magnetic_Field::operator()(const DistFunc2D& Din,
 }
 //--------------------------------------------------------------
 //**************************************************************
-
-//--------------------------------------------------------------
-  void Magnetic_Field::operator()(const DistFunc1D& Din,
-   const Field1D& FBx, const Field1D& FBy, const Field1D& FBz,
-   DistFunc1D& Dh) {
-//--------------------------------------------------------------
-//  This is the core calculation for the magnetic field
-//--------------------------------------------------------------
-
-    complex<double> ii(0.0,1.0);
-
-    #pragma omp parallel num_threads(Input::List().ompthreads)
-    {
-        valarray<complex<double> > Bx(FBx.array());
-        valarray<complex<double> > Bm(FBy.array());
-        Bm *= (-1.0)*ii;
-        Bm += FBz.array();
-        valarray<complex<double> > Bp(FBy.array());
-        Bp *= ii;
-        Bp += FBz.array();
-
-        Bx *= Din.q();
-        Bm *= Din.q();
-        Bp *= Din.q();
-
-        size_t l0(Din.l0());
-        size_t m0(Din.m0());
-
-        size_t this_thread  = omp_get_thread_num();
-
-        size_t f_start_thread(f_start[this_thread]);
-        size_t f_end_thread(f_end[this_thread]);
-
-        SHarmonic1D FLM(Din(0,0)), TMP(Din(0,0));
-
-        Bp *= A3;
-
-        size_t l(0),m(0);
-
-        if (this_thread == 0)
-        {
-            FLM = Din(1,0);                 Dh(1,1) += FLM.mxaxis(Bp);
-            // - - - - - - - - - - - - - - - - - - - - - - - - - - -
-            //      l = 1, m = 1
-            // - - - - - - - - - - - - - - - - - - - - - - - - - - -
-            FLM = Din(1,1); Bx *= A1[1];    Dh(1,1) += FLM.mxaxis(Bx);  Bx /= A1[1];
-        
-            // - - - - - - - - - - - - - - - - - - - - - - - - - - -
-            //      m = 1, l = 1
-            // - - - - - - - - - - - - - - - - - - - - - - - - - - -
-            FLM = Din(1,1); Bm *= B1[1];    FLM = FLM.mxaxis(Bm);     Dh(1,0) += FLM.Re();  Bm /= B1[1];
-        }
-
-        // ----------------------------------------- //
-        //              Do the chunks
-        // ----------------------------------------- //       
-        
-        for (size_t id = f_start_thread; id < f_end_thread ; ++id)
-        {   
-
-
-            l = dist_il[id];
-            m = dist_im[id];
-
-            FLM = Din(l,m);
-            TMP = FLM;
-
-            if (l == m || m == m0)         // Diagonal, no m + 1
-            {
-                            Bx *= A1[m];        Dh(l,m  ) += TMP.mxaxis(Bx);        Bx /= A1[m];
-                            Bm *= A2(l,m);      Dh(l,m-1) += FLM.mxaxis(Bm);        Bm /= A2(l,m);                   
-            }
-            else if (m == 0)    // m = 0, no m - 1
-            {   
-                                                Dh(l,1) += TMP.mxaxis(Bp);
-            }
-            else if (m == 1)
-            {
-                            Bm *= B1[l];        TMP = TMP.mxaxis(Bm);               Dh(l,0) += TMP.Re();        Bm /= B1[l];
-                TMP = FLM;                      Dh(l,2) += TMP.mxaxis(Bp);
-                TMP = FLM;  Bx *= A1[1];        Dh(l,1) += TMP.mxaxis(Bx);          Bx /= A1[1];
-            }
-            else
-            {
-                                                Dh(l,m+1) += TMP.mxaxis(Bp);
-                TMP = FLM; Bx *= A1[m];         Dh(l,m  ) += TMP.mxaxis(Bx);        Bx /= A1[m];
-                TMP = FLM; Bm *= A2(l,m);       Dh(l,m-1) += TMP.mxaxis(Bm);        Bm /= A2(l,m);                   
-            } 
-        }
-    }
-
-    // ----------------------------------------- //
-    //          Boundaries between chunks
-    // ----------------------------------------- //
-
-    #pragma omp parallel for num_threads(f_start.size()-1)
-    for (size_t threadboundaries = 0; threadboundaries < f_start.size()-1; ++threadboundaries)
-    {
-        valarray<complex<double> > Bx(FBx.array());
-        valarray<complex<double> > Bm(FBy.array());
-        Bm *= (-1.0)*ii;
-        Bm += FBz.array();
-        valarray<complex<double> > Bp(FBy.array());
-        Bp *= ii;
-        Bp += FBz.array();
-
-        Bx *= Din.q();
-        Bm *= Din.q();
-        Bp *= Din.q();
-
-        size_t l0(Din.l0());
-        size_t m0(Din.m0());
-
-        size_t this_thread  = omp_get_thread_num();
-
-        size_t f_start_thread(f_start[this_thread]);
-        size_t f_end_thread(f_end[this_thread]);
-
-        SHarmonic1D FLM(Din(0,0)), TMP(Din(0,0));
-
-        Bp *= A3;
-
-        size_t l(0),m(0);
-
-        for (size_t id = f_end[threadboundaries]; id < f_start[threadboundaries+1]; ++id)
-        {   
-            l = dist_il[id];
-            m = dist_im[id];
-
-            FLM = Din(l,m);
-            TMP = FLM;
-
-            if (l == m || m == m0)         // Diagonal, no m + 1
-            {
-                            Bx *= A1[m];        Dh(l,m  ) += TMP.mxaxis(Bx);        Bx /= A1[m];
-                            Bm *= A2(l,m);      Dh(l,m-1) += FLM.mxaxis(Bm);        Bm /= A2(l,m);                   
-            }
-            else if (m == 0)    // m = 0, no m - 1
-            {
-                                                Dh(l,1) += TMP.mxaxis(Bp);
-            }
-            else if (m == 1)
-            {
-                            Bm *= B1[l];        TMP = TMP.mxaxis(Bm);               Dh(l,0) += TMP.Re();        Bm /= B1[l];           
-                TMP = FLM;                      Dh(l,2) += TMP.mxaxis(Bp);
-                TMP = FLM;  Bx *= A1[1];        Dh(l,1) += TMP.mxaxis(Bx);          Bx /= A1[1];        
-            }
-            else
-            {
-                                                Dh(l,m+1) += TMP.mxaxis(Bp);
-                TMP = FLM; Bx *= A1[m];         Dh(l,m  ) += TMP.mxaxis(Bx);        Bx /= A1[m];
-                TMP = FLM; Bm *= A2(l,m);       Dh(l,m-1) += TMP.mxaxis(Bm);        Bm /= A2(l,m);                   
-            }
-        }
-    }
-}
-//--------------------------------------------------------------
 
 //--------------------------------------------------------------
 void Magnetic_Field::f1only(const DistFunc1D& Din,
@@ -3196,7 +3195,7 @@ Spatial_Advection::Spatial_Advection(size_t Nl, size_t Nm,
             // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
             //      m = 0, l = 0
             // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-            fd1 = Din(0,0);                         fd1 = fd1.Dx();
+            fd1 = Din(0,0);                         fd1 = fd1.Dx(Input::List().dbydx_order);
             vtemp *= A1(0,0);                       Dh(1,0) += fd1.mpaxis(vtemp);
             vtemp /= A1(0,0);
         
@@ -3207,13 +3206,13 @@ Spatial_Advection::Spatial_Advection(size_t Nl, size_t Nm,
             vtemp *= B1[0];
             for (size_t il = 1; il < l0; ++il)
             {
-                fd1 = Din(il,1);                fd1 = fd1.Dy();
+                fd1 = Din(il,1);                fd1 = fd1.Dy(Input::List().dbydy_order);;
                 vtemp *= B2[il]/B1[il-1];       fd2 = fd1;      fd1 = fd1.mpaxis(vtemp);    Dh(il-1,0) += fd1.Re();
                 vtemp *= B1[il]/B2[il];                         fd2 = fd2.mpaxis(vtemp);    Dh(il+1,0) += fd2.Re();
 
                 // std::cout << "\n Checkpoint (" << il  << ")\n";   Dh.checknan(); std::cout << ".. passed \n";
             }
-            fd1 = Din(l0,1);                            fd1 = fd1.Dy();
+            fd1 = Din(l0,1);                            fd1 = fd1.Dy(Input::List().dbydy_order);;
             vtemp *= B2[l0]/B1[l0-1];                   fd1 = fd1.mpaxis(vtemp);    Dh(l0-1,0) += fd1.Re();
 
             vtemp *= 1.0/B2[l0];
@@ -3235,7 +3234,7 @@ Spatial_Advection::Spatial_Advection(size_t Nl, size_t Nm,
 
             // std::cout << "\n (l,m) = " << l << ", " << m << " \n";
 
-            fd1 = Din(l,m);     fd1 = fd1.Dx();  
+            fd1 = Din(l,m);     fd1 = fd1.Dx(Input::List().dbydx_order);  
 
             if (l == m)         // Diagonal, no l - 1
             {
@@ -3262,7 +3261,7 @@ Spatial_Advection::Spatial_Advection(size_t Nl, size_t Nm,
             l = nwsediag_il[id];
             m = nwsediag_im[id];
 
-            fd1 = Din(l,m);     fd1 = fd1.Dy();
+            fd1 = Din(l,m);     fd1 = fd1.Dy(Input::List().dbydy_order);;
 
             if (m == 0)         // Top or Left, no l - 1, m - 1
             {
@@ -3289,7 +3288,7 @@ Spatial_Advection::Spatial_Advection(size_t Nl, size_t Nm,
             l = neswdiag_il[id];
             m = neswdiag_im[id];
 
-            fd1 = Din(l,m);     fd1 = fd1.Dy();
+            fd1 = Din(l,m);     fd1 = fd1.Dy(Input::List().dbydy_order);;
 
             if (m == 0)         // Left wall, no l + 1, m - 1
             {
@@ -3343,7 +3342,7 @@ Spatial_Advection::Spatial_Advection(size_t Nl, size_t Nm,
 
                 // std::cout << "\n (l,m) = " << l << ", " << m << " \n";
 
-                fd1 = Din(l,m);     fd1 = fd1.Dx();  
+                fd1 = Din(l,m);     fd1 = fd1.Dx(Input::List().dbydx_order);  
 
                 if (l == m)         // Diagonal, no l - 1
                 {
@@ -3369,7 +3368,7 @@ Spatial_Advection::Spatial_Advection(size_t Nl, size_t Nm,
                 l = nwsediag_il[id];
                 m = nwsediag_im[id];
 
-                fd1 = Din(l,m);     fd1 = fd1.Dy();
+                fd1 = Din(l,m);     fd1 = fd1.Dy(Input::List().dbydy_order);;
 
                 if (m == 0)         // Top or Left, no l - 1, m - 1
                 {
@@ -3395,7 +3394,7 @@ Spatial_Advection::Spatial_Advection(size_t Nl, size_t Nm,
                 l = neswdiag_il[id];
                 m = neswdiag_im[id];
 
-                fd1 = Din(l,m);     fd1 = fd1.Dy();
+                fd1 = Din(l,m);     fd1 = fd1.Dy(Input::List().dbydy_order);;
 
                 if (m == 0)         // Left wall, no l + 1, m - 1
                 {
@@ -3443,7 +3442,7 @@ void Spatial_Advection::operator()(const DistFunc1D& Din, DistFunc1D& Dh)
         
         if (this_thread == 0)
         {
-            fd1 = Din(0,0);                         fd1 = fd1.Dx();
+            fd1 = Din(0,0);                         fd1 = fd1.Dx(Input::List().dbydx_order);
             vtemp *= A1(0,0);                       Dh(1,0) += fd1.mpaxis(vtemp);
             vtemp /= A1(0,0);
         }
@@ -3455,7 +3454,7 @@ void Spatial_Advection::operator()(const DistFunc1D& Din, DistFunc1D& Dh)
         {   
             l = dist_il[id];    m = dist_im[id];
             
-            fd1 = Din(l,m);     fd1 = fd1.Dx();
+            fd1 = Din(l,m);     fd1 = fd1.Dx(Input::List().dbydx_order);
 
             if (l == m)         // Diagonal, no l - 1
             {
@@ -3491,7 +3490,7 @@ void Spatial_Advection::operator()(const DistFunc1D& Din, DistFunc1D& Dh)
         {   
             l = dist_il[id];    m = dist_im[id];
 
-            fd1 = Din(l,m);     fd1 = fd1.Dx();
+            fd1 = Din(l,m);     fd1 = fd1.Dx(Input::List().dbydx_order);
 
             if (l == m)         // Diagonal, no l - 1
             {
@@ -3543,7 +3542,7 @@ void Spatial_Advection::es1d(const DistFunc1D& Din, DistFunc1D& Dh) {
         //  -------------------------------------------------------- //
         if (this_thread == 0)
         {
-            fd1 = Din(0,0);                         fd1 = fd1.Dx();
+            fd1 = Din(0,0);                         fd1 = fd1.Dx(Input::List().dbydx_order);
             vtemp *= A1(0,0);                       Dh(1,0) += fd1.mpaxis(vtemp);
             vtemp /= A1(0,0);
 
@@ -3552,7 +3551,7 @@ void Spatial_Advection::es1d(const DistFunc1D& Din, DistFunc1D& Dh) {
 
         if (this_thread == Input::List().ompthreads - 1)    
         {    
-            fd1 = Din(l0,0);                        fd1 = fd1.Dx();
+            fd1 = Din(l0,0);                        fd1 = fd1.Dx(Input::List().dbydx_order);
             vtemp *= A2(l0,0);                      Dh(l0-1,0) += fd1.mpaxis(vtemp);
             vtemp /= A2(l0,0);
 
@@ -3568,7 +3567,7 @@ void Spatial_Advection::es1d(const DistFunc1D& Din, DistFunc1D& Dh) {
         for (size_t l = f_start_thread; l < f_end_thread; ++l)
         {
             fd1 = Din(l,0);  //std::cout << "\n \n before dx, l = " << l << " \n";          
-            fd1 = fd1.Dx();  //std::cout << " \n after dx\n";
+            fd1 = fd1.Dx(Input::List().dbydx_order);  //std::cout << " \n after dx\n";
 
             vtemp *= A2(l,0)/A1(l-1,0);    fd2 = fd1;  Dh(l-1,0) += fd1.mpaxis(vtemp);
             vtemp *= A1(l,0)/A2(l  ,0);                Dh(l+1,0) += fd2.mpaxis(vtemp);
@@ -3590,7 +3589,7 @@ void Spatial_Advection::es1d(const DistFunc1D& Din, DistFunc1D& Dh) {
         for (size_t l = f_end[threadboundaries]; l < f_start[threadboundaries+1]; ++l)
         {   
             fd1 = Din(l,0);  //std::cout << "\n \n before dx, l = " << l << " \n";          
-            fd1 = fd1.Dx(); //std::cout << " \n after dx\n";
+            fd1 = fd1.Dx(Input::List().dbydx_order); //std::cout << " \n after dx\n";
 
             vtemp *= A2(l,0)/A1(l-1,0);    fd2 = fd1;  Dh(l-1,0) += fd1.mpaxis(vtemp);
             vtemp *= A1(l,0)/A2(l  ,0);                Dh(l+1,0) += fd2.mpaxis(vtemp);
@@ -3614,11 +3613,11 @@ void Spatial_Advection::f1only(const DistFunc1D& Din, DistFunc1D& Dh) {
     SHarmonic1D fd1(vr.size(),Din(0,0).numx()),fd2(vr.size(),Din(0,0).numx());
 
     fd1 = Din(0,0);
-    fd1 = fd1.Dx();     vtemp *= A00;
+    fd1 = fd1.Dx(Input::List().dbydx_order);     vtemp *= A00;
     Dh(1,0) += (fd1.mpaxis(vtemp));
 
     fd1 = Din(1,0);
-    fd1 = fd1.Dx();     vtemp *= A10/A00;
+    fd1 = fd1.Dx(Input::List().dbydx_order);     vtemp *= A10/A00;
     Dh(0,0) += (fd1.mpaxis(vtemp));
 
 }
@@ -3634,23 +3633,23 @@ void Spatial_Advection::f1only(const DistFunc2D& Din, DistFunc2D& Dh) {
     SHarmonic2D fd1(Din(0,0));
 
     fd1 = Din(0,0);
-    fd1 = fd1.Dx();     vtemp *= A00;
+    fd1 = fd1.Dx(Input::List().dbydx_order);     vtemp *= A00;
     Dh(1,0) += (fd1.mpaxis(vtemp));
 
     fd1 = Din(1,0);
-    fd1 = fd1.Dx();     vtemp *= A10/A00;
+    fd1 = fd1.Dx(Input::List().dbydx_order);     vtemp *= A10/A00;
     Dh(0,0) += (fd1.mpaxis(vtemp));
 
     //  - - - - - - - - - - - - - - - - - - - - - - - - - - -
     //       m = 0, advection in y
     //  - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    fd1 = Din(0,0);                 fd1 = fd1.Dy();
+    fd1 = Din(0,0);                 fd1 = fd1.Dy(Input::List().dbydy_order);;
     vtemp *= C1[0]/A10;             Dh(1,1) += fd1.mpaxis(vtemp);
 
     //  - - - - - - - - - - - - - - - - - - - - - - - - - - -
     //       m = 1, advection in y
     //  - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    fd1 = Din(1,1);        fd1 = fd1.Dy();
+    fd1 = Din(1,1);        fd1 = fd1.Dy(Input::List().dbydy_order);;
     
     vtemp *= B2[1]/C1[0];  fd1 = fd1.mpaxis(vtemp);  Dh(0,0) += fd1.Re();
 
@@ -3682,12 +3681,12 @@ void Faraday::operator()(EMF1D& EMFin, EMF1D& EMFh) {
 //      dBy/dt +=   dEz/dx       
     // tmpE                 = EMFin.Ez();
     tmpE                *= idx;
-    EMFh.By()           += tmpE.Dx();
+    EMFh.By()           += tmpE.Dx(Input::List().dbydx_order);
     
 //      dBz/dt += - dEy/dx       
     tmpE                 = EMFin.Ey();
     tmpE                *= (-1.0) * idx;
-    EMFh.Bz()           += tmpE.Dx();
+    EMFh.Bz()           += tmpE.Dx(Input::List().dbydx_order);
 
 }
 //--------------------------------------------------------------
@@ -3701,23 +3700,23 @@ void Faraday::operator()(EMF2D& EMFin, EMF2D& EMFh) {
 //      dBx/dt += - dEz/dy  
     // tmpE          = EMFin.Ez(); 
     tmpE         *= (-1.0) * idy;
-    EMFh.Bx()    += tmpE.Dy();
+    EMFh.Bx()    += tmpE.Dy(Input::List().dbydy_order);;
 
 //      dBy/dt +=   dEz/dx       
     tmpE                 = EMFin.Ez(); 
     tmpE                *= idx;
-    EMFh.By()           += tmpE.Dx();
+    EMFh.By()           += tmpE.Dx(Input::List().dbydx_order);
         // EMFh.By()(numx-1)    = 0.0;        
 
 //      dBz/dt +=   dEx/dy       
     tmpE          = EMFin.Ex(); 
     tmpE         *= idy;
-    EMFh.Bz()    += tmpE.Dy();    
+    EMFh.Bz()    += tmpE.Dy(Input::List().dbydy_order);;    
 
 //      dBz/dt += - dEy/dx       
     tmpE                 = EMFin.Ey(); 
     tmpE                *= (-1.0) * idx;
-    EMFh.Bz()           += tmpE.Dx();  
+    EMFh.Bz()           += tmpE.Dx(Input::List().dbydx_order);  
 
 }
 //--------------------------------------------------------------
@@ -3748,12 +3747,12 @@ void Ampere::operator()(EMF1D& EMFin, EMF1D& EMFh) {
 //      dEy/dt +=  - dBz/dx       
     // tmpB                 = EMFin.Bz();
     tmpB                *= (-1.0) * idx;
-    EMFh.Ey()           += tmpB.Dx();
+    EMFh.Ey()           += tmpB.Dx(Input::List().dbydx_order);
 
 //      dEz/dt += dBy/dx       
     tmpB                 = EMFin.By();
     tmpB                *=  idx;
-    EMFh.Ez()           += tmpB.Dx();    
+    EMFh.Ez()           += tmpB.Dx(Input::List().dbydx_order);    
 
 }
 //--------------------------------------------------------------
@@ -3766,25 +3765,24 @@ void Ampere::operator()(EMF2D& EMFin, EMF2D& EMFh) {
 //      dEx/dt +=   dBz/dy       
     // tmpB                 = EMFin.Bz(); 
     tmpB                *= idy;
-    EMFh.Ex()           += tmpB.Dy();
+    EMFh.Ex()           += tmpB.Dy(Input::List().dbydy_order);;
 
 //      dEy/dt +=  - dBz/dx       
     tmpB                 = EMFin.Bz(); 
     tmpB                *= (-1.0) * idx;
-    EMFh.Ey()           += tmpB.Dx();
+    EMFh.Ey()           += tmpB.Dx(Input::List().dbydx_order);
 
 //      dEz/dt +=  - dBx/dy       
     tmpB                 = EMFin.Bx(); 
     tmpB                *= (-1.0) * idy;
-    EMFh.Ez()           += tmpB.Dy();    
+    EMFh.Ez()           += tmpB.Dy(Input::List().dbydy_order);;    
 
 //      dEz/dt += dBy/dx       
     tmpB                 = EMFin.By(); 
     tmpB                *=  idx;
-    EMFh.Ez()           += tmpB.Dx();   
+    EMFh.Ez()           += tmpB.Dx(Input::List().dbydx_order);   
         // EMFh.Ez()(numx-1)    = 0.0;
 
 }
 //--------------------------------------------------------------
 //**************************************************************
-

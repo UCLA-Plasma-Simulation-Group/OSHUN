@@ -80,7 +80,7 @@ public:
 
 //      Derivatives
     SHarmonic1D& Dp();
-    SHarmonic1D& Dx();
+    SHarmonic1D& Dx(size_t order);
 
 //      FilterP
     SHarmonic1D& Filterp(size_t N);
@@ -147,8 +147,8 @@ public:
 
 //      Derivatives
         SHarmonic2D& Dp();
-        SHarmonic2D& Dx();
-        SHarmonic2D& Dy();
+        SHarmonic2D& Dx(size_t order);
+        SHarmonic2D& Dy(size_t order);
 
 //      FilterP
         SHarmonic2D& Filterp(size_t N); 
@@ -201,7 +201,8 @@ public:
     Field1D& Re();
 
 //      Derivatives
-    Field1D& Dx();
+    // Field1D& Dx();
+    Field1D& Dx(size_t order);
 };
 //-------------------------------------------------------------------
 /** @} */
@@ -247,8 +248,8 @@ public:
         Field2D& operator-=(const Field2D& fimin);
 
 //      Derivatives
-        Field2D& Dx();
-        Field2D& Dy();
+        Field2D& Dx(size_t order);
+        Field2D& Dy(size_t order);
     };
 //--------------------------------------------------------------
 //**************************************************************

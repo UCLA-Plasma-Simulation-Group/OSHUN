@@ -52,15 +52,17 @@ namespace Input{
 
 //          Algorithms
         bool if_tridiagonal;
-        bool implicit_E, relativity;
+        bool implicit_E;
+        size_t dbydx_order, dbydy_order;
+        double abs_tol, rel_tol;
+        size_t max_fails;
+        bool relativity;
         bool implicit_B;
         bool collisions;
         int f00_implicitorexplicit;
         int flm_collisions;
         int flm_acc;
         bool ee_bool,ei_bool;
-        
-        
 
         int BoundaryCells;
         
@@ -93,7 +95,7 @@ namespace Input{
                 
         bool o_Ux, o_Uy, o_Uz, o_Z, o_ni, o_Ti;
         bool only_output;
-        // size_t numpx;//, nump1, nump2, nump3;
+        
 
 //          Electron-ion collisions
         double lnLambda_ei, lnLambda_ee, density_np;
@@ -122,11 +124,6 @@ namespace Input{
         double particlecharge, particlemass;
         std::vector<double> par_xpos, par_px, par_py, par_pz;
 
-
-                
-
-
-        
 // ----------------------------------------------------------------------
 // ----------------------------------------------------------------------
         /// Initialization

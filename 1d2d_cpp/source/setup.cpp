@@ -132,7 +132,6 @@ void Setup_Y::applytravelingwave(Grid_Info &grid, State1D& Y, double time, doubl
 
     for (size_t n(0); n < Input::List().num_waves; ++n)
     {
-
         valarray<double> Ex_profile( grid.axis.Nx(0));
         valarray<double> Ey_profile( grid.axis.Nx(0));
         valarray<double> Ez_profile( grid.axis.Nx(0));
@@ -298,24 +297,22 @@ void Setup_Y::initialize(State1D &Y, Grid_Info &grid){
     valarray<double> hydro_temp_profile( grid.axis.Nx(0));
     valarray<double> hydro_vel_profile( grid.axis.Nx(0));
     valarray<double> hydro_Z_profile( grid.axis.Nx(0));
-
-
-
+    
     for (size_t s(0); s < Input::List().qs.size(); ++s) {
 
         temp_profile = 0.0;
         
         Parser::parseprofile(grid.axis.x(0), Input::List().dens_profile_str[s], dens_profile);
-        
+        // std::cout << "\n11\n";
         Parser::parseprofile(grid.axis.x(0), Input::List().temp_profile_str[s], temp_profile);
-        
+        // std::cout << "\n12\n";
         Parser::parseprofile(grid.axis.x(0), Input::List().f10x_profile_str[s], f10x_profile);
-        
+        // std::cout << "\n13\n";
         // Parser::parseprofile(grid.axis.x(0), Input::List().f20x_profile_str[s], f20x_profile);
-        Parser::parseprofile(grid.axis.x(0), Input::List().f_pedestal[s], pedestal_profile);
-        
+        // Parser::parseprofile(grid.axis.x(0), Input::List().f_pedestal[s], pedestal_profile);
+        // std::cout << "\n14\n";
         init_f0(s, Y.SH(s,0,0), grid.axis.p(s), grid.axis.x(0), dens_profile, temp_profile, Y.DF(s).mass(), pedestal_profile);
-
+        // std::cout << "\n15\n";
         if (Input::List().init_f1) init_f1(s, Y.SH(s,1,0), grid.axis.p(s), grid.axis.x(0), dens_profile, temp_profile, f10x_profile, Y.SH(s,0,0), Y.DF(s).mass());
         
         // if (Input::List().init_f2) init_f2(s, Y.SH(s,2,0), grid.axis.p(s), grid.axis.x(0), dens_profile, temp_profile, f20x_profile, Y.DF(s).mass());
@@ -388,7 +385,7 @@ void Setup_Y::initialize(State2D &Y, Grid_Info &grid){
         Parser::parseprofile(grid.axis.x(0), grid.axis.x(1), Input::List().dens_profile_str[s], dens_profile);
         Parser::parseprofile(grid.axis.x(0), grid.axis.x(1), Input::List().temp_profile_str[s], temp_profile);
         Parser::parseprofile(grid.axis.x(0), grid.axis.x(1), Input::List().f10x_profile_str[s], f10x_profile);
-        Parser::parseprofile(grid.axis.x(0), grid.axis.x(1), Input::List().f_pedestal[s], pedestal_profile);
+        // Parser::parseprofile(grid.axis.x(0), grid.axis.x(1), Input::List().f_pedestal[s], pedestal_profile);
         
         init_f0(s, Y.SH(s,0,0), grid.axis.p(s), grid.axis.x(0), grid.axis.x(1), dens_profile, temp_profile, Y.DF(s).mass(), pedestal_profile);
 
@@ -478,8 +475,8 @@ void Setup_Y:: init_f0(size_t s, SHarmonic1D& h, const valarray<double>& p, cons
             // std::cout << "f0[" << p[k] << "] = " << exp(-1.0*pow((p[k])/alpha/sqrt(2.0*temperature[j]*mass),m)) << "\n";
             // 
             // Maxwell-Jutner distribution
-            if (Input::List().relativity) 
-                h(k,j) = coefftemp_relativistic*exp(-sqrt(1.0+p[k]*p[k])/temperature[j]);
+            // if (Input::List().relativity) 
+            //     h(k,j) = coefftemp_relativistic*exp(-sqrt(1.0+p[k]*p[k])/temperature[j]);
 
             // std::cout << "\n\n h(" << k << "," << j << ") = " << h(k,j) << "\n\n";
         }

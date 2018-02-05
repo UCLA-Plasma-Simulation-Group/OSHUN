@@ -107,8 +107,8 @@
 //      Abstract class for explicit methods
 //--------------------------------------------------------------
         public:
-            virtual void advance(Algorithms::RK2<State1D>* rk, State1D& Y, collisions_1D& coll, VlasovFunctor1D_implicitE_p2* rkF)=0;//, double time, double dt) = 0; // "covariant" return
-            virtual void advance(Algorithms::RK2<State2D>* rk, State2D& Y, collisions_2D& coll, VlasovFunctor2D_implicitE_p2* rkF)=0;//, double time, double dt) = 0; // "covariant" return
+            virtual void advance(Algorithms::RK2<State1D>* rk, State1D& Y, collisions_1D& coll, VlasovFunctor1D_implicitE_p2* rkF, const double step_size)=0;//, double time, double dt) = 0; // "covariant" return
+            virtual void advance(Algorithms::RK2<State2D>* rk, State2D& Y, collisions_2D& coll, VlasovFunctor2D_implicitE_p2* rkF, const double step_size)=0;//, double time, double dt) = 0; // "covariant" return
             virtual ~Efield_Method() = 0;
         };
 //--------------------------------------------------------------
@@ -154,11 +154,11 @@
 //--------------------------------------------------------------
         public:
 //          Constructor
-            Implicit_E_Field(const double& deltat, const Algorithms::AxisBundle<double> axes);
+            Implicit_E_Field(const Algorithms::AxisBundle<double> axes);
 
 //          Main function
-            void advance(Algorithms::RK2<State1D>* rk, State1D& Y, collisions_1D& coll, VlasovFunctor1D_implicitE_p2* rkF);
-            void advance(Algorithms::RK2<State2D>* rk, State2D& Y, collisions_2D& coll, VlasovFunctor2D_implicitE_p2* rkF);
+            void advance(Algorithms::RK2<State1D>* rk, State1D& Y, collisions_1D& coll, VlasovFunctor1D_implicitE_p2* rkF, const double step_size);
+            void advance(Algorithms::RK2<State2D>* rk, State2D& Y, collisions_2D& coll, VlasovFunctor2D_implicitE_p2* rkF, const double step_size);
 
         private:
 //          Boundary Cells
@@ -167,7 +167,7 @@
             //          Current and electric field 
             Current_xyz JN, J0, J_Ex, J_Ey, J_Ez;
             Efield_xyz  EN, E0, DE;
-            double dt;
+            
             complex<double>   idx, idy;            
 
 //          Ampere's law JN = rot(B)
