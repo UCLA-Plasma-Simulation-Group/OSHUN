@@ -10,7 +10,7 @@ COMPILER = mpiicpc
 OPTFLAGS3 = -O3 -no-prec-div -no-prec-sqrt -axsse4.2 -ipo -use-intel-optimized-headers
 OPTFLAGS2 = -O2 -no-vec -qopt-report=1
 OPTFLAGS1 = -O1 -no-prec-div -no-prec-sqrt -axsse4.2 -ipo -use-intel-optimized-headers
-# DBGFLAGS = -O3 -no-prec-div -no-prec-sqrt -axsse4.2 -ipo  
+# DBGFLAGS = -O3 -no-prec-div -no-prec-sqrt -axsse4.2 -ipo
 
 # HDF5 libraries
 H5LIB = -lhdf5_hl -lhdf5
@@ -31,8 +31,8 @@ BUILDOBJECTS = ${addprefix ${TMP_DIR}/,${OBJECTS}}
 BUILDEXEC = ${addprefix ${EXEC_DIR}/,${EXEC}}
 
 ${BUILDEXEC} : ${BUILDOBJECTS}
-	-${COMPILER} ${CPPFLAGS} ${OPTFLAGS1} ${INCLUDE_DIRS} ${LDFLAGS} $(H5LIB) $(MPILIB) -o ${BUILDEXEC}  \
-	${BUILDOBJECTS} 
+	-${COMPILER} ${CPPFLAGS} ${OPTFLAGS1} ${INCLUDE_DIRS} ${LDFLAGS} -o ${BUILDEXEC}  \
+	${BUILDOBJECTS} $(H5LIB) $(MPILIB) 
 
 clean ::
 	rm -f ${BUILDOBJECTS}
@@ -44,25 +44,25 @@ debug :
 	%.cpp
 
 ${TMP_DIR}/parser.o: parser.cpp
-	$(COMPILER) ${CPPFLAGS} $(OPTFLAGS3) $(INCLUDE_DIRS) -c -o $@ $<		
+	$(COMPILER) ${CPPFLAGS} $(OPTFLAGS3) $(INCLUDE_DIRS) -c -o $@ $<
 
 ${TMP_DIR}/input.o: input.cpp
 	$(COMPILER) ${CPPFLAGS} $(OPTFLAGS3) $(INCLUDE_DIRS) -c -o $@ $<
 
 ${TMP_DIR}/clock.o: clock.cpp
-	$(COMPILER) ${CPPFLAGS} $(OPTFLAGS3) $(INCLUDE_DIRS) -c -o $@ $<	
+	$(COMPILER) ${CPPFLAGS} $(OPTFLAGS3) $(INCLUDE_DIRS) -c -o $@ $<
 
 ${TMP_DIR}/state.o: state.cpp
-	$(COMPILER) ${CPPFLAGS} $(OPTFLAGS3) $(INCLUDE_DIRS) -c -o $@ $<	
+	$(COMPILER) ${CPPFLAGS} $(OPTFLAGS3) $(INCLUDE_DIRS) -c -o $@ $<
 
 ${TMP_DIR}/formulary.o: formulary.cpp
-	$(COMPILER) ${CPPFLAGS} $(OPTFLAGS3) $(INCLUDE_DIRS) -c -o $@ $<	
+	$(COMPILER) ${CPPFLAGS} $(OPTFLAGS3) $(INCLUDE_DIRS) -c -o $@ $<
 
 ${TMP_DIR}/setup.o: setup.cpp
-	$(COMPILER) ${CPPFLAGS} $(OPTFLAGS3) $(INCLUDE_DIRS) -c -o $@ $<	
+	$(COMPILER) ${CPPFLAGS} $(OPTFLAGS3) $(INCLUDE_DIRS) -c -o $@ $<
 
 ${TMP_DIR}/vlasov.o: vlasov.cpp
-	$(COMPILER) ${CPPFLAGS} $(OPTFLAGS3) $(INCLUDE_DIRS) -c -o $@ $<	
+	$(COMPILER) ${CPPFLAGS} $(OPTFLAGS3) $(INCLUDE_DIRS) -c -o $@ $<
 
 ${TMP_DIR}/nmethods.o: nmethods.cpp
 	$(COMPILER) ${CPPFLAGS} $(OPTFLAGS1) $(INCLUDE_DIRS) -c -o $@ $<
@@ -89,4 +89,4 @@ ${TMP_DIR}/export.o: export.cpp
 	$(COMPILER) ${CPPFLAGS} $(OPTFLAGS3) $(INCLUDE_DIRS) -c -o $@ $<
 
 ${TMP_DIR}/main.o: main.cpp
-	$(COMPILER) ${CPPFLAGS} $(OPTFLAGS3) $(INCLUDE_DIRS) -c -o $@ $<		
+	$(COMPILER) ${CPPFLAGS} $(OPTFLAGS3) $(INCLUDE_DIRS) -c -o $@ $<

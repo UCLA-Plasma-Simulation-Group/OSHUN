@@ -3,7 +3,7 @@
 # Makefile for OSHUN
 # This should work with gcc-6, open-mpi compiled with gcc-6, and HDF5 compiled with c++11 standards
 
-COMPILER = g++-7
+COMPILER = mpicc
 
 # GNU compilers#
 OPTFLAGS1 = -O3
@@ -19,9 +19,9 @@ DBGFLAGS = -v -O0 -Wall -Wuninitialized -Wextra -Wpedantic
 # HDF5 libraries
 H5LIB = -lhdf5_hl -lhdf5
 MPILIB = -lmpi
-LDFLAGS = -L/usr/local/Cellar/hdf5/1.10.1_2/lib -L/usr/local/Cellar/gcc/7.2.0/lib/gcc/7
+LDFLAGS = -L/usr/lib/x86_64-linux-gnu/hdf5/openmpi/lib/lib
 CPPFLAGS = -fopenmp
-INCLUDE_DIRS = -L/usr/local/Cellar/hdf5/1.10.1_2/include -I/usr/local/opt/gcc/lib/gcc/7
+INCLUDE_DIRS = -I/usr/lib/x86_64-linux-gnu/hdf5/openmpi/lib/include
 
 EXEC_DIR = ../bin
 TMP_DIR = ../bin/tmp
@@ -36,7 +36,7 @@ BUILDEXEC = ${addprefix ${EXEC_DIR}/,${EXEC}}
 
 ${BUILDEXEC} : ${BUILDOBJECTS}
 	-${COMPILER} ${CPPFLAGS} ${OPTFLAGS2} ${INCLUDE_DIRS} ${LDFLAGS} -o ${BUILDEXEC}  \
-	${BUILDOBJECTS} $(H5LIB) $(MPILIB) 
+	${BUILDOBJECTS} $(H5LIB) $(MPILIB)
 
 clean ::
 	rm -f ${BUILDOBJECTS}
