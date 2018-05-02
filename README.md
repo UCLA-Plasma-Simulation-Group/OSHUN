@@ -1,6 +1,6 @@
-# ![PICKSC Logo](http://exodus.physics.ucla.edu/~uclapic/repo_images/PICKSC-logo-OSHUN.png)
-
 # OSHUN
+
+[![Documentation Status](https://readthedocs.org/projects/oshun/badge/?version=latest)](http://oshun.readthedocs.io/en/latest/?badge=latest)
 
 OSHUN is a parallel Vlasov-Fokker-Planck plasma simulation code that employs an arbitrary-order spherical harmonic velocity-space decomposition.
 
@@ -46,3 +46,10 @@ python oshun.zip ../examples/sample-spitzer.py
 (With Windows replace all ```/``` with ```\```)
 
 Output should immediately be in the ```output``` subdirectory. The ```oshun.zip``` file can be copied and moved to any desired location. Input decks can exist in any directory as well. Just make sure the fully-qualified names are passed to python (i.e. ```python /full/path/to/oshun.zip /full/path/to/inputdeck```). Output will be placed in the current directory.
+
+# Help and Resources
+
+We encourage you to ask questions by emailing us at picksc.org@gmail.com. To participate in development discussions or get help, you can also talk with us on our [OSHUN Gitter channel](https://gitter.im/PICKSC/OSHUN).
+
+* [Documentation for OSHUN](http://oshun.readthedocs.io/en/latest/)
+* [Reporting Issues](https://github.com/UCLA-Plasma-Simulation-Group/OSHUN/issues)
